@@ -1,0 +1,103 @@
+;0x1200 Data For nextchar
+;0x1201 Position used in nextchar
+;0x1335 Char Position
+;0x1334 Text Color
+;0x1333 Used in nextchar but only there
+
+
+
+            set j, 0         
+            set [0x1200], data  
+            set [0x1335], 1 
+            set [0x1334], 0xf100
+            jsr print       
+            set [0x1200], text 
+            jsr printnl   
+            SET PC, Input  
+:printnl
+set j, 0           
+jsr Nextline	    
+jsr print         
+jsr Nextline     
+SET PC, pop         
+
+:print
+            set [0x1333], [0x1200] 
+            add [0x1333], j       
+            set a, [0x1333]	   
+            ife [a], 0x0003      
+                set PC, pop       
+            ifg [a], 0xff       
+                set PC, print
+            bor [a], [0x1334]  
+            set b, 0x8000	    
+            add b, [line]	   
+            add b, j           
+            set [b], [a]	
+            add j, 1		
+            set PC, print      
+
+:data  dat "Logon - ver 0.1!", 0x0003
+:line dat 0
+:text dat "New line BITCHES",0x0003
+:RedditData dat "asdf",0x0003
+
+:Write
+bor [0x9000], [0x1334]		
+set [0x1335], 0x8000			
+add [0x1335], Y			
+add [0x1335], [line]			
+set C, [0x1335]				
+SET [C], [0x9000]			
+add [0x5000], [0x9000]   	
+SET [0x9000], 0				
+ADD Y, 1			
+SET PC, Input		
+
+:CommandCheck
+SET PC, pop
+
+:Nextline
+SET [0x9000], 0		
+add [line], 32			
+set Y, 0				
+SET PC, pop			
+
+:Input
+SET [0x1336], [0x9000]		
+Set [0x1337], 0x8020	
+IFE [0x1336], 0	
+    SET PC, Input
+IFE [0x1336], 0x0020			
+    SET PC, Clearscreen
+IFE [0x1336], 0x8			
+    SET PC, BackSpace
+IFE [0x1336], 0xA			
+    jsr Nextline
+IFN [0x1336], 0x0000	
+    SET PC, Write
+SET PC, Input		
+
+:Clearscreen
+SET [0x9000], 0			
+SET Y, 0				
+set [line], 32			
+jsr Clearscreenloop		
+set PC, Input		
+
+:Clearscreenloop
+set C, [0x1337]			
+SET [C], 0			
+add [0x1337], 1			
+IFG [0x1337],  0x8060			
+    set PC, pop
+SET PC, Clearscreenloop    		
+
+:BackSpace
+SET [0x9000], 0			
+sub Y, 1					
+set b, 0x8000		
+add b, [line]	
+add b, y			
+set [b], 0x0000		
+set PC, Input
