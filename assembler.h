@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cpu.h"
+#include "emulator.h"
 
 const int MAX_CHARS = 1024;
 

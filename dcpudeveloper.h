@@ -2,10 +2,17 @@
 #define DCPUDEVELOPER_H
 
 #include <QMainWindow>
-#include <string>
+#include <QFile>
+#include <QTextStream>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QString>
 #include "assembler.h"
+#include "emulator.h"
 
-static std::string TEMP_FILENAME = "dcpu_temp.dasm16";
+static QString VERSION_NUMBER = "0.1 DEV";
+static QString TEMP_FILENAME = "dcpu_temp.dasm16";
+
 namespace Ui {
 class DCPUDeveloper;
 }
@@ -25,12 +32,21 @@ private slots:
 
     void on_compile_clicked();
 
+    void on_run_clicked();
+
+    void updateRegisters(registers_t* registers);
+
 private:
     Ui::DCPUDeveloper *ui;
 
     Assembler *assembler;
+    Emulator emulator;
 
-    std::string currentFilename;
+    QString currentFilename;
+
+    bool emulatorRunning;
+
+    void appendLogMessage(QString message);
 
 };
 

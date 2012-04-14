@@ -1,14 +1,15 @@
 /**
-DCPU Emulator.
+DEmulator Emulator.
 Written by James Whitwell, 2012.
 
-CPU emulation class
-This code orginally based on dcpu-emu https://bitbucket.org/interfect/dcpu-emu
+DEmulator emulation class
+This code was started as a port of dcpu-emu https://bitbucket.org/interfect/dcpu-emu
 
 Started 7-Apr-2012 
 */
 #pragma once
 
+#include <QThread>
 #include <iostream>
 #include <Windows.h>
 
@@ -73,14 +74,28 @@ const int FRAMESKIP = 10;
 
 const int NUM_COLOURS = 16;
 
-class Cpu
+typedef struct {
+    int a, b, c, x, y, z, i, j, o;
+    long pc, sp;
+} registers_t;
+
+class Emulator : public QThread
 {
+    Q_OBJECT
+
+signals:
+    void registersChanged(registers_t*);
+
 private:
 	bool DEBUG;
 	bool OPCODE_DEBUGGING;
 
 	bool STEP_MODE;
 	bool RUNNING;
+
+    std::string compiledFilename;
+
+    registers_t* latestRegisters;
 
 	word_t* evaluateArgument(argument_t argument);
 
@@ -90,11 +105,18 @@ private:
 	bool_t isConst(argument_t argument);
 	word_t getInstructionLength(instruction_t instruction);
 	word_t getNextWordOffset(instruction_t instruction, bool_t which);
-public:
-	Cpu(void);
-	~Cpu(void);
 
-	int run(std::string filename);
+protected:
+    void run();
+
+public:
+   explicit Emulator(QObject* parent = 0);
+    ~Emulator(void);
+
+    //int run(std::string filename);
+    void setFilename(std::string filename);
+
+    registers_t* getRegisters();
 
 	static bool_t usesNextWord(argument_t argument);
 	static instruction_t setOpcode(instruction_t instruction, opcode_t opcode);

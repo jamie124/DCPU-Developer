@@ -12,11 +12,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         dcpudeveloper.cpp \
-    cpu.cpp \
-    assembler.cpp
+    assembler.cpp \
+    emulator.cpp
 
 HEADERS  += dcpudeveloper.h \
-    cpu.h \
-    assembler.h
+    assembler.h \
+    emulator.h
 
 FORMS    += dcpudeveloper.ui

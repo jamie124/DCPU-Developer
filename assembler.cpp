@@ -473,20 +473,20 @@ int Assembler::compile(std::string filename)
 		}
 
 		instruction_t packed = 0;
-		packed = Cpu::setOpcode(packed, instruction->opcode);
-		packed = Cpu::setArgument(packed, 0, instruction->a.argument);
-		packed = Cpu::setArgument(packed, 1, instruction->b.argument);
+        packed = Emulator::setOpcode(packed, instruction->opcode);
+        packed = Emulator::setArgument(packed, 0, instruction->a.argument);
+        packed = Emulator::setArgument(packed, 1, instruction->b.argument);
 
 		// Save instruction
 		std::cout << address << ": Assembled instruction: " << packed << std::endl;
 		fwrite(&packed, sizeof(instruction_t), 1, compiledFile);
 
-		if (instruction->opcode != OP_NONBASIC && Cpu::usesNextWord(instruction->a.argument)) {
+        if (instruction->opcode != OP_NONBASIC && Emulator::usesNextWord(instruction->a.argument)) {
 			std::cout << ++address << ": Extra Word A: " << instruction->a.nextWord << std::endl;
 			fwrite(&(instruction->a.nextWord), sizeof(word_t), 1, compiledFile);
 		}
 
-		if (Cpu::usesNextWord(instruction->b.argument)) {
+        if (Emulator::usesNextWord(instruction->b.argument)) {
 			std::cout << ++address << ": Extra Word B: " << instruction->b.nextWord << std::endl;
 			fwrite(&(instruction->b.nextWord), sizeof(word_t), 1, compiledFile);
 		}
@@ -845,7 +845,7 @@ void Assembler::processArg1(char* command, char* arg, word_t &address, char* lab
 	// Advance address
 	address++;
 
-	if (Cpu::usesNextWord(instruction->a.argument)) {
+    if (Emulator::usesNextWord(instruction->a.argument)) {
 		address++;
 	}
 }
@@ -885,7 +885,7 @@ void Assembler::processArg2(char* command, char* arg, word_t &address, char* lab
 
 		instruction->b = argumentFor(arg);
 
-		if (Cpu::usesNextWord(instruction->b.argument)) {
+        if (Emulator::usesNextWord(instruction->b.argument)) {
 			address++;
 		}
 	}

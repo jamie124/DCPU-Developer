@@ -1,14 +1,14 @@
 /**
-DCPU Emulator.
+DEmulator Emulator.
 Written by James Whitwell, 2012.
 
-CPU emulation class
+Emulator emulation class
 This code orginally based on dcpu-emu https://bitbucket.org/interfect/dcpu-emu
 
 Started 7-Apr-2012 
 */
 
-#include "cpu.h"
+#include "emulator.h"
 #include <iostream>
 #include <stdio.h>
 //#include <fstream>
@@ -28,7 +28,7 @@ word_t* literals;
 
 word_t* colourTable;
 
-Cpu::Cpu(void)
+Emulator::Emulator(QObject* parent) : QThread(parent)
 {
 	DEBUG = false;
 	OPCODE_DEBUGGING = false;
@@ -50,6 +50,8 @@ Cpu::Cpu(void)
 		registers[i] = 0;
 	}
 
+    latestRegisters = new registers_t;
+
 	// Colour table
 	colourTable = new word_t[NUM_COLOURS];
 	colourTable[0] = 0; // Black
@@ -69,14 +71,6 @@ Cpu::Cpu(void)
 	colourTable[14] = 11; // Yellow
 	colourTable[15] = 15; // White
 
-	/*
-	for(int i = 0; i < NUM_COLOURS; i++) {
-	for (int j = 0; j < NUM_COLOURS; j++) {
-	initPair(getColourPair(i, j), colourTable[i], colourTable[j]);
-	}
-	}
-	*/
-
 	programCounter = 0;
 	stackPointer = 0;
 	overflow = 0;
@@ -85,24 +79,28 @@ Cpu::Cpu(void)
 }
 
 
-Cpu::~Cpu(void)
+Emulator::~Emulator(void)
 {
 	delete literals;
 	delete memory;
 	delete registers;
+    delete latestRegisters;
 	delete colourTable;
 }
 
-int Cpu::run(std::string filename)
+void Emulator::setFilename(std::string filename)
+{
+    compiledFilename = filename;
+}
+
+void Emulator::run()
 {
 	clearScreen();
 
-	FILE * program = fopen(filename.c_str(), "r");
+    FILE * program = fopen(compiledFilename.c_str(), "r");
 
 	if (!program) {
 		std::cout << "File could not be opened" << std::endl;
-
-		return -1;
 	}
 
 	//fread(memory, sizeof(word_t), MEMORY_LIMIT, program);
@@ -152,7 +150,7 @@ int Cpu::run(std::string filename)
 				break;
 			default:
 				std::cout << "ERROR: Reserved OP_NONBASIC" << std::endl;
-				return -2;
+
 			}
 
 			break;
@@ -311,7 +309,6 @@ int Cpu::run(std::string filename)
 				&& ((opcode == OP_SET && getArgument(instruction, 1) == ARG_NEXTWORD)
 				|| (opcode == OP_SUB && getArgument(instruction, 1) == ARG_LITERAL_START + 1))) {
 					std::cout << "SYSTEM HALTED!" << std::endl;
-					return -1;
 			}
 
 			// Check if video needs to be updated
@@ -344,6 +341,7 @@ int Cpu::run(std::string filename)
 		}
 		
 
+        /*
 		setCursorPos(1, TERM_HEIGHT + 1);
 		printf("==== Program Status - CYCLE 0x%04hx====\n", cycle);
 		printf("A:  0x%04hx\tB:  0x%04hx\tC:  0x%04hx\n", registers[0], registers[1], registers[2]);
@@ -351,13 +349,22 @@ int Cpu::run(std::string filename)
 		printf("I:  0x%04hx\tJ:  0x%04hx\n", registers[6], registers[7]);
 		printf("PC: 0x%04hx\tSP: 0x%04hx\tO:  0x%04hx\n", programCounter, stackPointer, overflow);
 		printf("Instruction: 0x%04hx\n", instruction);
+        */
+
+        latestRegisters->a += 1;
+
+        emit registersChanged(latestRegisters);
 
 	}
-
-	return 1;
 }
 
-word_t* Cpu::evaluateArgument(argument_t argument)
+// Update and return the latest registers
+registers_t* Emulator::getRegisters()
+{
+    return latestRegisters;
+}
+
+word_t* Emulator::evaluateArgument(argument_t argument)
 {
 	if (argument >= ARG_REG_START && argument < ARG_REG_END) {
 		// Register value
@@ -483,24 +490,24 @@ word_t* Cpu::evaluateArgument(argument_t argument)
 }
 
 // Get an opcode from instruction
-opcode_t Cpu::getOpcode(instruction_t instruction)
+opcode_t Emulator::getOpcode(instruction_t instruction)
 {
 	return instruction & 0xF;
 }
 
-argument_t Cpu::getArgument(instruction_t instruction, bool_t which)
+argument_t Emulator::getArgument(instruction_t instruction, bool_t which)
 {
 	// First 6 bits for true, second 6 for false
 	return ((instruction >> 4) >> 6 * which) & 0x3F;
 }
 
-instruction_t Cpu::setOpcode(instruction_t instruction, opcode_t opcode) 
+instruction_t Emulator::setOpcode(instruction_t instruction, opcode_t opcode)
 {
 	// Clear low 4 bits and OR in opcode
 	return (instruction & 0xFFF0) | opcode; 
 }
 
-instruction_t Cpu::setArgument(instruction_t instruction, bool_t which, argument_t argument)
+instruction_t Emulator::setArgument(instruction_t instruction, bool_t which, argument_t argument)
 {
 	if (!which) {
 		// A argument
@@ -512,7 +519,7 @@ instruction_t Cpu::setArgument(instruction_t instruction, bool_t which, argument
 }
 
 // Check if argument references next word
-bool_t Cpu::usesNextWord(argument_t argument)
+bool_t Emulator::usesNextWord(argument_t argument)
 {
 	return (argument >= ARG_REG_NEXTWORD_INDEX_START && argument < ARG_REG_NEXTWORD_INDEX_END)
 		|| argument == ARG_NEXTWORD_INDEX
@@ -520,14 +527,14 @@ bool_t Cpu::usesNextWord(argument_t argument)
 }
 
 // Is argument constant
-bool_t Cpu::isConst(argument_t argument)
+bool_t Emulator::isConst(argument_t argument)
 {
 	return (argument >= ARG_LITERAL_START && argument < ARG_LITERAL_END)
 		|| argument == ARG_NEXTWORD;
 }
 
 // How many words does instruction take
-word_t Cpu::getInstructionLength(instruction_t instruction)
+word_t Emulator::getInstructionLength(instruction_t instruction)
 {
 	if (getOpcode(instruction) == OP_NONBASIC) {
 		// 1 argument
@@ -538,7 +545,7 @@ word_t Cpu::getInstructionLength(instruction_t instruction)
 }
 
 // Get offset from instruction for next word
-word_t Cpu::getNextWordOffset(instruction_t instruction, bool_t which)
+word_t Emulator::getNextWordOffset(instruction_t instruction, bool_t which)
 {
 	if (getOpcode(instruction) == OP_NONBASIC) {
 		// 1 argument, 1 extra word
@@ -552,51 +559,51 @@ word_t Cpu::getNextWordOffset(instruction_t instruction, bool_t which)
 	}
 }
 
-void Cpu::setScreen(word_t row, word_t column, word_t character)
+void Emulator::setScreen(word_t row, word_t column, word_t character)
 {
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	setCursorPos(column, row);
+    setCursorPos(column, row);
 
-	word_t colourData = character >> 7;
-	word_t foreColour = colourData >> 5;
-	word_t backColour = (colourData >> 1) & 0xF;
-	bool_t blinkBit = colourData & 0x1;
+    word_t colourData = character >> 7;
+    word_t foreColour = colourData >> 5;
+    word_t backColour = (colourData >> 1) & 0xF;
+    bool_t blinkBit = colourData & 0x1;
 
-	char letter = (character & 0x7F);
+    char letter = (character & 0x7F);
 
-	if (letter == '\0') {
-		letter = ' ';
-	}
+    if (letter == '\0') {
+        letter = ' ';
+    }
 
-	SetConsoleTextAttribute(console, 6);
+    SetConsoleTextAttribute(console, 6);
 
-	std::cout << letter;
+    std::cout << letter;
 }
 
-void Cpu::setCursorPos(int x, int y)
+void Emulator::setCursorPos(int x, int y)
 {
-	COORD pos  = {x, y};
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD pos  = {x, y};
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	SetConsoleTextAttribute(console, 7);
-	SetConsoleCursorPosition(console, pos);
+    SetConsoleTextAttribute(console, 7);
+    SetConsoleCursorPosition(console, pos);
 }
 
-void Cpu::clearScreen()
+void Emulator::clearScreen()
 {
-	COORD topLeft  = { 0, 0 };
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_SCREEN_BUFFER_INFO screen;
-	DWORD written;
+    COORD topLeft  = { 0, 0 };
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO screen;
+    DWORD written;
 
-	GetConsoleScreenBufferInfo(console, &screen);
-	FillConsoleOutputCharacterA(
-		console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-		);
-	FillConsoleOutputAttribute(
-		console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
-		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-		);
-	SetConsoleCursorPosition(console, topLeft);
+    GetConsoleScreenBufferInfo(console, &screen);
+    FillConsoleOutputCharacterA(
+        console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
+        );
+    FillConsoleOutputAttribute(
+        console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
+        screen.dwSize.X * screen.dwSize.Y, topLeft, &written
+        );
+    SetConsoleCursorPosition(console, topLeft);
 }
