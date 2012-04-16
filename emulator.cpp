@@ -8,7 +8,7 @@ This code orginally based on dcpu-emu https://bitbucket.org/interfect/dcpu-emu
 Started 7-Apr-2012 
 */
 
-#include "constants.h"
+#include "phrases.h"
 #include "emulator.h"
 #include <iostream>
 #include <stdio.h>
@@ -29,7 +29,7 @@ word_t* literals;
 
 word_t* colourTable;
 
-Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(true)
+Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
 	DEBUG = false;
 	OPCODE_DEBUGGING = false;

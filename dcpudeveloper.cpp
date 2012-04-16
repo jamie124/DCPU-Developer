@@ -1,5 +1,4 @@
 #include <QDebug>
-#include "constants.h"
 #include "dcpudeveloper.h"
 #include "ui_dcpudeveloper.h"
 
@@ -9,8 +8,6 @@ DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
 {
     ui->setupUi(this);
     setWindowTitle("DCPU Developer - " + VERSION_NUMBER);
-
-    assembler = new Assembler();
 
     QFile file(TEMP_FILENAME);
 
@@ -23,9 +20,17 @@ DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
     file.close();
 
 	running = 0;
+
+	assembler = new Assembler();
 	emulator = new Emulator();
+	phrases = new Phrases();
 
     // Setup thread slots
+	// Assembler
+	connect(assembler, SIGNAL(sendAssemblerMessage(assembler_error_t*)), this,
+		SLOT(addAssemblerMessage(assembler_error_t*)));
+
+	// Emulator
     connect(emulator, SIGNAL(registersChanged(registers_t*)), this,
 		SLOT(updateRegisters(registers_t*)), Qt::DirectConnection);
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)));
@@ -35,7 +40,12 @@ DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
 DCPUDeveloper::~DCPUDeveloper()
 {
     delete ui;
-    delete assembler;
+    
+	assembler->stopEmulator();
+
+	delete assembler;
+
+	delete phrases;
 
 	emulator->stopEmulator();
 
@@ -78,10 +88,11 @@ void DCPUDeveloper::on_compile_button_clicked()
     stream.flush();
     file.close();
 
-
     appendLogMessage("File saved, starting compile.");
 
-    assembler->compile(TEMP_FILENAME.toStdString());
+	assembler->setFilename(TEMP_FILENAME.toStdString());
+
+	assembler->startEmulator();
 }
 
 void DCPUDeveloper::appendLogMessage(QString message)
@@ -111,6 +122,19 @@ void DCPUDeveloper::on_run_button_clicked()
     }
 }
 
+void DCPUDeveloper::addAssemblerMessage(assembler_error_t* error)
+{
+	if (error->errorCode == ASSEMBLER_SUCESSFUL) {
+		ui->run_button->setEnabled(true);
+	} else {
+		ui->run_button->setEnabled(false);
+	}
+
+	appendLogMessage(phrases->getResponseMessage(error->errorCode) + (error->lineNumber > 0 ? " at line: " + QString::number(error->lineNumber) : ""));
+
+	delete error;
+}
+
 void DCPUDeveloper::updateRegisters(registers_t* registers)
 {
 	ui->register_pc->setValue(registers->pc);
@@ -119,14 +143,7 @@ void DCPUDeveloper::updateRegisters(registers_t* registers)
 
 void DCPUDeveloper::endEmulation(int endCode)
 {
-	switch (endCode) {
-	case DCPU_SUCCESSFUL:
-		appendLogMessage("Emulation finished succesfully");
-		break;
-	case DCPU_RESERVED_OPCODE:
-		appendLogMessage("Reserved OP_NONBASIC");
-		break;
-	}
+	appendLogMessage(phrases->getResponseMessage(endCode));
 }
 
 void DCPUDeveloper::on_toggle_step_button_clicked()

@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QMutex>
+#include "phrases.h"
 #include "emulator.h"
 
 const int MAX_CHARS = 1024;
@@ -12,6 +13,8 @@ typedef struct argumentStruct {
 	word_t nextWord;
 	char* labelReference;		// If NULL, nextWord is valid, otherwise nextWord should point to this
 	bool badArgument;
+	int errorCode;
+	int lineNumber;				// For debugging
 } argumentStruct_t;
 
 typedef struct assembledInstruction {
@@ -25,9 +28,28 @@ typedef struct assembledInstruction {
 	struct assembledInstruction* next;
 } assembledInstruction_t;
 
-class Assembler
+typedef struct {
+	int errorCode;
+	int lineNumber;
+} assembler_error_t;
+
+class Assembler : public QThread
 {
+	Q_OBJECT
+
+signals:
+	void sendAssemblerMessage(assembler_error_t*);
+
 private:
+	QMutex mutex;
+
+	volatile bool assemblerRunning;
+	volatile int lineNumber;
+
+	std::string sourceFilename;
+
+	void assemblerError(int errorCode, int lineNumber);
+
 	opcode_t opcodeFor(char* command);
 	nonbasicOpcode_t nonbasicOpcodeFor(char* command);
 	int registerFor(char regName);
@@ -40,11 +62,18 @@ private:
 	void processArg1(char* command, char* arg, word_t &address, char* label, assembledInstruction_t *&instruction);
 	void processArg2(char* command, char* arg, word_t &address, char* label, assembledInstruction_t *&instruction);
 
+protected:
+	void run();
+
 public:
-	Assembler(void);
+	explicit Assembler(QObject* parent = 0);
 	~Assembler(void);
 
-	int compile(std::string filename);
+	void setFilename(std::string filename);
+
+	void startEmulator();
+	void stopEmulator();
+
 };
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef DCPUDEVELOPER_H
-#define DCPUDEVELOPER_H
+#ifndef _DCPUDEVELOPER_H
+#define _DCPUDEVELOPER_H
 
 #include <QMainWindow>
 #include <QFile>
@@ -8,6 +8,8 @@
 #include <QFileDialog>
 #include <QString>
 #include <QThread>
+
+#include "phrases.h"
 #include "assembler.h"
 #include "emulator.h"
 
@@ -28,13 +30,16 @@ public:
     ~DCPUDeveloper();
     
 private slots:
-    void on_actionOpen_triggered();
-
-    void on_actionExit_triggered();
+	// Assembler UI update requests
+	void addAssemblerMessage(assembler_error_t* error);
 
 	// Emulator UI update requests
     void updateRegisters(registers_t* registers);
 	void endEmulation(int endCode);
+
+    void on_actionOpen_triggered();
+
+    void on_actionExit_triggered();
 
     void on_run_button_clicked();
 
@@ -48,8 +53,8 @@ private:
     Ui::DCPUDeveloper *ui;
 
     Assembler *assembler;
-
     Emulator *emulator;
+	Phrases *phrases;
 
     QString currentFilename;
 

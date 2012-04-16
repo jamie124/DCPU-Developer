@@ -13,5 +13,5 @@ set pc, print_string_loop
 :crash
 set pc, crash
 
-:hello 
+:hello
 dat "Hello world", 0 

@@ -1,3 +1,4 @@
+#include "phrases.h"
 #include "assembler.h"
 #include <QDebug>
 #include <iostream>
@@ -5,10 +6,9 @@
 #include <string.h>
 #include <stdio.h>
 
-Assembler::Assembler(void)
+Assembler::Assembler(QObject *parent) : QThread(parent), assemblerRunning(false)
 {
 }
-
 
 Assembler::~Assembler(void)
 {
@@ -87,7 +87,7 @@ nonbasicOpcode_t Assembler::nonbasicOpcodeFor(char* command)
 	}
 
 	// Instruction not found
-	std::cout << "ERROR: Unknown instruction \"" << command << "\"" << std::endl;
+	qDebug() << "ERROR: Unknown instruction \"" << command << "\"";
 	return 0;
 }
 
@@ -134,9 +134,11 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 	toReturn.labelReference = NULL;
 
 	if (strlen(arg) == 0) {
-		std::cout << "ERROR: Empty argument string" << std::endl;
+		qDebug() << "ERROR: Empty argument string";
 
 		toReturn.badArgument = true;
+		toReturn.errorCode = ASSEMBLER_EMPTY_ARG_STR;
+
 		return toReturn;
 	}
 
@@ -154,9 +156,11 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 		}
 
 		if (sscanf(arg, format, &argValue) != 1) {
-			std::cout << "ERROR: Invalid literal value: " << arg << std::endl;
+			qDebug() << "ERROR: Invalid literal value: " << arg;
 
 			toReturn.badArgument = true;
+			toReturn.errorCode = ASSEMBLER_INVALID_LITERAL;
+
 			return toReturn;
 		}
 
@@ -182,8 +186,10 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 				return toReturn;
 			} else {
 				qDebug() << "ERROR: Invalid [register]: " << arg;
-
+				
 				toReturn.badArgument = true;
+				toReturn.errorCode = ASSEMBLER_INVALID_REG;
+
 				return toReturn;
 			}
 		}
@@ -205,6 +211,8 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 					qDebug() << "ERROR: Invalid register name " << regName << " in: " << arg;
 
 					toReturn.badArgument = true;
+					toReturn.errorCode = ASSEMBLER_INVALID_REG_NAME;
+
 					return toReturn;
 				}
 			} else {
@@ -230,6 +238,8 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 				qDebug() << "ERROR: Unterminated label in argument: " << arg;
 
 				toReturn.badArgument = true;
+				toReturn.errorCode = ASSEMBLER_UNTERM_LABEL;
+
 				return toReturn;
 			}
 
@@ -248,7 +258,7 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 					toReturn.argument = ARG_REG_NEXTWORD_INDEX_START + regNum;
 					return toReturn;
 				} else {
-					std::cout << "ERROR: Invalid register name '" << regName << "' in: " << arg << " (" << labelEnd << ")" << std::endl;
+					qDebug() << "ERROR: Invalid register name '" << regName << "' in: " << arg << " (" << labelEnd << ")";
 
 					toReturn.badArgument = true;
 					return toReturn;
@@ -319,15 +329,35 @@ std::string replace(std::string& str, const std::string& from, const std::string
 
 }
 
-int Assembler::compile(std::string filename)
+void Assembler::startEmulator()
 {
-	std::string compiledFilename = replace(filename, "dasm16", "bin");
+	qDebug() << "Starting emulator";
+	assemblerRunning = true;
 
-    std::ifstream sourceFile(filename);
+	start();
+}
+
+void Assembler::stopEmulator()
+{
+	assemblerRunning = false;
+}
+
+void Assembler::setFilename(std::string filename)
+{
+	sourceFilename = filename;
+}
+
+void Assembler::run()
+{
+	lineNumber = 0;
+
+	std::string compiledFilename = replace(sourceFilename, "dasm16", "bin");
+
+    std::ifstream sourceFile(sourceFilename);
 
 	if (!sourceFile.is_open()) {
-		qDebug() << "ERROR: Could not open source file " << filename.c_str();
-		return -1;
+		qDebug() << "ERROR: Could not open source file " << sourceFilename.c_str();
+		assemblerError(SOURCE_FILE_MISSING, lineNumber);
 	}
 
 	// TODO: Add automatic file naming
@@ -335,6 +365,8 @@ int Assembler::compile(std::string filename)
 
 	if (!compiledFile) {
 		qDebug() << "ERROR: Could not open output file " << compiledFilename.c_str();
+
+		assemblerError(BIN_FILE_MISSING, lineNumber);
 	}
 
 	char lineBuffer[MAX_CHARS];
@@ -369,6 +401,8 @@ int Assembler::compile(std::string filename)
 		if (skipTillNextLine) {
 			skipTillNextLine = false;
 		}
+
+		lineNumber++;
 
 		if (sourceFile.getline(lineBuffer, MAX_CHARS).eof()) {
 			finished = true;
@@ -457,12 +491,14 @@ int Assembler::compile(std::string filename)
 		// Any references left?
 		if (instruction->a.labelReference != NULL) {
 			qDebug() << "Unresolved label for a: " << instruction->a.labelReference;
-			return -1;
+			
+			assemblerError(ASSEMBLER_UNRESOLVED_LABEL_A, instruction->a.lineNumber);
 		}
 
 		if (instruction->b.labelReference != NULL) {
 			qDebug() << "Unresolved label for b: " << instruction->b.labelReference;
-			return -1;
+			
+			assemblerError(ASSEMBLER_UNRESOLVED_LABEL_B, instruction->b.lineNumber);
 		}
 	}
 
@@ -496,7 +532,19 @@ int Assembler::compile(std::string filename)
 
 	qDebug() << "Program compiled successfully.";
 
+	assemblerError(ASSEMBLER_SUCESSFUL, 0);
+
 	fclose(compiledFile);
+}
+
+void Assembler::assemblerError(int errorCode, int lineNumber)
+{
+	assembler_error_t* error = new assembler_error_t;
+
+	error->errorCode = errorCode;
+	error->lineNumber = lineNumber;
+
+	emit sendAssemblerMessage(error);
 }
 
 // Remove any extra characters to make line easier to parse
@@ -844,6 +892,12 @@ void Assembler::processArg1(char* command, char* arg, word_t &address, char* lab
 
 	instruction->a = argumentFor(arg);
 
+	instruction->a.lineNumber = lineNumber;
+
+	if (instruction->a.badArgument) {
+		assemblerError(instruction->a.errorCode, lineNumber);
+	}
+
 	// Advance address
 	address++;
 
@@ -886,6 +940,12 @@ void Assembler::processArg2(char* command, char* arg, word_t &address, char* lab
 		}
 
 		instruction->b = argumentFor(arg);
+
+		instruction->b.lineNumber = lineNumber;
+
+		if (instruction->b.badArgument) {
+			assemblerError(instruction->b.errorCode, lineNumber);
+		}
 
         if (Emulator::usesNextWord(instruction->b.argument)) {
 			address++;
