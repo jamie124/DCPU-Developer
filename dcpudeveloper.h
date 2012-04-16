@@ -7,8 +7,10 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QString>
+#include <QThread>
 #include "assembler.h"
 #include "emulator.h"
+
 
 static QString VERSION_NUMBER = "0.1 DEV";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";
@@ -22,7 +24,7 @@ class DCPUDeveloper : public QMainWindow
     Q_OBJECT
     
 public:
-    explicit DCPUDeveloper(QWidget *parent = 0);
+    DCPUDeveloper(QWidget *parent = 0);
     ~DCPUDeveloper();
     
 private slots:
@@ -30,24 +32,30 @@ private slots:
 
     void on_actionExit_triggered();
 
-    void on_compile_clicked();
-
-    void on_run_clicked();
-
+	// Emulator UI update requests
     void updateRegisters(registers_t* registers);
+	void endEmulation(int endCode);
+
+    void on_run_button_clicked();
+
+    void on_compile_button_clicked();
+
+	void on_toggle_step_button_clicked();
+
+	void on_step_button_clicked();
 
 private:
     Ui::DCPUDeveloper *ui;
 
     Assembler *assembler;
-    Emulator emulator;
+
+    Emulator *emulator;
 
     QString currentFilename;
 
-    bool emulatorRunning;
+    int running;
 
     void appendLogMessage(QString message);
-
 };
 
 #endif // DCPUDEVELOPER_H

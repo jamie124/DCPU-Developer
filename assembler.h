@@ -1,5 +1,8 @@
-#pragma once
+#ifndef _ASSEMBLER_H
+#define _ASSEMBLER_H
 
+#include <QThread>
+#include <QMutex>
 #include "emulator.h"
 
 const int MAX_CHARS = 1024;
@@ -44,3 +47,4 @@ public:
 	int compile(std::string filename);
 };
 
+#endif

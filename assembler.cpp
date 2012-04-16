@@ -1,9 +1,9 @@
 #include "assembler.h"
+#include <QDebug>
 #include <iostream>
 #include <fstream>
 #include <string.h>
 #include <stdio.h>
-
 
 Assembler::Assembler(void)
 {
@@ -181,7 +181,7 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 				toReturn.argument = ARG_REG_INDEX_START + regNum;
 				return toReturn;
 			} else {
-				std::cout << "ERROR: Invalid [register]: " << arg << std::endl;
+				qDebug() << "ERROR: Invalid [register]: " << arg;
 
 				toReturn.badArgument = true;
 				return toReturn;
@@ -202,7 +202,7 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 					toReturn.nextWord = hexValue;
 					return toReturn;
 				} else {
-					std::cout << "ERROR: Invalid register name " << regName << " in: " << arg << std::endl;
+					qDebug() << "ERROR: Invalid register name " << regName << " in: " << arg;
 
 					toReturn.badArgument = true;
 					return toReturn;
@@ -227,7 +227,7 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 			}
 
 			if (labelEnd == NULL) {
-				std::cout << "ERROR: Unterminated label in argument: " << arg << std::endl;
+				qDebug() << "ERROR: Unterminated label in argument: " << arg;
 
 				toReturn.badArgument = true;
 				return toReturn;
@@ -323,10 +323,10 @@ int Assembler::compile(std::string filename)
 {
 	std::string compiledFilename = replace(filename, "dasm16", "bin");
 
-	std::ifstream sourceFile(filename);
+    std::ifstream sourceFile(filename);
 
 	if (!sourceFile.is_open()) {
-		std::cout << "ERROR: Could not open " << filename.c_str() << std::endl;
+		qDebug() << "ERROR: Could not open source file " << filename.c_str();
 		return -1;
 	}
 
@@ -334,7 +334,7 @@ int Assembler::compile(std::string filename)
 	FILE* compiledFile = fopen(compiledFilename.c_str(), "w");
 
 	if (!compiledFile) {
-		std::cout << "ERROR: Could not open " << compiledFilename.c_str() << std::endl;
+		qDebug() << "ERROR: Could not open output file " << compiledFilename.c_str();
 	}
 
 	char lineBuffer[MAX_CHARS];
@@ -389,7 +389,7 @@ int Assembler::compile(std::string filename)
 			if (temp[0] == ':') {
 				processLine(temp, data, label, skipTillNextLine, command, arg1, arg2, true);
 
-				std::cout << "label: " << label << " " << std::endl; 
+				qDebug() << "label: " << label << " "; 
 
 			} else {
 				processLine(temp, data, label, skipTillNextLine, command, arg1, arg2, false);
@@ -404,9 +404,11 @@ int Assembler::compile(std::string filename)
 					processArg2(command, arg2, address, label, instruction);
 				}
 
-				std::cout << "\tCommand: " << command << " Arg1: " << arg1 << " Arg2: " << arg2 << " Dat: " << data << std::endl;
+				qDebug() << "\tCommand: " << command << " Arg1: " << arg1 << " Arg2: " << arg2 << " Dat: " << data;
 			}
 		}
+
+		delete temp;
 
 		if (finished) {
 			break;
@@ -416,7 +418,7 @@ int Assembler::compile(std::string filename)
 	std::cout << std::endl;
 
 	for (assembledInstruction_t* instruction = head; instruction != NULL; instruction = instruction->next) {
-		std::cout << "Assembling for address " << instruction->address << std::endl;
+		qDebug() << "Assembling for address " << instruction->address;
 
 		if (instruction->data != NULL) {
 			continue;
@@ -424,12 +426,12 @@ int Assembler::compile(std::string filename)
 
 		// Label reference for A
 		if (instruction->a.labelReference != NULL) {
-			std::cout << "Unresolved label for a: " << instruction->a.labelReference << std::endl;
+			qDebug() << "Unresolved label for a: " << instruction->a.labelReference;
 
 			for (assembledInstruction_t* other = head; other != NULL; other = other->next) {
 				if (other->label != NULL && !strcmp(other->label, instruction->a.labelReference)) {
 					// Match
-					std::cout << "Resolved " << instruction->a.labelReference << " to address " << other->address << std::endl;
+					qDebug() << "Resolved " << instruction->a.labelReference << " to address " << other->address;
 					instruction->a.nextWord = other->address;
 					instruction->a.labelReference = NULL;
 					break;
@@ -439,12 +441,12 @@ int Assembler::compile(std::string filename)
 
 		// Label reference for B
 		if (instruction->b.labelReference != NULL) {
-			std::cout << "Unresolved label for b: " << instruction->b.labelReference << std::endl;
+			qDebug() << "Unresolved label for b: " << instruction->b.labelReference;
 
 			for (assembledInstruction_t* other = head; other != NULL; other = other->next) {
 				if (other->label != NULL && !strcmp(other->label, instruction->b.labelReference)) {
 					// Match
-					std::cout << "Resolved " << instruction->b.labelReference << " to address " << other->address << std::endl;
+					qDebug() << "Resolved " << instruction->b.labelReference << " to address " << other->address;
 					instruction->b.nextWord = other->address;
 					instruction->b.labelReference = NULL;
 					break;
@@ -454,12 +456,12 @@ int Assembler::compile(std::string filename)
 
 		// Any references left?
 		if (instruction->a.labelReference != NULL) {
-			std::cout << "Unresolved label for a: " << instruction->a.labelReference << std::endl;
+			qDebug() << "Unresolved label for a: " << instruction->a.labelReference;
 			return -1;
 		}
 
 		if (instruction->b.labelReference != NULL) {
-			std::cout << "Unresolved label for b: " << instruction->b.labelReference << std::endl;
+			qDebug() << "Unresolved label for b: " << instruction->b.labelReference;
 			return -1;
 		}
 	}
@@ -467,7 +469,7 @@ int Assembler::compile(std::string filename)
 	// Write out code
 	for (assembledInstruction_t* instruction = head; instruction != NULL; instruction = instruction->next) {
 		if (instruction->data != NULL) {
-			std::cout << "DATA: " << instruction->dataLength << " words" << std::endl;
+			qDebug() << "DATA: " << instruction->dataLength << " words";
 			fwrite(instruction->data, sizeof(word_t), instruction->dataLength, compiledFile);
 			continue;
 		}
@@ -478,21 +480,21 @@ int Assembler::compile(std::string filename)
         packed = Emulator::setArgument(packed, 1, instruction->b.argument);
 
 		// Save instruction
-		std::cout << address << ": Assembled instruction: " << packed << std::endl;
+		qDebug() << address << ": Assembled instruction: " << packed;
 		fwrite(&packed, sizeof(instruction_t), 1, compiledFile);
 
         if (instruction->opcode != OP_NONBASIC && Emulator::usesNextWord(instruction->a.argument)) {
-			std::cout << ++address << ": Extra Word A: " << instruction->a.nextWord << std::endl;
+			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord;
 			fwrite(&(instruction->a.nextWord), sizeof(word_t), 1, compiledFile);
 		}
 
         if (Emulator::usesNextWord(instruction->b.argument)) {
-			std::cout << ++address << ": Extra Word B: " << instruction->b.nextWord << std::endl;
+			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord;
 			fwrite(&(instruction->b.nextWord), sizeof(word_t), 1, compiledFile);
 		}
 	}
 
-	std::cout << "Program compiled successfully." << std::endl;
+	qDebug() << "Program compiled successfully.";
 
 	fclose(compiledFile);
 }
@@ -500,7 +502,7 @@ int Assembler::compile(std::string filename)
 // Remove any extra characters to make line easier to parse
 char* Assembler::cleanString(char *rawLine)
 {
-	char temp[MAX_CHARS];
+	char* temp = new char[MAX_CHARS];
 	int tempIndex = 0, rawIndex = 0;
 
 	if (rawLine[0] != ';') {
@@ -642,7 +644,7 @@ int Assembler::processLine(char *currentLine, char *data, char *label, bool &fun
 			while (currentLine[lineIndex] != ',' && currentLine[lineIndex] != ' ') {
 				if (currentLine[lineIndex] == '\0') {
 					// ',' was not found
-					std::cout << "\",\" not found." << std::endl;
+					qDebug() << "\",\" not found.";
 
 					return -1;
 				}
@@ -725,7 +727,7 @@ int Assembler::processCommand(char* command, char *data, word_t &address, char* 
 
 			int nextChar = data[index++];
 			if (nextChar == '"') {
-				std::cout << "Reading string." << std::endl;
+				qDebug() << "Reading string.";
 
 				bool_t escaped = 0;
 				while(1) {
@@ -752,7 +754,7 @@ int Assembler::processCommand(char* command, char *data, word_t &address, char* 
 							break;
 
 						default:
-							std::cout << "ERROR: Unrecognized escape sequence " << nextChar << std::endl;
+							qDebug() << "ERROR: Unrecognized escape sequence " << nextChar;
 							return -1;
 						}
 
@@ -784,21 +786,21 @@ int Assembler::processCommand(char* command, char *data, word_t &address, char* 
 					data[index - 2];
 
 					// Hex literal
-					std::cout << "Reading hex literal" << std::endl;
+					qDebug() << "Reading hex literal";
 
 					if (!sscanf(data, "0x%hx", &instruction->data[instruction->dataLength]) == 1) {
-						std::cout << "ERROR: Expected hex literal" << std::endl;
+						qDebug() << "ERROR: Expected hex literal";
 						return -1;
 					}
 
 					instruction->dataLength++;
 				} else if(sscanf(data, "%hu", &instruction->data[instruction->dataLength]) == 1) {
 					// Decimal literal
-					std::cout << "Reading decimal literal" << std::endl;
+					qDebug() << "Reading decimal literal";
 					instruction->dataLength++;
 				} else {
 					// Not a real literal
-					std::cout << "Out of literals" << std::endl;
+					qDebug() << "Out of literals";
 					break;
 				}
 

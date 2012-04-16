@@ -1,16 +1,18 @@
 /**
-DEmulator Emulator.
+DCPU Emulator.
 Written by James Whitwell, 2012.
 
-DEmulator emulation class
+DCPU emulation class
 This code was started as a port of dcpu-emu https://bitbucket.org/interfect/dcpu-emu
 
 Started 7-Apr-2012 
 */
-#pragma once
+#ifndef _EMULATOR_H
+#define _EMULATOR_H
 
 #include <QThread>
 #include <iostream>
+#include <QMutex>
 #include <Windows.h>
 
 typedef unsigned short word_t;
@@ -22,6 +24,7 @@ typedef argument_t nonbasicOpcode_t;
 
 typedef unsigned char bool_t;
 
+// Opcodes
 static const int OP_NONBASIC = 0;
 static const int OP_SET = 1;
 static const int OP_ADD = 2;
@@ -85,13 +88,18 @@ class Emulator : public QThread
 
 signals:
     void registersChanged(registers_t*);
+	void emulationEnded(int);
 
 private:
+
+	QMutex mutex;
+
 	bool DEBUG;
 	bool OPCODE_DEBUGGING;
 
-	bool STEP_MODE;
-	bool RUNNING;
+	volatile bool skippingCurrentPass;
+    volatile bool stepMode;
+    volatile bool emulatorRunning;
 
     std::string compiledFilename;
 
@@ -106,6 +114,8 @@ private:
 	word_t getInstructionLength(instruction_t instruction);
 	word_t getNextWordOffset(instruction_t instruction, bool_t which);
 
+	void setRegisters();
+
 protected:
     void run();
 
@@ -113,10 +123,16 @@ public:
    explicit Emulator(QObject* parent = 0);
     ~Emulator(void);
 
-    //int run(std::string filename);
     void setFilename(std::string filename);
 
-    registers_t* getRegisters();
+    void startEmulator();
+	void stopEmulator();
+
+	bool inStepMode();
+
+	void toggleStepMode();
+
+	void step();
 
 	static bool_t usesNextWord(argument_t argument);
 	static instruction_t setOpcode(instruction_t instruction, opcode_t opcode);
@@ -127,3 +143,4 @@ public:
 	void clearScreen();
 };
 
+#endif

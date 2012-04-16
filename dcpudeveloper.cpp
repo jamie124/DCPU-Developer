@@ -1,3 +1,5 @@
+#include <QDebug>
+#include "constants.h"
 #include "dcpudeveloper.h"
 #include "ui_dcpudeveloper.h"
 
@@ -20,21 +22,25 @@ DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
     ui->editor->setText(in.readAll());
     file.close();
 
-    // Emulator isn't running by default
-    emulatorRunning = false;
+	running = 0;
+	emulator = new Emulator();
 
     // Setup thread slots
-    QObject::connect(&emulator, SIGNAL(registersChanged(registers_t*)), this,
-                     SLOT(updateRegisters(registers_t*)));
+    connect(emulator, SIGNAL(registersChanged(registers_t*)), this,
+		SLOT(updateRegisters(registers_t*)), Qt::DirectConnection);
+	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)));
+
 }
 
 DCPUDeveloper::~DCPUDeveloper()
 {
     delete ui;
-
     delete assembler;
 
-    emulator.quit();
+	emulator->stopEmulator();
+
+	delete emulator;
+
 }
 
 void DCPUDeveloper::on_actionOpen_triggered()
@@ -60,7 +66,7 @@ void DCPUDeveloper::on_actionExit_triggered()
     exit(1);
 }
 
-void DCPUDeveloper::on_compile_clicked()
+void DCPUDeveloper::on_compile_button_clicked()
 {
     QFile file(TEMP_FILENAME);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -84,26 +90,59 @@ void DCPUDeveloper::appendLogMessage(QString message)
 }
 
 // Start or stop the emulation thread
-void DCPUDeveloper::on_run_clicked()
+void DCPUDeveloper::on_run_button_clicked()
 {
-    emulator.setFilename(TEMP_FILENAME.toStdString());
+    emulator->setFilename(TEMP_FILENAME.toStdString());
 
-    if (!emulatorRunning){
-        emulator.start();
+    if (running == 0){
+		emulator->startEmulator();
 
-        emulatorRunning = true;
+        appendLogMessage("Emulator running.");
+
+        running = 1;
 
         ui->run_button->setText("Stop");
     } else {
-        emulator.quit();
-
-        emulatorRunning = false;
-
         ui->run_button->setText("Run");
+
+		emulator->stopEmulator();
+
+		running = 0;
     }
 }
 
 void DCPUDeveloper::updateRegisters(registers_t* registers)
 {
-    ui->test->setText(QString::number(registers->a));
+	ui->register_pc->setValue(registers->pc);
+
+}
+
+void DCPUDeveloper::endEmulation(int endCode)
+{
+	switch (endCode) {
+	case DCPU_SUCCESSFUL:
+		appendLogMessage("Emulation finished succesfully");
+		break;
+	case DCPU_RESERVED_OPCODE:
+		appendLogMessage("Reserved OP_NONBASIC");
+		break;
+	}
+}
+
+void DCPUDeveloper::on_toggle_step_button_clicked()
+{
+    emulator->toggleStepMode();
+
+	if (emulator->inStepMode()) {
+		ui->toggle_step_button->setText("Disable Step Mode");
+		ui->step_button->setEnabled(true);
+	} else {
+		ui->toggle_step_button->setText("Enable Step Mode");
+		ui->step_button->setEnabled(false);
+	}
+}
+
+void DCPUDeveloper::on_step_button_clicked()
+{
+    emulator->step();
 }
