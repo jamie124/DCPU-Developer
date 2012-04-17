@@ -138,6 +138,8 @@ public:
 	static instruction_t setOpcode(instruction_t instruction, opcode_t opcode);
 	static instruction_t setArgument(instruction_t instruction, bool_t which, argument_t argument);
 
+	static instruction_t swapByteOrder(instruction_t instruction);
+
 	void setScreen(word_t row, word_t column, word_t character);
 	void setCursorPos(int x, int y);
 	void clearScreen();

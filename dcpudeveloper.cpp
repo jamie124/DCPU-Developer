@@ -33,7 +33,7 @@ DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
 	// Emulator
     connect(emulator, SIGNAL(registersChanged(registers_t*)), this,
 		SLOT(updateRegisters(registers_t*)), Qt::DirectConnection);
-	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)));
+	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 
 }
 
@@ -103,7 +103,7 @@ void DCPUDeveloper::appendLogMessage(QString message)
 // Start or stop the emulation thread
 void DCPUDeveloper::on_run_button_clicked()
 {
-    emulator->setFilename(TEMP_FILENAME.toStdString());
+	emulator->setFilename(COMPILED_TEMP_FILENAME.toStdString());
 
     if (running == 0){
 		emulator->startEmulator();
@@ -144,6 +144,8 @@ void DCPUDeveloper::updateRegisters(registers_t* registers)
 void DCPUDeveloper::endEmulation(int endCode)
 {
 	appendLogMessage(phrases->getResponseMessage(endCode));
+
+	ui->run_button->setText("Run");
 }
 
 void DCPUDeveloper::on_toggle_step_button_clicked()

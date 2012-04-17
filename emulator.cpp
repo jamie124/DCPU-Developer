@@ -13,6 +13,7 @@ Started 7-Apr-2012
 #include <iostream>
 #include <stdio.h>
 #include <QDebug>
+#include <fstream>
 
 word_t* memory;
 word_t* registers;
@@ -156,15 +157,26 @@ void Emulator::run()
 
 	//clearScreen();
 
-	FILE * program = fopen(compiledFilename.c_str(), "r");
+	FILE * program = fopen(compiledFilename.c_str(), "rb");
 
 	if (!program) {
 		qDebug() << "File could not be opened";
 	}
 
-	//fread(memory, sizeof(word_t), MEMORY_LIMIT, program);
-	fread(memory, sizeof(word_t), MEMORY_LIMIT, program);
+
+	word_t* tempMemory = new word_t[MEMORY_LIMIT];
+
+	fread(tempMemory, sizeof(word_t), MEMORY_LIMIT, program);
 	fclose(program);
+
+	// Reverse endianess of memory
+	for (int i = 0; i < MEMORY_LIMIT; i++) {
+		word_t section = swapByteOrder(tempMemory[i]);
+		memory[i] = section;
+	
+	}
+
+	delete tempMemory;
 
 	bool videoDirty = false;
 
@@ -176,6 +188,10 @@ void Emulator::run()
 
 			word_t executingPC = programCounter;
 			instruction_t instruction = memory[programCounter++];
+
+			//instruction_t instruction = swapByteOrder(temp);
+
+			//qDebug() << instruction;
 
 			// Decode
 			opcode_t opcode = getOpcode(instruction);
@@ -212,9 +228,11 @@ void Emulator::run()
 					programCounter = *aLoc;
 					cycle += 2;
 					break;
-					default:
-						emit emulationEnded(DCPU_RESERVED_OPCODE);
-						break;
+				default:
+					emit emulationEnded(DCPU_RESERVED_OPCODE);
+
+					emulatorRunning = false;
+					break;
 				}
 				break;
 
@@ -372,6 +390,9 @@ void Emulator::run()
 					&& ((opcode == OP_SET && getArgument(instruction, 1) == ARG_NEXTWORD)
 					|| (opcode == OP_SUB && getArgument(instruction, 1) == ARG_LITERAL_START + 1))) {
 						qDebug() << "SYSTEM HALTED!";
+
+						emulatorRunning = false;
+						break;
 				}
 
 				// Check if video needs to be updated
@@ -390,6 +411,7 @@ void Emulator::run()
 			// TODO: Update video memory
 
 			if (videoDirty) {
+				clearScreen();
 				for (int i = 0; i < TERM_HEIGHT; i++) {
 					for (int j = 0; j < TERM_WIDTH; j +=1) {
 						word_t toPrint = memory[CONSOLE_START + i * TERM_WIDTH + j];
@@ -402,19 +424,8 @@ void Emulator::run()
 				videoDirty = false;
 			}
 
-			/*
-			setCursorPos(1, TERM_HEIGHT + 1);
-			printf("==== Program Status - CYCLE 0x%04hx====\n", cycle);
-			printf("A:  0x%04hx\tB:  0x%04hx\tC:  0x%04hx\n", registers[0], registers[1], registers[2]);
-			printf("X:  0x%04hx\tY:  0x%04hx\tZ:  0x%04hx\n", registers[3], registers[4], registers[5]);
-			printf("I:  0x%04hx\tJ:  0x%04hx\n", registers[6], registers[7]);
-			printf("PC: 0x%04hx\tSP: 0x%04hx\tO:  0x%04hx\n", programCounter, stackPointer, overflow);
-			printf("Instruction: 0x%04hx\n", instruction);
-			*/
-
-			setRegisters();
-
 			if (stepMode) {
+				setRegisters();
 				// Sending the register updates should only be done in step mode, otherwise the 
 				// GUI events will get overloaded.
 				emit registersChanged(latestRegisters);
@@ -640,6 +651,12 @@ word_t Emulator::getNextWordOffset(instruction_t instruction, bool_t which)
 
 		return 1 + (which && usesNextWord(getArgument(instruction, 0)));
 	}
+}
+
+// Reverse the byte order
+instruction_t Emulator::swapByteOrder(instruction_t instruction)
+{
+	return (instruction<<8) | (instruction>>8);
 }
 
 bool Emulator::inStepMode() 

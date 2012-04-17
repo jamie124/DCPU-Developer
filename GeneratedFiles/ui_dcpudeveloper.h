@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Mon Apr 16 22:40:20 2012
+** Created: Tue Apr 17 21:46:53 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -37,6 +37,16 @@ public:
     QAction *actionNew;
     QAction *actionSave;
     QAction *actionOpen;
+    QAction *actionAbout;
+    QAction *actionOptions;
+    QAction *actionUndo;
+    QAction *actionRedo;
+    QAction *actionCut;
+    QAction *actionCopy;
+    QAction *actionPaste;
+    QAction *actionSelect_All;
+    QAction *actionFind_Selection;
+    QAction *actionFind_File;
     QWidget *centralWidget;
     QGridLayout *gridLayout_6;
     QGridLayout *gridLayout;
@@ -84,6 +94,10 @@ public:
     QListView *disassembly;
     QMenuBar *menuBar;
     QMenu *menuFile;
+    QMenu *menuHelp;
+    QMenu *menuTools;
+    QMenu *menuEdit;
+    QMenu *menuFind;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *DCPUDeveloper)
@@ -99,6 +113,26 @@ public:
         actionSave->setObjectName(QString::fromUtf8("actionSave"));
         actionOpen = new QAction(DCPUDeveloper);
         actionOpen->setObjectName(QString::fromUtf8("actionOpen"));
+        actionAbout = new QAction(DCPUDeveloper);
+        actionAbout->setObjectName(QString::fromUtf8("actionAbout"));
+        actionOptions = new QAction(DCPUDeveloper);
+        actionOptions->setObjectName(QString::fromUtf8("actionOptions"));
+        actionUndo = new QAction(DCPUDeveloper);
+        actionUndo->setObjectName(QString::fromUtf8("actionUndo"));
+        actionRedo = new QAction(DCPUDeveloper);
+        actionRedo->setObjectName(QString::fromUtf8("actionRedo"));
+        actionCut = new QAction(DCPUDeveloper);
+        actionCut->setObjectName(QString::fromUtf8("actionCut"));
+        actionCopy = new QAction(DCPUDeveloper);
+        actionCopy->setObjectName(QString::fromUtf8("actionCopy"));
+        actionPaste = new QAction(DCPUDeveloper);
+        actionPaste->setObjectName(QString::fromUtf8("actionPaste"));
+        actionSelect_All = new QAction(DCPUDeveloper);
+        actionSelect_All->setObjectName(QString::fromUtf8("actionSelect_All"));
+        actionFind_Selection = new QAction(DCPUDeveloper);
+        actionFind_Selection->setObjectName(QString::fromUtf8("actionFind_Selection"));
+        actionFind_File = new QAction(DCPUDeveloper);
+        actionFind_File->setObjectName(QString::fromUtf8("actionFind_File"));
         centralWidget = new QWidget(DCPUDeveloper);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         gridLayout_6 = new QGridLayout(centralWidget);
@@ -111,6 +145,10 @@ public:
         editor = new QTextEdit(centralWidget);
         editor->setObjectName(QString::fromUtf8("editor"));
         editor->setMinimumSize(QSize(800, 400));
+        QFont font;
+        font.setFamily(QString::fromUtf8("Courier"));
+        font.setPointSize(10);
+        editor->setFont(font);
 
         gridLayout->addWidget(editor, 0, 1, 1, 2);
 
@@ -348,17 +386,42 @@ public:
         menuBar->setGeometry(QRect(0, 0, 1146, 21));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
+        menuHelp = new QMenu(menuBar);
+        menuHelp->setObjectName(QString::fromUtf8("menuHelp"));
+        menuTools = new QMenu(menuBar);
+        menuTools->setObjectName(QString::fromUtf8("menuTools"));
+        menuEdit = new QMenu(menuBar);
+        menuEdit->setObjectName(QString::fromUtf8("menuEdit"));
+        menuFind = new QMenu(menuEdit);
+        menuFind->setObjectName(QString::fromUtf8("menuFind"));
         DCPUDeveloper->setMenuBar(menuBar);
         statusBar = new QStatusBar(DCPUDeveloper);
         statusBar->setObjectName(QString::fromUtf8("statusBar"));
         DCPUDeveloper->setStatusBar(statusBar);
 
         menuBar->addAction(menuFile->menuAction());
+        menuBar->addAction(menuEdit->menuAction());
+        menuBar->addAction(menuTools->menuAction());
+        menuBar->addAction(menuHelp->menuAction());
         menuFile->addAction(actionNew);
         menuFile->addAction(actionSave);
         menuFile->addAction(actionOpen);
         menuFile->addSeparator();
         menuFile->addAction(actionExit);
+        menuHelp->addAction(actionAbout);
+        menuTools->addAction(actionOptions);
+        menuEdit->addAction(actionUndo);
+        menuEdit->addAction(actionRedo);
+        menuEdit->addSeparator();
+        menuEdit->addAction(actionCut);
+        menuEdit->addAction(actionCopy);
+        menuEdit->addAction(actionPaste);
+        menuEdit->addSeparator();
+        menuEdit->addAction(actionSelect_All);
+        menuEdit->addSeparator();
+        menuEdit->addAction(menuFind->menuAction());
+        menuFind->addAction(actionFind_Selection);
+        menuFind->addAction(actionFind_File);
 
         retranslateUi(DCPUDeveloper);
 
@@ -372,6 +435,16 @@ public:
         actionNew->setText(QApplication::translate("DCPUDeveloper", "New", 0, QApplication::UnicodeUTF8));
         actionSave->setText(QApplication::translate("DCPUDeveloper", "Save", 0, QApplication::UnicodeUTF8));
         actionOpen->setText(QApplication::translate("DCPUDeveloper", "Open", 0, QApplication::UnicodeUTF8));
+        actionAbout->setText(QApplication::translate("DCPUDeveloper", "About", 0, QApplication::UnicodeUTF8));
+        actionOptions->setText(QApplication::translate("DCPUDeveloper", "Options", 0, QApplication::UnicodeUTF8));
+        actionUndo->setText(QApplication::translate("DCPUDeveloper", "Undo", 0, QApplication::UnicodeUTF8));
+        actionRedo->setText(QApplication::translate("DCPUDeveloper", "Redo", 0, QApplication::UnicodeUTF8));
+        actionCut->setText(QApplication::translate("DCPUDeveloper", "Cut", 0, QApplication::UnicodeUTF8));
+        actionCopy->setText(QApplication::translate("DCPUDeveloper", "Copy", 0, QApplication::UnicodeUTF8));
+        actionPaste->setText(QApplication::translate("DCPUDeveloper", "Paste", 0, QApplication::UnicodeUTF8));
+        actionSelect_All->setText(QApplication::translate("DCPUDeveloper", "Select All", 0, QApplication::UnicodeUTF8));
+        actionFind_Selection->setText(QApplication::translate("DCPUDeveloper", "Find Selection", 0, QApplication::UnicodeUTF8));
+        actionFind_File->setText(QApplication::translate("DCPUDeveloper", "Find in File", 0, QApplication::UnicodeUTF8));
         messages_gb->setTitle(QApplication::translate("DCPUDeveloper", "Messages", 0, QApplication::UnicodeUTF8));
         program_control_gb->setTitle(QApplication::translate("DCPUDeveloper", "Program Control", 0, QApplication::UnicodeUTF8));
         cycle_label->setText(QApplication::translate("DCPUDeveloper", "Cycle: 0", 0, QApplication::UnicodeUTF8));
@@ -396,6 +469,10 @@ public:
         test->setText(QString());
         disassembly_gb->setTitle(QApplication::translate("DCPUDeveloper", "Disassembly", 0, QApplication::UnicodeUTF8));
         menuFile->setTitle(QApplication::translate("DCPUDeveloper", "File", 0, QApplication::UnicodeUTF8));
+        menuHelp->setTitle(QApplication::translate("DCPUDeveloper", "Help", 0, QApplication::UnicodeUTF8));
+        menuTools->setTitle(QApplication::translate("DCPUDeveloper", "Tools", 0, QApplication::UnicodeUTF8));
+        menuEdit->setTitle(QApplication::translate("DCPUDeveloper", "Edit", 0, QApplication::UnicodeUTF8));
+        menuFind->setTitle(QApplication::translate("DCPUDeveloper", "Find", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

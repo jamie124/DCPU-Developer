@@ -361,7 +361,7 @@ void Assembler::run()
 	}
 
 	// TODO: Add automatic file naming
-	FILE* compiledFile = fopen(compiledFilename.c_str(), "w");
+	FILE* compiledFile = fopen(compiledFilename.c_str(), "wb");
 
 	if (!compiledFile) {
 		qDebug() << "ERROR: Could not open output file " << compiledFilename.c_str();
@@ -515,18 +515,25 @@ void Assembler::run()
         packed = Emulator::setArgument(packed, 0, instruction->a.argument);
         packed = Emulator::setArgument(packed, 1, instruction->b.argument);
 
+		instruction_t swapped = (packed>>8) | (packed<<8);
+
 		// Save instruction
-		qDebug() << address << ": Assembled instruction: " << packed;
-		fwrite(&packed, sizeof(instruction_t), 1, compiledFile);
+		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped;
+		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
 
         if (instruction->opcode != OP_NONBASIC && Emulator::usesNextWord(instruction->a.argument)) {
-			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord;
-			fwrite(&(instruction->a.nextWord), sizeof(word_t), 1, compiledFile);
+			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
+
+			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord << " Swapped: " << swapped;
+
+			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 		}
 
         if (Emulator::usesNextWord(instruction->b.argument)) {
-			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord;
-			fwrite(&(instruction->b.nextWord), sizeof(word_t), 1, compiledFile);
+			swapped = (instruction->b.nextWord>>8) | (instruction->b.nextWord<<8);
+
+			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord << " Swapped: " << swapped;
+			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 		}
 	}
 
