@@ -12,6 +12,7 @@ Started 7-Apr-2012
 
 #include <QThread>
 #include <iostream>
+#include <QString>
 #include <QMutex>
 #include <Windows.h>
 
@@ -101,7 +102,7 @@ private:
     volatile bool stepMode;
     volatile bool emulatorRunning;
 
-    std::string compiledFilename;
+    QString compiledFilename;
 
     registers_t* latestRegisters;
 
@@ -123,7 +124,7 @@ public:
    explicit Emulator(QObject* parent = 0);
     ~Emulator(void);
 
-    void setFilename(std::string filename);
+    void setFilename(QString filename);
 
     void startEmulator();
 	void stopEmulator();

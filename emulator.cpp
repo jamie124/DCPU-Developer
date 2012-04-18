@@ -13,7 +13,8 @@ Started 7-Apr-2012
 #include <iostream>
 #include <stdio.h>
 #include <QDebug>
-#include <fstream>
+#include <QFile>
+#include <QByteArray>
 
 word_t* memory;
 word_t* registers;
@@ -110,7 +111,7 @@ Emulator::~Emulator(void)
 	wait();
 }
 
-void Emulator::setFilename(std::string filename)
+void Emulator::setFilename(QString filename)
 {
 	compiledFilename = filename;
 }
@@ -149,6 +150,8 @@ void Emulator::stopEmulator()
 
 void Emulator::run()
 {
+	clearScreen();
+
 	if (stepMode) {
 		skippingCurrentPass = true;
 	} else {
@@ -157,26 +160,35 @@ void Emulator::run()
 
 	//clearScreen();
 
-	FILE * program = fopen(compiledFilename.c_str(), "rb");
+	QFile program(compiledFilename);
 
-	if (!program) {
-		qDebug() << "File could not be opened";
+	//FILE * program = fopen(compiledFilename.c_str(), "rb");
+
+	if (!program.exists()) {
+		qDebug() << "File does not exist.";
 	}
 
-
-	word_t* tempMemory = new word_t[MEMORY_LIMIT];
-
-	fread(tempMemory, sizeof(word_t), MEMORY_LIMIT, program);
-	fclose(program);
-
-	// Reverse endianess of memory
-	for (int i = 0; i < MEMORY_LIMIT; i++) {
-		word_t section = swapByteOrder(tempMemory[i]);
-		memory[i] = section;
-	
+	if (!program.open(QIODevice::ReadOnly)) {
+		qDebug() << "File could not be opened.";
 	}
 
-	delete tempMemory;
+	QByteArray tempArray = program.readAll();
+
+	QDataStream inputStream(&tempArray, QIODevice::ReadOnly);
+	inputStream.setByteOrder(QDataStream::BigEndian);
+
+	// Store stream in memory
+	int i = 0;
+	while (!inputStream.atEnd()) {
+		word_t currentWord;
+
+		inputStream >> currentWord;
+
+		memory[i++] = currentWord;
+	}
+
+	program.close();
+
 
 	bool videoDirty = false;
 
@@ -411,7 +423,7 @@ void Emulator::run()
 			// TODO: Update video memory
 
 			if (videoDirty) {
-				clearScreen();
+				//clearScreen();
 				for (int i = 0; i < TERM_HEIGHT; i++) {
 					for (int j = 0; j < TERM_WIDTH; j +=1) {
 						word_t toPrint = memory[CONSOLE_START + i * TERM_WIDTH + j];
@@ -672,11 +684,12 @@ void Emulator::setScreen(word_t row, word_t column, word_t character)
 
 	setCursorPos(column, row);
 
+	/*
 	word_t colourData = character >> 7;
 	word_t foreColour = colourData >> 5;
 	word_t backColour = (colourData >> 1) & 0xF;
 	bool_t blinkBit = colourData & 0x1;
-
+	*/
 	char letter = (character & 0x7F);
 
 	if (letter == '\0') {

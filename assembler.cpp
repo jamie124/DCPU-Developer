@@ -505,6 +505,11 @@ void Assembler::run()
 	// Write out code
 	for (assembledInstruction_t* instruction = head; instruction != NULL; instruction = instruction->next) {
 		if (instruction->data != NULL) {
+			// Reverse endianess
+			for (int i = 0; i < instruction->dataLength; i++) {
+				instruction->data[i] = Emulator::swapByteOrder(instruction->data[i]);
+			}
+
 			qDebug() << "DATA: " << instruction->dataLength << " words";
 			fwrite(instruction->data, sizeof(word_t), instruction->dataLength, compiledFile);
 			continue;

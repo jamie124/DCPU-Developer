@@ -103,7 +103,7 @@ void DCPUDeveloper::appendLogMessage(QString message)
 // Start or stop the emulation thread
 void DCPUDeveloper::on_run_button_clicked()
 {
-	emulator->setFilename(COMPILED_TEMP_FILENAME.toStdString());
+	emulator->setFilename(COMPILED_TEMP_FILENAME);
 
     if (running == 0){
 		emulator->startEmulator();
