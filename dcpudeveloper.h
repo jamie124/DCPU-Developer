@@ -12,6 +12,7 @@
 #include "phrases.h"
 #include "assembler.h"
 #include "emulator.h"
+#include "highlighter.h"
 
 
 static QString VERSION_NUMBER = "0.1 DEV";
@@ -64,6 +65,8 @@ private:
 	void resetMessages();
 
     void appendLogMessage(QString message);
+
+	Highlighter *highlighter;
 };
 
 #endif // DCPUDEVELOPER_H

@@ -19,6 +19,9 @@ DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
     ui->editor->setText(in.readAll());
     file.close();
 
+	// Setup syntax highlighting
+	highlighter = new Highlighter(ui->editor->document());
+
 	running = 0;
 
 	assembler = new Assembler();
