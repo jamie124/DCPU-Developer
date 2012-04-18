@@ -61,6 +61,8 @@ private:
 
     int running;
 
+	void resetMessages();
+
     void appendLogMessage(QString message);
 };
 

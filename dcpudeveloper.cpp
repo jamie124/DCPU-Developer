@@ -78,6 +78,8 @@ void DCPUDeveloper::on_actionExit_triggered()
 
 void DCPUDeveloper::on_compile_button_clicked()
 {
+	resetMessages();
+
     QFile file(TEMP_FILENAME);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
 
@@ -100,9 +102,16 @@ void DCPUDeveloper::appendLogMessage(QString message)
     ui->messages->setText(ui->messages->toPlainText() +  message + "\n");
 }
 
+void DCPUDeveloper::resetMessages()
+{
+	ui->messages->clear();
+}
+
 // Start or stop the emulation thread
 void DCPUDeveloper::on_run_button_clicked()
 {
+	resetMessages();
+
 	emulator->setFilename(COMPILED_TEMP_FILENAME);
 
     if (running == 0){
@@ -113,13 +122,7 @@ void DCPUDeveloper::on_run_button_clicked()
         running = 1;
 
         ui->run_button->setText("Stop");
-    } else {
-        ui->run_button->setText("Run");
-
-		emulator->stopEmulator();
-
-		running = 0;
-    }
+    } 
 }
 
 void DCPUDeveloper::addAssemblerMessage(assembler_error_t* error)
@@ -146,6 +149,8 @@ void DCPUDeveloper::endEmulation(int endCode)
 	appendLogMessage(phrases->getResponseMessage(endCode));
 
 	ui->run_button->setText("Run");
+
+	running = 0;
 }
 
 void DCPUDeveloper::on_toggle_step_button_clicked()

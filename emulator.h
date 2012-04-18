@@ -117,6 +117,10 @@ private:
 
 	void setRegisters();
 
+	void reset();
+
+	void cleanupMemory();
+
 protected:
     void run();
 

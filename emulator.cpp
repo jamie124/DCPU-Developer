@@ -36,6 +36,50 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 	DEBUG = false;
 	OPCODE_DEBUGGING = false;
 
+	reset();
+}
+
+
+Emulator::~Emulator(void)
+{
+	wait();
+}
+
+void Emulator::setFilename(QString filename)
+{
+	compiledFilename = filename;
+}
+
+void Emulator::startEmulator()
+{
+	reset();
+
+	qDebug() << "Starting emulator";
+	emulatorRunning = true;
+
+	start();
+}
+
+void Emulator::toggleStepMode() 
+{
+	if (stepMode) {
+		stepMode = false;
+		skippingCurrentPass = false;
+	} else {
+		stepMode = true;
+		skippingCurrentPass = true;
+	}
+}
+
+// Tell emulator loop to execute one more opcode
+void Emulator::step()
+{
+	skippingCurrentPass = false;
+}
+
+// Reset the emulator
+void Emulator::reset() 
+{
 	stepMode = false;
 
 	// Setup literals
@@ -95,52 +139,14 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 	cycle = 0;
 }
 
-
-Emulator::~Emulator(void)
+void Emulator::cleanupMemory()
 {
-	mutex.lock();
-
 	delete literals;
 	delete memory;
 	delete registers;
 	delete latestRegisters;
 	delete colourTable;
-
-	mutex.unlock();
-
-	wait();
 }
-
-void Emulator::setFilename(QString filename)
-{
-	compiledFilename = filename;
-}
-
-void Emulator::startEmulator()
-{
-	qDebug() << "Starting emulator";
-	emulatorRunning = true;
-
-	start();
-}
-
-void Emulator::toggleStepMode() 
-{
-	if (stepMode) {
-		stepMode = false;
-		skippingCurrentPass = false;
-	} else {
-		stepMode = true;
-		skippingCurrentPass = true;
-	}
-}
-
-// Tell emulator loop to execute one more opcode
-void Emulator::step()
-{
-	skippingCurrentPass = false;
-}
-
 
 void Emulator::stopEmulator()
 {
@@ -158,11 +164,7 @@ void Emulator::run()
 		skippingCurrentPass = false;
 	}
 
-	//clearScreen();
-
 	QFile program(compiledFilename);
-
-	//FILE * program = fopen(compiledFilename.c_str(), "rb");
 
 	if (!program.exists()) {
 		qDebug() << "File does not exist.";
@@ -175,7 +177,6 @@ void Emulator::run()
 	QByteArray tempArray = program.readAll();
 
 	QDataStream inputStream(&tempArray, QIODevice::ReadOnly);
-	inputStream.setByteOrder(QDataStream::BigEndian);
 
 	// Store stream in memory
 	int i = 0;
@@ -194,16 +195,12 @@ void Emulator::run()
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
-		mutex.lock();
+		QMutexLocker lock(&mutex);
 
 		if (!skippingCurrentPass) {
 
 			word_t executingPC = programCounter;
 			instruction_t instruction = memory[programCounter++];
-
-			//instruction_t instruction = swapByteOrder(temp);
-
-			//qDebug() << instruction;
 
 			// Decode
 			opcode_t opcode = getOpcode(instruction);
@@ -445,10 +442,10 @@ void Emulator::run()
 				// Skip next pass
 				skippingCurrentPass = true;
 			}
-
 		}
-		mutex.unlock();
 	}
+
+	cleanupMemory();
 
 	emit emulationEnded(DCPU_SUCCESSFUL);
 }
@@ -696,7 +693,7 @@ void Emulator::setScreen(word_t row, word_t column, word_t character)
 		letter = ' ';
 	}
 
-	SetConsoleTextAttribute(console, 6);
+	//SetConsoleTextAttribute(console, 6);
 
 	std::cout << letter;
 }
@@ -706,7 +703,7 @@ void Emulator::setCursorPos(int x, int y)
 	COORD pos  = {x, y};
 	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	SetConsoleTextAttribute(console, 7);
+	//SetConsoleTextAttribute(console, 7);
 	SetConsoleCursorPosition(console, pos);
 }
 
