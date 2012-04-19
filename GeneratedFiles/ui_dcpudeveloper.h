@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Tue Apr 17 21:46:53 2012
+** Created: Thu Apr 19 20:58:11 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -27,6 +27,7 @@
 #include <QtGui/QStatusBar>
 #include <QtGui/QTextEdit>
 #include <QtGui/QWidget>
+#include "editor.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -47,10 +48,11 @@ public:
     QAction *actionSelect_All;
     QAction *actionFind_Selection;
     QAction *actionFind_File;
+    QAction *actionRun;
     QWidget *centralWidget;
     QGridLayout *gridLayout_6;
     QGridLayout *gridLayout;
-    QTextEdit *editor;
+    Editor *editor;
     QGroupBox *messages_gb;
     QGridLayout *gridLayout_5;
     QTextEdit *messages;
@@ -98,6 +100,7 @@ public:
     QMenu *menuTools;
     QMenu *menuEdit;
     QMenu *menuFind;
+    QMenu *menuProgram;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *DCPUDeveloper)
@@ -133,6 +136,8 @@ public:
         actionFind_Selection->setObjectName(QString::fromUtf8("actionFind_Selection"));
         actionFind_File = new QAction(DCPUDeveloper);
         actionFind_File->setObjectName(QString::fromUtf8("actionFind_File"));
+        actionRun = new QAction(DCPUDeveloper);
+        actionRun->setObjectName(QString::fromUtf8("actionRun"));
         centralWidget = new QWidget(DCPUDeveloper);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         gridLayout_6 = new QGridLayout(centralWidget);
@@ -142,7 +147,7 @@ public:
         gridLayout = new QGridLayout();
         gridLayout->setSpacing(6);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-        editor = new QTextEdit(centralWidget);
+        editor = new Editor(centralWidget);
         editor->setObjectName(QString::fromUtf8("editor"));
         editor->setMinimumSize(QSize(800, 400));
         QFont font;
@@ -394,6 +399,8 @@ public:
         menuEdit->setObjectName(QString::fromUtf8("menuEdit"));
         menuFind = new QMenu(menuEdit);
         menuFind->setObjectName(QString::fromUtf8("menuFind"));
+        menuProgram = new QMenu(menuBar);
+        menuProgram->setObjectName(QString::fromUtf8("menuProgram"));
         DCPUDeveloper->setMenuBar(menuBar);
         statusBar = new QStatusBar(DCPUDeveloper);
         statusBar->setObjectName(QString::fromUtf8("statusBar"));
@@ -401,6 +408,7 @@ public:
 
         menuBar->addAction(menuFile->menuAction());
         menuBar->addAction(menuEdit->menuAction());
+        menuBar->addAction(menuProgram->menuAction());
         menuBar->addAction(menuTools->menuAction());
         menuBar->addAction(menuHelp->menuAction());
         menuFile->addAction(actionNew);
@@ -422,6 +430,7 @@ public:
         menuEdit->addAction(menuFind->menuAction());
         menuFind->addAction(actionFind_Selection);
         menuFind->addAction(actionFind_File);
+        menuProgram->addAction(actionRun);
 
         retranslateUi(DCPUDeveloper);
 
@@ -432,19 +441,32 @@ public:
     {
         DCPUDeveloper->setWindowTitle(QApplication::translate("DCPUDeveloper", "DCPU Developer", 0, QApplication::UnicodeUTF8));
         actionExit->setText(QApplication::translate("DCPUDeveloper", "Exit", 0, QApplication::UnicodeUTF8));
+        actionExit->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+Q", 0, QApplication::UnicodeUTF8));
         actionNew->setText(QApplication::translate("DCPUDeveloper", "New", 0, QApplication::UnicodeUTF8));
+        actionNew->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+N", 0, QApplication::UnicodeUTF8));
         actionSave->setText(QApplication::translate("DCPUDeveloper", "Save", 0, QApplication::UnicodeUTF8));
+        actionSave->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+S", 0, QApplication::UnicodeUTF8));
         actionOpen->setText(QApplication::translate("DCPUDeveloper", "Open", 0, QApplication::UnicodeUTF8));
+        actionOpen->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+O", 0, QApplication::UnicodeUTF8));
         actionAbout->setText(QApplication::translate("DCPUDeveloper", "About", 0, QApplication::UnicodeUTF8));
         actionOptions->setText(QApplication::translate("DCPUDeveloper", "Options", 0, QApplication::UnicodeUTF8));
         actionUndo->setText(QApplication::translate("DCPUDeveloper", "Undo", 0, QApplication::UnicodeUTF8));
+        actionUndo->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+Z", 0, QApplication::UnicodeUTF8));
         actionRedo->setText(QApplication::translate("DCPUDeveloper", "Redo", 0, QApplication::UnicodeUTF8));
+        actionRedo->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+Y", 0, QApplication::UnicodeUTF8));
         actionCut->setText(QApplication::translate("DCPUDeveloper", "Cut", 0, QApplication::UnicodeUTF8));
+        actionCut->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+X", 0, QApplication::UnicodeUTF8));
         actionCopy->setText(QApplication::translate("DCPUDeveloper", "Copy", 0, QApplication::UnicodeUTF8));
+        actionCopy->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+C", 0, QApplication::UnicodeUTF8));
         actionPaste->setText(QApplication::translate("DCPUDeveloper", "Paste", 0, QApplication::UnicodeUTF8));
+        actionPaste->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+V", 0, QApplication::UnicodeUTF8));
         actionSelect_All->setText(QApplication::translate("DCPUDeveloper", "Select All", 0, QApplication::UnicodeUTF8));
+        actionSelect_All->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+A", 0, QApplication::UnicodeUTF8));
         actionFind_Selection->setText(QApplication::translate("DCPUDeveloper", "Find Selection", 0, QApplication::UnicodeUTF8));
         actionFind_File->setText(QApplication::translate("DCPUDeveloper", "Find in File", 0, QApplication::UnicodeUTF8));
+        actionFind_File->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+F", 0, QApplication::UnicodeUTF8));
+        actionRun->setText(QApplication::translate("DCPUDeveloper", "Run", 0, QApplication::UnicodeUTF8));
+        actionRun->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+R", 0, QApplication::UnicodeUTF8));
         messages_gb->setTitle(QApplication::translate("DCPUDeveloper", "Messages", 0, QApplication::UnicodeUTF8));
         program_control_gb->setTitle(QApplication::translate("DCPUDeveloper", "Program Control", 0, QApplication::UnicodeUTF8));
         cycle_label->setText(QApplication::translate("DCPUDeveloper", "Cycle: 0", 0, QApplication::UnicodeUTF8));
@@ -473,6 +495,7 @@ public:
         menuTools->setTitle(QApplication::translate("DCPUDeveloper", "Tools", 0, QApplication::UnicodeUTF8));
         menuEdit->setTitle(QApplication::translate("DCPUDeveloper", "Edit", 0, QApplication::UnicodeUTF8));
         menuFind->setTitle(QApplication::translate("DCPUDeveloper", "Find", 0, QApplication::UnicodeUTF8));
+        menuProgram->setTitle(QApplication::translate("DCPUDeveloper", "Program", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

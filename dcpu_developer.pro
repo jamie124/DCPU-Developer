@@ -14,11 +14,15 @@ SOURCES += main.cpp\
         dcpudeveloper.cpp \
     assembler.cpp \
     emulator.cpp \
-    phrases.cpp
+    phrases.cpp \
+    highlighter.cpp \
+    editor.cpp
 
 HEADERS  += dcpudeveloper.h \
     assembler.h \
     emulator.h \
-    phrases.h
+    phrases.h \
+    highlighter.h \
+    editor.h
 
 FORMS    += dcpudeveloper.ui

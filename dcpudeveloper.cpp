@@ -1,23 +1,40 @@
+#include <QDialog>
 #include <QDebug>
+#include <QShortcut>
+#include <QKeySequence>
+#include <QStringListModel>
+
 #include "dcpudeveloper.h"
 #include "ui_dcpudeveloper.h"
 
 DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::DCPUDeveloper)
+QMainWindow(parent),
+	ui(new Ui::DCPUDeveloper), completer(0)
 {
-    ui->setupUi(this);
-    setWindowTitle("DCPU Developer - " + VERSION_NUMBER);
+	ui->setupUi(this);
+	setWindowTitle("DCPU Developer - " + VERSION_NUMBER);
 
-    QFile file(TEMP_FILENAME);
+	editor = new Editor;
 
-    if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-    }
+	// Setup code completion
+	completer = new QCompleter(this);
+	completer->setModel(modelFromFile(":/resources/wordlist.txt"));
+	completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
+	completer->setCompletionMode(QCompleter::PopupCompletion);
+	completer->setCaseSensitivity(Qt::CaseInsensitive);
+	completer->setWrapAround(true);
 
-    QTextStream in(&file);
-    ui->editor->setText(in.readAll());
-    file.close();
+	editor->setCompleter(completer);
+
+	QFile file(TEMP_FILENAME);
+
+	if (!file.open(QIODevice::ReadOnly)) {
+		QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+	}
+
+	QTextStream in(&file);
+	editor->setText(in.readAll());
+	file.close();
 
 	// Setup syntax highlighting
 	highlighter = new Highlighter(ui->editor->document());
@@ -28,22 +45,15 @@ DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
 	emulator = new Emulator();
 	phrases = new Phrases();
 
-    // Setup thread slots
-	// Assembler
-	connect(assembler, SIGNAL(sendAssemblerMessage(assembler_error_t*)), this,
-		SLOT(addAssemblerMessage(assembler_error_t*)));
-
-	// Emulator
-    connect(emulator, SIGNAL(registersChanged(registers_t*)), this,
-		SLOT(updateRegisters(registers_t*)), Qt::DirectConnection);
-	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
-
+	setupConnections();
 }
 
 DCPUDeveloper::~DCPUDeveloper()
 {
-    delete ui;
-    
+	delete ui;
+	delete editor;
+	delete highlighter;
+
 	assembler->stopEmulator();
 
 	delete assembler;
@@ -56,44 +66,85 @@ DCPUDeveloper::~DCPUDeveloper()
 
 }
 
+void DCPUDeveloper::setupConnections() 
+{
+	// Setup thread slots
+	// Assembler
+	connect(assembler, SIGNAL(sendAssemblerMessage(assembler_error_t*)), this,
+		SLOT(addAssemblerMessage(assembler_error_t*)));
+
+	// Emulator
+	connect(emulator, SIGNAL(registersChanged(registers_t*)), this,
+		SLOT(updateRegisters(registers_t*)), Qt::DirectConnection);
+	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+}
+
+QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
+{
+	QFile file(filename);
+
+	if (!file.open(QFile::ReadOnly)) {
+		return new QStringListModel(completer);
+	}
+
+#ifndef QT_NO_CURSOR
+	QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+#endif
+	QStringList words;
+
+	while (!file.atEnd()) {
+		QByteArray line = file.readLine();
+
+		if (!line.isEmpty()) {
+			words << line.trimmed();
+		}
+	}
+
+#ifndef QT_NO_CURSOR
+		QApplication::restoreOverrideCursor();
+#endif
+		return new QStringListModel(words, completer);
+	
+}
+
 void DCPUDeveloper::on_actionOpen_triggered()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Open File"), "",
-                                                    tr("Dasm16 Source File (*.dasm16)"));
+	QString filename = QFileDialog::getOpenFileName(this, tr("Open File"), "",
+		tr("Dasm16 Source File (*.dasm16)"));
 
-    if (filename != "") {
-        QFile file(filename);
+	if (filename != "") {
+		QFile file(filename);
 
-        if (!file.open(QIODevice::ReadOnly)) {
-            QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-        }
+		if (!file.open(QIODevice::ReadOnly)) {
+			QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+		}
 
-        QTextStream in(&file);
-        ui->editor->setText(in.readAll());
-        file.close();
-    }
+		QTextStream in(&file);
+		ui->editor->setText(in.readAll());
+		file.close();
+	}
 }
 
 void DCPUDeveloper::on_actionExit_triggered()
 {
-    exit(1);
+	exit(1);
 }
 
 void DCPUDeveloper::on_compile_button_clicked()
 {
 	resetMessages();
 
-    QFile file(TEMP_FILENAME);
-    file.open(QIODevice::WriteOnly | QIODevice::Text);
+	QFile file(TEMP_FILENAME);
+	file.open(QIODevice::WriteOnly | QIODevice::Text);
 
-    QTextStream stream(&file);
+	QTextStream stream(&file);
 
-    stream << ui->editor->toPlainText();
+	stream << ui->editor->toPlainText();
 
-    stream.flush();
-    file.close();
+	stream.flush();
+	file.close();
 
-    appendLogMessage("File saved, starting compile.");
+	appendLogMessage("File saved, starting compile.");
 
 	assembler->setFilename(TEMP_FILENAME.toStdString());
 
@@ -102,7 +153,7 @@ void DCPUDeveloper::on_compile_button_clicked()
 
 void DCPUDeveloper::appendLogMessage(QString message)
 {
-    ui->messages->setText(ui->messages->toPlainText() +  message + "\n");
+	ui->messages->setText(ui->messages->toPlainText() +  message + "\n");
 }
 
 void DCPUDeveloper::resetMessages()
@@ -117,15 +168,15 @@ void DCPUDeveloper::on_run_button_clicked()
 
 	emulator->setFilename(COMPILED_TEMP_FILENAME);
 
-    if (running == 0){
+	if (running == 0){
 		emulator->startEmulator();
 
-        appendLogMessage("Emulator running.");
+		appendLogMessage("Emulator running.");
 
-        running = 1;
+		running = 1;
 
-        ui->run_button->setText("Stop");
-    } 
+		ui->run_button->setText("Stop");
+	} 
 }
 
 void DCPUDeveloper::addAssemblerMessage(assembler_error_t* error)
@@ -158,7 +209,7 @@ void DCPUDeveloper::endEmulation(int endCode)
 
 void DCPUDeveloper::on_toggle_step_button_clicked()
 {
-    emulator->toggleStepMode();
+	emulator->toggleStepMode();
 
 	if (emulator->inStepMode()) {
 		ui->toggle_step_button->setText("Disable Step Mode");
@@ -171,5 +222,46 @@ void DCPUDeveloper::on_toggle_step_button_clicked()
 
 void DCPUDeveloper::on_step_button_clicked()
 {
-    emulator->step();
+	emulator->step();
+}
+
+void DCPUDeveloper::on_actionRun_triggered()
+{
+
+}
+
+void DCPUDeveloper::on_actionSave_triggered()
+{
+
+}
+
+void DCPUDeveloper::on_actionCut_triggered()
+{
+
+}
+
+void DCPUDeveloper::on_actionCopy_triggered()
+{
+
+}
+
+void DCPUDeveloper::on_actionPaste_triggered()
+{
+
+}
+
+void DCPUDeveloper::on_actionSelect_All_triggered()
+{
+
+}
+
+void DCPUDeveloper::on_actionNew_triggered()
+{
+	ui->editor->clear();
+}
+
+void DCPUDeveloper::on_actionAbout_triggered()
+{
+	QMessageBox::about(this, "About", "DCPU Developer - " + VERSION_NUMBER);
+
 }
