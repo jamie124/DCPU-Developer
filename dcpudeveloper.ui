@@ -17,22 +17,6 @@
    <layout class="QGridLayout" name="gridLayout_6">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1" colspan="2">
-       <widget class="Editor" name="editor">
-        <property name="minimumSize">
-         <size>
-          <width>800</width>
-          <height>400</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <family>Courier</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0">
        <widget class="QGroupBox" name="messages_gb">
         <property name="minimumSize">
@@ -323,6 +307,19 @@
         </layout>
        </widget>
       </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QGroupBox" name="editor_gb">
+        <property name="minimumSize">
+         <size>
+          <width>800</width>
+          <height>500</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>Editor</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -506,13 +503,6 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <customwidgets>
-  <customwidget>
-   <class>Editor</class>
-   <extends>QTextEdit</extends>
-   <header>editor.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

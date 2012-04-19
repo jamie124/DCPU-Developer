@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Thu Apr 19 20:58:11 2012
+** Created: Thu Apr 19 23:01:52 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -27,7 +27,6 @@
 #include <QtGui/QStatusBar>
 #include <QtGui/QTextEdit>
 #include <QtGui/QWidget>
-#include "editor.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -52,7 +51,6 @@ public:
     QWidget *centralWidget;
     QGridLayout *gridLayout_6;
     QGridLayout *gridLayout;
-    Editor *editor;
     QGroupBox *messages_gb;
     QGridLayout *gridLayout_5;
     QTextEdit *messages;
@@ -94,6 +92,7 @@ public:
     QGroupBox *disassembly_gb;
     QGridLayout *gridLayout_4;
     QListView *disassembly;
+    QGroupBox *editor_gb;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuHelp;
@@ -147,16 +146,6 @@ public:
         gridLayout = new QGridLayout();
         gridLayout->setSpacing(6);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-        editor = new Editor(centralWidget);
-        editor->setObjectName(QString::fromUtf8("editor"));
-        editor->setMinimumSize(QSize(800, 400));
-        QFont font;
-        font.setFamily(QString::fromUtf8("Courier"));
-        font.setPointSize(10);
-        editor->setFont(font);
-
-        gridLayout->addWidget(editor, 0, 1, 1, 2);
-
         messages_gb = new QGroupBox(centralWidget);
         messages_gb->setObjectName(QString::fromUtf8("messages_gb"));
         messages_gb->setMinimumSize(QSize(0, 50));
@@ -382,6 +371,12 @@ public:
 
         gridLayout->addWidget(disassembly_gb, 0, 0, 1, 1);
 
+        editor_gb = new QGroupBox(centralWidget);
+        editor_gb->setObjectName(QString::fromUtf8("editor_gb"));
+        editor_gb->setMinimumSize(QSize(800, 500));
+
+        gridLayout->addWidget(editor_gb, 0, 1, 1, 2);
+
 
         gridLayout_6->addLayout(gridLayout, 0, 0, 1, 1);
 
@@ -490,6 +485,7 @@ public:
         label_8->setText(QApplication::translate("DCPUDeveloper", "J:", 0, QApplication::UnicodeUTF8));
         test->setText(QString());
         disassembly_gb->setTitle(QApplication::translate("DCPUDeveloper", "Disassembly", 0, QApplication::UnicodeUTF8));
+        editor_gb->setTitle(QApplication::translate("DCPUDeveloper", "Editor", 0, QApplication::UnicodeUTF8));
         menuFile->setTitle(QApplication::translate("DCPUDeveloper", "File", 0, QApplication::UnicodeUTF8));
         menuHelp->setTitle(QApplication::translate("DCPUDeveloper", "Help", 0, QApplication::UnicodeUTF8));
         menuTools->setTitle(QApplication::translate("DCPUDeveloper", "Tools", 0, QApplication::UnicodeUTF8));

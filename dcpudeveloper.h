@@ -78,6 +78,7 @@ private:
     Emulator *emulator;
 	Phrases *phrases;
 	Highlighter *highlighter;
+
 	QCompleter *completer;
 
 	Editor *editor;

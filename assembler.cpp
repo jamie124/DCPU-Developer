@@ -775,7 +775,7 @@ int Assembler::processCommand(char* command, char *data, word_t &address, char* 
 
 	instruction->next = NULL;
 	instruction->address = address;
-	instruction->label = strdup(label);
+	instruction->label = _strdup(label);
 
 	instruction->data = NULL;
 

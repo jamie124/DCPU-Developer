@@ -3,13 +3,15 @@
 #include <QShortcut>
 #include <QKeySequence>
 #include <QStringListModel>
+#include <QGridLayout>
 
 #include "dcpudeveloper.h"
+
 #include "ui_dcpudeveloper.h"
 
 DCPUDeveloper::DCPUDeveloper(QWidget *parent) :
 QMainWindow(parent),
-	ui(new Ui::DCPUDeveloper), completer(0)
+	ui(new Ui::DCPUDeveloper)
 {
 	ui->setupUi(this);
 	setWindowTitle("DCPU Developer - " + VERSION_NUMBER);
@@ -26,6 +28,11 @@ QMainWindow(parent),
 
 	editor->setCompleter(completer);
 
+    QGridLayout *layout = new QGridLayout;
+
+    layout->addWidget(editor);
+    ui->editor_gb->setLayout(layout);
+
 	QFile file(TEMP_FILENAME);
 
 	if (!file.open(QIODevice::ReadOnly)) {
@@ -34,10 +41,11 @@ QMainWindow(parent),
 
 	QTextStream in(&file);
 	editor->setText(in.readAll());
+
 	file.close();
 
 	// Setup syntax highlighting
-	highlighter = new Highlighter(ui->editor->document());
+	highlighter = new Highlighter(editor->document());
 
 	running = 0;
 
@@ -52,7 +60,7 @@ DCPUDeveloper::~DCPUDeveloper()
 {
 	delete ui;
 	delete editor;
-	delete highlighter;
+	//delete highlighter;
 
 	assembler->stopEmulator();
 
@@ -84,7 +92,10 @@ QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
 	QFile file(filename);
 
 	if (!file.open(QFile::ReadOnly)) {
-		return new QStringListModel(completer);
+		QStringList startingList;
+
+		startingList << "Test";
+		return new QStringListModel(startingList, completer);
 	}
 
 #ifndef QT_NO_CURSOR
@@ -120,7 +131,7 @@ void DCPUDeveloper::on_actionOpen_triggered()
 		}
 
 		QTextStream in(&file);
-		ui->editor->setText(in.readAll());
+        editor->setText(in.readAll());
 		file.close();
 	}
 }
@@ -139,7 +150,7 @@ void DCPUDeveloper::on_compile_button_clicked()
 
 	QTextStream stream(&file);
 
-	stream << ui->editor->toPlainText();
+    stream << editor->toPlainText();
 
 	stream.flush();
 	file.close();
@@ -257,7 +268,7 @@ void DCPUDeveloper::on_actionSelect_All_triggered()
 
 void DCPUDeveloper::on_actionNew_triggered()
 {
-	ui->editor->clear();
+    editor->clear();
 }
 
 void DCPUDeveloper::on_actionAbout_triggered()
