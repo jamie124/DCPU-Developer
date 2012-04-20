@@ -14,5 +14,4 @@ Debug/
 Win32/
 ipch/
 *.bin
-*.vcxproj
 *.vcxproj.*
