@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QMutex>
+
 #include "phrases.h"
 #include "emulator.h"
 
