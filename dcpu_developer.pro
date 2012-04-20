@@ -19,10 +19,16 @@ SOURCES += main.cpp\
     editor.cpp
 
 HEADERS  += dcpudeveloper.h \
-    assembler.h \
     emulator.h \
     phrases.h \
     highlighter.h \
-    editor.h
+    editor.h \
+    include/phrases.h \
+    include/highlighter.h \
+    include/emulator.h \
+    include/editor.h \
+    include/dcpudeveloper.h \
+    include/constants.h \
+    include/assembler.h
 
 FORMS    += dcpudeveloper.ui

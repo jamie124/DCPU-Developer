@@ -1,6 +1,6 @@
 #include <QtGui/QApplication>
-#include "dcpudeveloper.h"
-#include "emulator.h"
+#include "include/dcpudeveloper.h"
+#include "include/emulator.h"
 
 int main(int argc, char *argv[])
 {

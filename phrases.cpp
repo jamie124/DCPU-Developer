@@ -1,5 +1,4 @@
-#include "phrases.h"
-
+#include "include/phrases.h"
 
 Phrases::Phrases(void)
 {

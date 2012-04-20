@@ -10,3 +10,9 @@
 *.lai
 *.la
 *.a
+Debug/
+Win32/
+ipch/
+*.bin
+*.vcxproj
+*.vcxproj.*

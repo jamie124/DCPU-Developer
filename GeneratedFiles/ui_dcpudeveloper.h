@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Fri Apr 20 18:13:51 2012
+** Created: Fri Apr 20 18:51:23 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -108,6 +108,7 @@ public:
             DCPUDeveloper->setObjectName(QString::fromUtf8("DCPUDeveloper"));
         DCPUDeveloper->resize(1146, 700);
         DCPUDeveloper->setMinimumSize(QSize(1146, 700));
+        DCPUDeveloper->setMaximumSize(QSize(1146, 700));
         actionExit = new QAction(DCPUDeveloper);
         actionExit->setObjectName(QString::fromUtf8("actionExit"));
         actionNew = new QAction(DCPUDeveloper);
@@ -140,6 +141,7 @@ public:
         actionRun->setObjectName(QString::fromUtf8("actionRun"));
         centralWidget = new QWidget(DCPUDeveloper);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
+        centralWidget->setMinimumSize(QSize(1146, 659));
         gridLayout_6 = new QGridLayout(centralWidget);
         gridLayout_6->setSpacing(6);
         gridLayout_6->setContentsMargins(11, 11, 11, 11);
@@ -376,7 +378,7 @@ public:
 
         editor_gb = new QGroupBox(centralWidget);
         editor_gb->setObjectName(QString::fromUtf8("editor_gb"));
-        QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        QSizePolicy sizePolicy1(QSizePolicy::Fixed, QSizePolicy::Fixed);
         sizePolicy1.setHorizontalStretch(0);
         sizePolicy1.setVerticalStretch(0);
         sizePolicy1.setHeightForWidth(editor_gb->sizePolicy().hasHeightForWidth());

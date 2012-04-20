@@ -8,13 +8,14 @@ This code orginally based on dcpu-emu https://bitbucket.org/interfect/dcpu-emu
 Started 7-Apr-2012 
 */
 
-#include "phrases.h"
-#include "emulator.h"
 #include <iostream>
 #include <stdio.h>
 #include <QDebug>
 #include <QFile>
 #include <QByteArray>
+
+#include "include/phrases.h"
+#include "include/emulator.h"
 
 word_t* memory;
 word_t* registers;

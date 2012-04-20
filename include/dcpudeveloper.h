@@ -11,11 +11,11 @@
 #include <QCompleter>
 #include <QList>
 
-#include "phrases.h"
-#include "assembler.h"
-#include "emulator.h"
-#include "highlighter.h"
-#include "editor.h"
+#include "include/phrases.h"
+#include "include/assembler.h"
+#include "include/emulator.h"
+#include "include/highlighter.h"
+#include "include/editor.h"
 
 static QString VERSION_NUMBER = "0.2";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";

@@ -1,4 +1,3 @@
-#include "editor.h"
 #include <QCompleter>
 #include <QKeyEvent>
 #include <QAbstractItemView>
@@ -7,6 +6,8 @@
 #include <QModelIndex>
 #include <QAbstractItemModel>
 #include <QScrollBar>
+
+#include "include/editor.h"
 
  Editor::Editor(QWidget *parent)
  : QTextEdit(parent), c(0)

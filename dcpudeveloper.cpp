@@ -5,7 +5,7 @@
 #include <QStringListModel>
 #include <QGridLayout>
 
-#include "dcpudeveloper.h"
+#include "include/dcpudeveloper.h"
 
 #include "ui_dcpudeveloper.h"
 
@@ -20,7 +20,7 @@ QMainWindow(parent),
 
 	// Setup code completion
 	completer = new QCompleter(this);
-	//completer->setModel(modelFromFile("wordcache.txt"));
+	completer->setModel(modelFromFile("wordcache.txt"));
 	completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
 	completer->setCompletionMode(QCompleter::PopupCompletion);
 	completer->setCaseSensitivity(Qt::CaseInsensitive);

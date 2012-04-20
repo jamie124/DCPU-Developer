@@ -1,10 +1,11 @@
-#include "phrases.h"
-#include "assembler.h"
 #include <QDebug>
 #include <iostream>
 #include <fstream>
 #include <string.h>
 #include <stdio.h>
+
+#include "include/phrases.h"
+#include "include/assembler.h"
 
 Assembler::Assembler(QObject *parent) : QThread(parent), assemblerRunning(false)
 {
