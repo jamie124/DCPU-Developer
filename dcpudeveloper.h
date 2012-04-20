@@ -9,6 +9,7 @@
 #include <QString>
 #include <QThread>
 #include <QCompleter>
+#include <QList>
 
 #include "phrases.h"
 #include "assembler.h"
@@ -81,6 +82,8 @@ private:
 
 	QCompleter *completer;
 
+	QList<QString> codeCompleteList;
+
 	Editor *editor;
 
     QString currentFilename;
@@ -91,6 +94,8 @@ private:
     void appendLogMessage(QString message);
 
 	void setupConnections();
+
+	void addToCodeComplete(QString newEntry);
 
 	QAbstractItemModel* modelFromFile(const QString &filename);
 };

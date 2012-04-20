@@ -20,7 +20,7 @@ QMainWindow(parent),
 
 	// Setup code completion
 	completer = new QCompleter(this);
-	completer->setModel(modelFromFile(":/resources/wordlist.txt"));
+	//completer->setModel(modelFromFile("wordcache.txt"));
 	completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
 	completer->setCompletionMode(QCompleter::PopupCompletion);
 	completer->setCaseSensitivity(Qt::CaseInsensitive);
@@ -28,10 +28,10 @@ QMainWindow(parent),
 
 	editor->setCompleter(completer);
 
-    QGridLayout *layout = new QGridLayout;
+	QGridLayout *layout = new QGridLayout;
 
-    layout->addWidget(editor);
-    ui->editor_gb->setLayout(layout);
+	layout->addWidget(editor);
+	ui->editor_gb->setLayout(layout);
 
 	QFile file(TEMP_FILENAME);
 
@@ -87,6 +87,22 @@ void DCPUDeveloper::setupConnections()
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 }
 
+
+void DCPUDeveloper::addToCodeComplete(QString newEntry)
+{
+	QStringList codeList;
+
+	if (!codeCompleteList.contains(newEntry)){
+		codeCompleteList << newEntry;
+
+		for (int i = 0; i < codeCompleteList.size(); i++) {
+			codeList << codeCompleteList[i];
+		}
+	}
+	completer->setModel(new QStringListModel(codeList, completer));
+
+}
+
 QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
 {
 	QFile file(filename);
@@ -112,10 +128,10 @@ QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
 	}
 
 #ifndef QT_NO_CURSOR
-		QApplication::restoreOverrideCursor();
+	QApplication::restoreOverrideCursor();
 #endif
-		return new QStringListModel(words, completer);
-	
+	return new QStringListModel(words, completer);
+
 }
 
 void DCPUDeveloper::on_actionOpen_triggered()
@@ -131,7 +147,7 @@ void DCPUDeveloper::on_actionOpen_triggered()
 		}
 
 		QTextStream in(&file);
-        editor->setText(in.readAll());
+		editor->setText(in.readAll());
 		file.close();
 	}
 }
@@ -150,7 +166,7 @@ void DCPUDeveloper::on_compile_button_clicked()
 
 	QTextStream stream(&file);
 
-    stream << editor->toPlainText();
+	stream << editor->toPlainText();
 
 	stream.flush();
 	file.close();
@@ -268,7 +284,7 @@ void DCPUDeveloper::on_actionSelect_All_triggered()
 
 void DCPUDeveloper::on_actionNew_triggered()
 {
-    editor->clear();
+	editor->clear();
 }
 
 void DCPUDeveloper::on_actionAbout_triggered()
