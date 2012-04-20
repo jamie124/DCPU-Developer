@@ -1,0 +1,1 @@
+{"name":"Dcpu-developer","body":"### Prerequisite Libraries\r\n\r\nQt 4.7\r\n\r\n### Build Instructions.\r\n\r\nClone or download the latest build. \r\n\r\nOpen the project file dcpu_developer.pro in Qt Creator and click the build button.\r\n\r\n","tagline":"Qt based DASM IDE","google":"","note":"Don't delete this file! It's used internally to help with page regeneration."}
