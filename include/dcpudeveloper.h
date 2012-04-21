@@ -16,6 +16,8 @@
 #include "emulator.h"
 #include "highlighter.h"
 #include "editor.h"
+#include "glhelper.h"
+#include "memoryviewer.h"
 
 static QString VERSION_NUMBER = "0.2";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";
@@ -80,11 +82,14 @@ private:
 	Phrases *phrases;
 	Highlighter *highlighter;
 
+    GLHelper glHelper;
+
 	QCompleter *completer;
 
 	QList<QString> codeCompleteList;
 
 	Editor *editor;
+    MemoryViewer *memoryViewer;
 
     QString currentFilename;
 
@@ -96,7 +101,7 @@ private:
 	void setupConnections();
 
 	void addToCodeComplete(QString newEntry);
-	
+
 	QAbstractItemModel* modelFromFile(const QString &filename);
 };
 

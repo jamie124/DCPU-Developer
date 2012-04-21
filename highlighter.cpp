@@ -1,5 +1,5 @@
+#include <QDebug>
 #include "include/highlighter.h"
-
 
 Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 {
@@ -49,6 +49,10 @@ void Highlighter::highlightBlock(const QString &text)
 		while (index >= 0) {
 			int length = expression.matchedLength();
 			setFormat(index, length, rule.format);
+
+			if (text.contains(QRegExp(":[^ ]*"))) {
+				qDebug() << text.mid(text.indexOf(":") + 1, length - 1);
+			}
 			index = expression.indexIn(text, index + length);
 		}
 	}

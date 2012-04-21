@@ -4,6 +4,7 @@
 #include <QKeySequence>
 #include <QStringListModel>
 #include <QGridLayout>
+#include <QSizePolicy>
 
 #include "include/dcpudeveloper.h"
 
@@ -31,7 +32,13 @@ QMainWindow(parent),
 	QGridLayout *layout = new QGridLayout;
 
 	layout->addWidget(editor);
-	ui->editor_gb->setLayout(layout);
+    ui->default_editor_tab->setLayout(layout);
+
+    memoryViewer = new MemoryViewer(&glHelper, this);
+	
+	memoryViewer->setFixedSize(450, 300);
+    ui->debug_layout->addWidget(memoryViewer, 0, Qt::AlignRight);
+
 
 	QFile file(TEMP_FILENAME);
 

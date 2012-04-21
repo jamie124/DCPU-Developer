@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui opengl
 
 TARGET = dcpu_developer
 TEMPLATE = app
@@ -16,7 +16,9 @@ SOURCES += main.cpp\
     emulator.cpp \
     phrases.cpp \
     highlighter.cpp \
-    editor.cpp
+    editor.cpp \
+    memoryviewer.cpp \
+    glhelper.cpp
 
 HEADERS  += dcpudeveloper.h \
     emulator.h \
@@ -29,6 +31,8 @@ HEADERS  += dcpudeveloper.h \
     include/editor.h \
     include/dcpudeveloper.h \
     include/constants.h \
-    include/assembler.h
+    include/assembler.h \
+    include/memoryviewer.h \
+    include/glhelper.h
 
 FORMS    += dcpudeveloper.ui
