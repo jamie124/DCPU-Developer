@@ -37,7 +37,7 @@ class DCPUDeveloper : public QMainWindow
 public:
     DCPUDeveloper(QWidget *parent = 0);
     ~DCPUDeveloper();
-    
+
 private slots:
 	// Assembler UI update requests
 	void addAssemblerMessage(assembler_error_t* error);
@@ -45,6 +45,9 @@ private slots:
 	// Emulator UI update requests
     void updateRegisters(registers_t* registers);
 	void endEmulation(int endCode);
+
+	// Memory Viewer timer
+	void updateScrollbarValue(int value);
 
     void on_actionOpen_triggered();
 
@@ -73,6 +76,8 @@ private slots:
     void on_actionNew_triggered();
 
     void on_actionAbout_triggered();
+
+    void on_memory_scrollbar_valueChanged(int value);
 
 private:
     Ui::DCPUDeveloper *ui;

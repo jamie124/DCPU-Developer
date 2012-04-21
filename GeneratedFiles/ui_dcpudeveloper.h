@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Sat Apr 21 22:45:49 2012
+** Created: Sun Apr 22 00:33:07 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -24,6 +24,7 @@
 #include <QtGui/QMenu>
 #include <QtGui/QMenuBar>
 #include <QtGui/QPushButton>
+#include <QtGui/QScrollBar>
 #include <QtGui/QSpinBox>
 #include <QtGui/QStatusBar>
 #include <QtGui/QTabWidget>
@@ -105,6 +106,7 @@ public:
     QLabel *label_8;
     QSpinBox *register_j;
     QGroupBox *memory_gb;
+    QScrollBar *memory_scrollbar;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuHelp;
@@ -439,6 +441,13 @@ public:
 
 
         gridLayout_4->addLayout(horizontalLayout, 0, 0, 1, 1);
+
+        memory_scrollbar = new QScrollBar(registers_tab);
+        memory_scrollbar->setObjectName(QString::fromUtf8("memory_scrollbar"));
+        memory_scrollbar->setMaximum(1);
+        memory_scrollbar->setOrientation(Qt::Vertical);
+
+        gridLayout_4->addWidget(memory_scrollbar, 0, 1, 1, 1);
 
         build_debug_tabwidget->addTab(registers_tab, QString());
 

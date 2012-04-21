@@ -1,6 +1,7 @@
 #include <QtGui>
 
 #include "include/glhelper.h"
+#include "include/emulator.h"
 
 GLHelper::GLHelper()
 {
@@ -41,9 +42,17 @@ void GLHelper::paint(QPainter *painter, QMap<int, int> &memoryMap, QPaintEvent *
 	painter->setFont(textFont);
 
 	int i = 0;
+
+	if (rowOffset > 0) {
+		i += (rowOffset * blocksPerRow);
+	}
+
+	//qDebug() << "rowOffset:" << rowOffset << " rows:" << rows << " blocks:" << blocksPerRow << " i:" << i;
+
 	int offset = 0;
 	QString value = "";
 
+	// Draw labels and memory locations
 	for (int y = 1; y <= rows; y++) {
 		offset += i;
 
@@ -66,4 +75,21 @@ void GLHelper::paint(QPainter *painter, QMap<int, int> &memoryMap, QPaintEvent *
 	// Draw line seperating offset labels
 	painter->setPen(QPen(Qt::white, 2));
 	painter->drawLine(QPointF(WIDTH_OFFSET * 2, 0), QPointF(WIDTH_OFFSET * 2, viewerHeight));
+}
+
+// Work out how many rows in total will be needed
+long GLHelper::getTotalRows() 
+{
+	return MEMORY_LIMIT / blocksPerRow;
+}
+
+// Get number of rows that will fit in memory window
+int GLHelper::getRowsPerWindow()
+{
+	return 1;
+}
+
+void GLHelper::setRowOffset(int value)
+{
+	rowOffset = value;
 }

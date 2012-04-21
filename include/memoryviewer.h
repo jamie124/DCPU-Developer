@@ -20,6 +20,9 @@ public:
 public slots:
 	void animate();
 
+signals:
+	void setScrollbarValue(int);
+
 protected:
 	void paintEvent(QPaintEvent *event);
 

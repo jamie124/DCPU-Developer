@@ -36,27 +36,19 @@ QMainWindow(parent),
     ui->default_editor_tab->setLayout(editorLayout);
 
     memoryViewer = new MemoryViewer(&glHelper, this);
-	
-	//memoryViewer->setFixedSize(ui->debug_layout->sizeHint());
-
-	//ui->debug_layout->addWidget(memoryViewer, 0, Qt::AlignRight);
 
     QGridLayout *memoryLayout = new QGridLayout;
-
-	/*
-	QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	sizePolicy.setHorizontalStretch(0);
-	sizePolicy.setVerticalStretch(0);
-	ui->memory_gb->setSizePolicy(sizePolicy);
-	*/
 
     memoryLayout->addWidget(memoryViewer);
     ui->memory_gb->setLayout(memoryLayout);
 
 	memoryViewer->setFixedSize(500, 150);
-	//memoryViewer->setSizePolicy(ui->memory_gb->sizePolicy());
 
 	glHelper.setWindowSize(memoryViewer->width(), memoryViewer->height());
+
+	// Set memory scrollbar max value
+	ui->memory_scrollbar->setMaximum(glHelper.getTotalRows());
+	ui->memory_scrollbar->setSingleStep(glHelper.getRowsPerWindow());
 
 	QFile file(TEMP_FILENAME);
 
@@ -117,12 +109,25 @@ void DCPUDeveloper::setupConnections()
 	// TEMPORARY
 	QMap<int, int> tempMap;
 
-	tempMap[0] = 13;
+	tempMap[0] = 1;
 	tempMap[1] = 2;
+	tempMap[2] = 3;
+	tempMap[3] = 4;
+	tempMap[4] = 5;
+	tempMap[5] = 6;
+	tempMap[6] = 7;
+	tempMap[7] = 8;
+	tempMap[8] = 9;
+	tempMap[9] = 10;
+	tempMap[10] = 11;
+	tempMap[11] = 12;
+	tempMap[12] = 13;
 
 	memoryViewer->setMemoryMap(tempMap);
 
 	connect(timer, SIGNAL(timeout()), memoryViewer, SLOT(animate()));
+	connect(timer, SIGNAL(setScrollbarValue(int)), memoryViewer, SLOT(updateScrollbarValue(int)));
+
 	timer->start(30);
 }
 
@@ -264,6 +269,12 @@ void DCPUDeveloper::updateRegisters(registers_t* registers)
 
 }
 
+// Set the max memory scrollbar value
+void DCPUDeveloper::updateScrollbarValue(int value)
+{
+	ui->memory_scrollbar->setMaximum(value);
+}
+
 void DCPUDeveloper::endEmulation(int endCode)
 {
 	appendLogMessage(phrases->getResponseMessage(endCode));
@@ -330,4 +341,10 @@ void DCPUDeveloper::on_actionAbout_triggered()
 {
 	QMessageBox::about(this, "About", "DCPU Developer - " + VERSION_NUMBER);
 
+}
+
+
+void DCPUDeveloper::on_memory_scrollbar_valueChanged(int value)
+{
+	glHelper.setRowOffset(value);
 }

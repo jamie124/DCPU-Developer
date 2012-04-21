@@ -19,6 +19,10 @@ public:
 	~GLHelper(void);
 
 	void setWindowSize(int width, int hight);
+	long getTotalRows();
+	int getRowsPerWindow();
+
+	void setRowOffset(int value);
 
 	void paint(QPainter *painter, QMap<int, int> &memoryMap, QPaintEvent *event, int elapsed);
 
@@ -29,8 +33,8 @@ private:
 
 	int viewerWidth, viewerHeight;
 	int rows, blocksPerRow;
+	int rowOffset;							// Number of rows to scroll 
 	int highlightedX, highlightedY;			// TODO: Will be needed for highlighting a block of data.
-
 };
 
 #endif
