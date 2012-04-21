@@ -36,12 +36,12 @@
       <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="Generated Files\Debug">
-      <UniqueIdentifier>{fed59ae2-592e-417d-b2e1-ecf1e066a33d}</UniqueIdentifier>
+      <UniqueIdentifier>{a981b054-f943-40f3-a009-bb4398ae4bc7}</UniqueIdentifier>
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="Generated Files\Release">
-      <UniqueIdentifier>{b1e167ed-2cd7-4cee-aa50-7677cf029ce2}</UniqueIdentifier>
+      <UniqueIdentifier>{93d8c91d-7fa0-40da-8ba0-aa960179e09c}</UniqueIdentifier>
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
@@ -112,57 +112,43 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="dcpudeveloper.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
     <CustomBuild Include="include\assembler.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <ClInclude Include="include\constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dcpudeveloper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <CustomBuild Include="include\dcpudeveloper.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <ClInclude Include="editor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <CustomBuild Include="include\editor.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <ClInclude Include="emulator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <CustomBuild Include="include\emulator.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <ClInclude Include="include\glhelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="highlighter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <CustomBuild Include="include\highlighter.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="include\memoryviewer.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <ClInclude Include="include\phrases.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="phrases.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="dcpudeveloper.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_dcpudeveloper.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\glhelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\phrases.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

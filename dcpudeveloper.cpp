@@ -5,6 +5,7 @@
 #include <QStringListModel>
 #include <QGridLayout>
 #include <QSizePolicy>
+#include <QTimer>
 
 #include "include/dcpudeveloper.h"
 
@@ -29,16 +30,33 @@ QMainWindow(parent),
 
 	editor->setCompleter(completer);
 
-	QGridLayout *layout = new QGridLayout;
+    QGridLayout *editorLayout = new QGridLayout;
 
-	layout->addWidget(editor);
-    ui->default_editor_tab->setLayout(layout);
+    editorLayout->addWidget(editor);
+    ui->default_editor_tab->setLayout(editorLayout);
 
     memoryViewer = new MemoryViewer(&glHelper, this);
 	
-	memoryViewer->setFixedSize(450, 300);
-    ui->debug_layout->addWidget(memoryViewer, 0, Qt::AlignRight);
+	//memoryViewer->setFixedSize(ui->debug_layout->sizeHint());
 
+	//ui->debug_layout->addWidget(memoryViewer, 0, Qt::AlignRight);
+
+    QGridLayout *memoryLayout = new QGridLayout;
+
+	/*
+	QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	sizePolicy.setHorizontalStretch(0);
+	sizePolicy.setVerticalStretch(0);
+	ui->memory_gb->setSizePolicy(sizePolicy);
+	*/
+
+    memoryLayout->addWidget(memoryViewer);
+    ui->memory_gb->setLayout(memoryLayout);
+
+	memoryViewer->setFixedSize(500, 150);
+	//memoryViewer->setSizePolicy(ui->memory_gb->sizePolicy());
+
+	glHelper.setWindowSize(memoryViewer->width(), memoryViewer->height());
 
 	QFile file(TEMP_FILENAME);
 
@@ -92,6 +110,20 @@ void DCPUDeveloper::setupConnections()
 	connect(emulator, SIGNAL(registersChanged(registers_t*)), this,
 		SLOT(updateRegisters(registers_t*)), Qt::DirectConnection);
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+
+	// Memory viewer
+	QTimer *timer = new QTimer(this);
+
+	// TEMPORARY
+	QMap<int, int> tempMap;
+
+	tempMap[0] = 13;
+	tempMap[1] = 2;
+
+	memoryViewer->setMemoryMap(tempMap);
+
+	connect(timer, SIGNAL(timeout()), memoryViewer, SLOT(animate()));
+	timer->start(30);
 }
 
 

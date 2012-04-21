@@ -16,6 +16,11 @@ MemoryViewer::~MemoryViewer(void)
 {
 }
 
+void MemoryViewer::setMemoryMap(QMap<int, int> map) 
+{
+	memoryMap = map;
+}
+
 void MemoryViewer::animate()
 {
 	elapsed = (elapsed + qobject_cast<QTimer*>(sender())->interval()) % 1000;
@@ -28,6 +33,6 @@ void MemoryViewer::paintEvent(QPaintEvent *event)
 	
 	painter.begin(this);
 	painter.setRenderHint(QPainter::Antialiasing);
-	glHelper->paint(&painter, event, elapsed);
+	glHelper->paint(&painter, memoryMap, event, elapsed);
 	painter.end();
 }

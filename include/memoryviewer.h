@@ -15,6 +15,8 @@ public:
 	MemoryViewer(GLHelper *glHelper, QWidget *parent = 0);
 	~MemoryViewer();
 
+	void setMemoryMap(QMap<int, int> map);
+
 public slots:
 	void animate();
 
@@ -25,7 +27,7 @@ private:
 	GLHelper *glHelper;
 	int elapsed;
 
-private:
+	QMap<int, int> memoryMap;
 };
 
 #endif

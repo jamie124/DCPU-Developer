@@ -8,19 +8,29 @@
 class QPainter;
 class QPaintEvent;
 
+static int BLOCK_HEIGHT = 20;
+static int BLOCK_WIDTH = 36;
+static int WIDTH_OFFSET = 25;
+
 class GLHelper
 {
 public:
 	GLHelper(void);
 	~GLHelper(void);
 
-	void paint(QPainter *painter, QPaintEvent *event, int elapsed);
+	void setWindowSize(int width, int hight);
+
+	void paint(QPainter *painter, QMap<int, int> &memoryMap, QPaintEvent *event, int elapsed);
 
 private:
 	QBrush background;
-	QBrush circleBrush;
 	QFont textFont;
 	QPen textPen;
+
+	int viewerWidth, viewerHeight;
+	int rows, blocksPerRow;
+	int highlightedX, highlightedY;			// TODO: Will be needed for highlighting a block of data.
+
 };
 
 #endif

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Sat Apr 21 16:04:01 2012
+** Created: Sat Apr 21 22:45:49 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -78,8 +78,8 @@ public:
     QGridLayout *gridLayout_8;
     QColumnView *columnView;
     QWidget *registers_tab;
-    QGridLayout *gridLayout_6;
-    QHBoxLayout *debug_layout;
+    QGridLayout *gridLayout_4;
+    QHBoxLayout *horizontalLayout;
     QGroupBox *registers_gb;
     QGridLayout *gridLayout_3;
     QLabel *label;
@@ -104,7 +104,7 @@ public:
     QSpinBox *register_x;
     QLabel *label_8;
     QSpinBox *register_j;
-    QLabel *test;
+    QGroupBox *memory_gb;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuHelp;
@@ -179,7 +179,6 @@ public:
         gridLayout_9->addWidget(treeView, 0, 0, 1, 1);
 
         project_tabwidget->addTab(project_tab, QString());
-        treeView->raise();
         disassembly_tab = new QWidget();
         disassembly_tab->setObjectName(QString::fromUtf8("disassembly_tab"));
         project_tabwidget->addTab(disassembly_tab, QString());
@@ -256,7 +255,7 @@ public:
         sizePolicy1.setHeightForWidth(build_debug_tabwidget->sizePolicy().hasHeightForWidth());
         build_debug_tabwidget->setSizePolicy(sizePolicy1);
         build_debug_tabwidget->setMinimumSize(QSize(800, 160));
-        build_debug_tabwidget->setMaximumSize(QSize(16777215, 153));
+        build_debug_tabwidget->setMaximumSize(QSize(16777215, 200));
         build_debug_tabwidget->setTabPosition(QTabWidget::South);
         messages_tab = new QWidget();
         messages_tab->setObjectName(QString::fromUtf8("messages_tab"));
@@ -284,13 +283,13 @@ public:
         build_debug_tabwidget->addTab(errors_tab, QString());
         registers_tab = new QWidget();
         registers_tab->setObjectName(QString::fromUtf8("registers_tab"));
-        gridLayout_6 = new QGridLayout(registers_tab);
-        gridLayout_6->setSpacing(6);
-        gridLayout_6->setContentsMargins(11, 11, 11, 11);
-        gridLayout_6->setObjectName(QString::fromUtf8("gridLayout_6"));
-        debug_layout = new QHBoxLayout();
-        debug_layout->setSpacing(6);
-        debug_layout->setObjectName(QString::fromUtf8("debug_layout"));
+        gridLayout_4 = new QGridLayout(registers_tab);
+        gridLayout_4->setSpacing(6);
+        gridLayout_4->setContentsMargins(11, 11, 11, 11);
+        gridLayout_4->setObjectName(QString::fromUtf8("gridLayout_4"));
+        horizontalLayout = new QHBoxLayout();
+        horizontalLayout->setSpacing(6);
+        horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
         registers_gb = new QGroupBox(registers_tab);
         registers_gb->setObjectName(QString::fromUtf8("registers_gb"));
         gridLayout_3 = new QGridLayout(registers_gb);
@@ -424,16 +423,22 @@ public:
 
         gridLayout_3->addWidget(register_j, 3, 3, 1, 1);
 
-        test = new QLabel(registers_gb);
-        test->setObjectName(QString::fromUtf8("test"));
 
-        gridLayout_3->addWidget(test, 3, 4, 1, 1);
+        horizontalLayout->addWidget(registers_gb);
+
+        memory_gb = new QGroupBox(registers_tab);
+        memory_gb->setObjectName(QString::fromUtf8("memory_gb"));
+        QSizePolicy sizePolicy3(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        sizePolicy3.setHorizontalStretch(0);
+        sizePolicy3.setVerticalStretch(0);
+        sizePolicy3.setHeightForWidth(memory_gb->sizePolicy().hasHeightForWidth());
+        memory_gb->setSizePolicy(sizePolicy3);
+        memory_gb->setMinimumSize(QSize(500, 150));
+
+        horizontalLayout->addWidget(memory_gb);
 
 
-        debug_layout->addWidget(registers_gb);
-
-
-        gridLayout_6->addLayout(debug_layout, 0, 0, 1, 1);
+        gridLayout_4->addLayout(horizontalLayout, 0, 0, 1, 1);
 
         build_debug_tabwidget->addTab(registers_tab, QString());
 
@@ -551,7 +556,7 @@ public:
         label_11->setText(QApplication::translate("DCPUDeveloper", "O:", 0, QApplication::UnicodeUTF8));
         label_4->setText(QApplication::translate("DCPUDeveloper", "X:", 0, QApplication::UnicodeUTF8));
         label_8->setText(QApplication::translate("DCPUDeveloper", "J:", 0, QApplication::UnicodeUTF8));
-        test->setText(QString());
+        memory_gb->setTitle(QApplication::translate("DCPUDeveloper", "Memory View", 0, QApplication::UnicodeUTF8));
         build_debug_tabwidget->setTabText(build_debug_tabwidget->indexOf(registers_tab), QApplication::translate("DCPUDeveloper", "Debug Info", 0, QApplication::UnicodeUTF8));
         menuFile->setTitle(QApplication::translate("DCPUDeveloper", "File", 0, QApplication::UnicodeUTF8));
         menuHelp->setTitle(QApplication::translate("DCPUDeveloper", "Help", 0, QApplication::UnicodeUTF8));

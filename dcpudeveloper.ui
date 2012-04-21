@@ -63,8 +63,6 @@
          </widget>
         </item>
        </layout>
-       <zorder>treeView</zorder>
-       <zorder>editors_tabwidget</zorder>
       </widget>
       <widget class="QWidget" name="disassembly_tab">
        <attribute name="title">
@@ -176,7 +174,7 @@
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>153</height>
+        <height>200</height>
        </size>
       </property>
       <property name="tabPosition">
@@ -209,9 +207,9 @@
        <attribute name="title">
         <string>Debug Info</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_6">
+       <layout class="QGridLayout" name="gridLayout_4">
         <item row="0" column="0">
-         <layout class="QHBoxLayout" name="debug_layout">
+         <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QGroupBox" name="registers_gb">
             <property name="title">
@@ -381,14 +379,26 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="4">
-              <widget class="QLabel" name="test">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
             </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="memory_gb">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>500</width>
+              <height>150</height>
+             </size>
+            </property>
+            <property name="title">
+             <string>Memory View</string>
+            </property>
            </widget>
           </item>
          </layout>
