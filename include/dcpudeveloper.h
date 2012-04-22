@@ -43,7 +43,7 @@ private slots:
 	void addAssemblerMessage(assembler_error_t* error);
 
 	// Emulator UI update requests
-    void updateRegisters(registers_t* registers);
+    void updateRegisters(registers_ptr registers);
 	void endEmulation(int endCode);
 
 	// Memory Viewer timer

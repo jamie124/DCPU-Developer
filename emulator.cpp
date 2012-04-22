@@ -17,21 +17,6 @@ Started 7-Apr-2012
 #include "include/phrases.h"
 #include "include/emulator.h"
 
-word_t* memory;
-word_t* registers;
-
-word_t programCounter;
-word_t stackPointer;
-word_t overflow;
-
-word_t cycle;
-
-word_t keyboardPosition;
-
-word_t* literals;
-
-word_t* colourTable;
-
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
 	DEBUG = false;
@@ -39,9 +24,14 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 
 	stepMode = false;
 
+	memory = word_vector(MEMORY_LIMIT);
+	registers = word_vector(NUM_REGISTERS);
+	literals = word_vector(ARG_LITERAL_END - ARG_LITERAL_START);
+
+	latestRegisters = registers_ptr(new registers_t());
+	
 	reset();
 }
-
 
 Emulator::~Emulator(void)
 {
@@ -86,23 +76,31 @@ void Emulator::reset()
 	//stepMode = false;
 
 	// Setup literals
-	literals = new word_t[ARG_LITERAL_END - ARG_LITERAL_START];
+	//literals = new word_t[ARG_LITERAL_END - ARG_LITERAL_START];
 	for (int i = 0; i < ARG_LITERAL_END - ARG_LITERAL_START; i++) {
 		literals[i] = i;
 	}
 
-	memory = new word_t[MEMORY_LIMIT];
+	//memory = new word_t[MEMORY_LIMIT];
+	//memory = word_ptr(new word_t(MEMORY_LIMIT));
+
 	// Init memory
+	memory.empty();
+
 	for (int i = 0; i < MEMORY_LIMIT; i++) {
 		memory[i] = 0;
+		//std::cout << &memory[i];
 	}
+	
 
-	registers = new word_t[NUM_REGISTERS];
+	//registers = new word_t[NUM_REGISTERS];
+	registers.empty();
+
 	for (word_t i = 0; i < NUM_REGISTERS; i++) {
 		registers[i] = 0;
 	}
 
-	latestRegisters = new registers_t;
+	//latestRegisters = new registers_t;
 
 	latestRegisters->a = 0;
 	latestRegisters->b = 0;
@@ -144,10 +142,9 @@ void Emulator::reset()
 
 void Emulator::cleanupMemory()
 {
-	delete literals;
-	delete memory;
-	delete registers;
-	delete latestRegisters;
+	//delete literals;
+	//delete memory;
+	//delete registers;
 	delete colourTable;
 }
 
@@ -198,11 +195,11 @@ void Emulator::run()
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
-		//QMutexLocker lock(&mutex);
+		QMutexLocker lock(&mutex);
 
 		if (!skippingCurrentPass) {
 
-			mutex.lock();
+			
 
 			word_t executingPC = programCounter;
 			instruction_t instruction = memory[programCounter++];
@@ -230,7 +227,6 @@ void Emulator::run()
 			unsigned int resultWithCarry;		// Some opcodes use internal variable
 			bool skipNext = 0;				// Skip the next instruction
 
-			mutex.unlock();
 
 			switch(opcode) {
 			case OP_NONBASIC:
@@ -463,7 +459,7 @@ void Emulator::setRegisters()
 {
 	//QMutexLocker locker(&mutex);
 
-	mutex.lock();
+	//mutex.lock();
 
 	latestRegisters->a = registers[0];
 	latestRegisters->b = registers[1];
@@ -477,7 +473,7 @@ void Emulator::setRegisters()
 	latestRegisters->sp = stackPointer;
 	latestRegisters->o = overflow;
 	
-	mutex.unlock();
+	//mutex.unlock();
 }
 
 word_t* Emulator::evaluateArgument(argument_t argument)

@@ -11,18 +11,20 @@ Started 7-Apr-2012
 #define _EMULATOR_H
 
 #include <QThread>
-#include <iostream>
 #include <QString>
 #include <QMutex>
+#include <QSharedPointer>
+
+#include <iostream>
+#include <vector>
+
 #include <Windows.h>
 
 typedef unsigned short word_t;
 typedef word_t instruction_t;
-
 typedef unsigned char argument_t;
 typedef unsigned char opcode_t;
 typedef argument_t nonbasicOpcode_t;
-
 typedef unsigned char bool_t;
 
 // Opcodes
@@ -83,12 +85,16 @@ typedef struct {
     long pc, sp;
 } registers_t;
 
+// Pointer typedefs
+typedef QSharedPointer<registers_t> registers_ptr;
+typedef std::vector<word_t> word_vector;
+
 class Emulator : public QThread
 {
     Q_OBJECT
 
 signals:
-    void registersChanged(registers_t*);
+    void registersChanged(registers_ptr);
 	void emulationEnded(int);
 
 private:
@@ -104,7 +110,7 @@ private:
 
     QString compiledFilename;
 
-    registers_t* latestRegisters;
+    registers_ptr latestRegisters;
 
 	word_t* evaluateArgument(argument_t argument);
 
@@ -148,6 +154,20 @@ public:
 	void setScreen(word_t row, word_t column, word_t character);
 	void setCursorPos(int x, int y);
 	void clearScreen();
+
+private:
+	//word_t* memory;
+	word_vector memory;
+	word_vector registers;
+	word_vector literals;
+	word_t* colourTable;
+
+	word_t programCounter;
+	word_t stackPointer;
+	word_t overflow;
+	word_t cycle;
+
+	word_t keyboardPosition;
 };
 
 #endif

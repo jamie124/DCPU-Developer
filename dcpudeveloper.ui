@@ -226,10 +226,10 @@
              <item row="0" column="1">
               <widget class="QSpinBox" name="register_a">
                <property name="readOnly">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>
@@ -242,8 +242,11 @@
              </item>
              <item row="0" column="3">
               <widget class="QSpinBox" name="register_y">
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>
@@ -276,8 +279,11 @@
              </item>
              <item row="1" column="1">
               <widget class="QSpinBox" name="register_b">
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>
@@ -290,8 +296,11 @@
              </item>
              <item row="1" column="3">
               <widget class="QSpinBox" name="register_z">
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>
@@ -318,8 +327,11 @@
              </item>
              <item row="2" column="1">
               <widget class="QSpinBox" name="register_c">
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>
@@ -332,8 +344,11 @@
              </item>
              <item row="2" column="3">
               <widget class="QSpinBox" name="register_i">
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>
@@ -360,8 +375,11 @@
              </item>
              <item row="3" column="1">
               <widget class="QSpinBox" name="register_x">
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>
@@ -374,8 +392,11 @@
              </item>
              <item row="3" column="3">
               <widget class="QSpinBox" name="register_j">
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>

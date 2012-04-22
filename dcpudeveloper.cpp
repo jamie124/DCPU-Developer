@@ -6,6 +6,7 @@
 #include <QGridLayout>
 #include <QSizePolicy>
 #include <QTimer>
+#include <QWeakPointer>
 
 #include "include/dcpudeveloper.h"
 
@@ -100,8 +101,8 @@ void DCPUDeveloper::setupConnections()
 		SLOT(addAssemblerMessage(assembler_error_t*)));
 
 	// Emulator
-	connect(emulator, SIGNAL(registersChanged(registers_t*)), this,
-		SLOT(updateRegisters(registers_t*)), Qt::DirectConnection);
+	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
+		SLOT(updateRegisters(registers_ptr)), Qt::DirectConnection);
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 
 	// Memory viewer
@@ -264,16 +265,18 @@ void DCPUDeveloper::addAssemblerMessage(assembler_error_t* error)
 	delete error;
 }
 
-void DCPUDeveloper::updateRegisters(registers_t* registers)
+void DCPUDeveloper::updateRegisters(registers_ptr registers)
 {
+	//QWeakPointer<registers_t> temp(registers);
+
 	ui->register_a->setValue(registers->a);
 	ui->register_b->setValue(registers->b);
 	ui->register_c->setValue(registers->c);
-
+	
 	ui->register_x->setValue(registers->x);
 	ui->register_y->setValue(registers->y);
 	ui->register_z->setValue(registers->z);
-
+	
 	ui->register_i->setValue(registers->i);
 	ui->register_j->setValue(registers->j);
 
@@ -281,6 +284,43 @@ void DCPUDeveloper::updateRegisters(registers_t* registers)
 	ui->register_sp->setValue(registers->sp);
 
 	ui->register_o->setValue(registers->o);
+
+
+	/*
+	ui->register_a->setValue(temp.value->a);
+	ui->register_b->setValue(temp.value->b);
+	ui->register_c->setValue(temp.value->c);
+
+	ui->register_x->setValue(temp.value->x);
+	ui->register_y->setValue(temp.value->y);
+	ui->register_z->setValue(temp.value->z);
+
+	ui->register_i->setValue(temp.value->i);
+	ui->register_j->setValue(temp.value->j);
+
+	ui->register_pc->setValue(temp.value->pc);
+	ui->register_sp->setValue(temp.value->sp);
+
+	ui->register_o->setValue(temp.value->o);
+	*/
+
+	/*
+	ui->register_a->setValue(1);
+	ui->register_b->setValue(1);
+	ui->register_c->setValue(1);
+
+	ui->register_x->setValue(1);
+	ui->register_y->setValue(1);
+	ui->register_z->setValue(1);
+
+	ui->register_i->setValue(1);
+	ui->register_j->setValue(1);
+
+	ui->register_pc->setValue(1);
+	ui->register_sp->setValue(1);
+
+	ui->register_o->setValue(1);
+	*/
 }
 
 // Set the max memory scrollbar value

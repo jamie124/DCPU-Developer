@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Sun Apr 22 15:06:48 2012
+** Created: Sun Apr 22 23:12:52 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -318,8 +318,8 @@ public:
 
         register_a = new QSpinBox(registers_gb);
         register_a->setObjectName(QString::fromUtf8("register_a"));
-        register_a->setReadOnly(true);
-        register_a->setMaximum(999);
+        register_a->setReadOnly(false);
+        register_a->setMaximum(99999);
 
         gridLayout_3->addWidget(register_a, 0, 1, 1, 1);
 
@@ -330,7 +330,8 @@ public:
 
         register_y = new QSpinBox(registers_gb);
         register_y->setObjectName(QString::fromUtf8("register_y"));
-        register_y->setMaximum(999);
+        register_y->setReadOnly(false);
+        register_y->setMaximum(99999);
 
         gridLayout_3->addWidget(register_y, 0, 3, 1, 1);
 
@@ -357,7 +358,8 @@ public:
 
         register_b = new QSpinBox(registers_gb);
         register_b->setObjectName(QString::fromUtf8("register_b"));
-        register_b->setMaximum(999);
+        register_b->setReadOnly(false);
+        register_b->setMaximum(99999);
 
         gridLayout_3->addWidget(register_b, 1, 1, 1, 1);
 
@@ -368,7 +370,8 @@ public:
 
         register_z = new QSpinBox(registers_gb);
         register_z->setObjectName(QString::fromUtf8("register_z"));
-        register_z->setMaximum(999);
+        register_z->setReadOnly(false);
+        register_z->setMaximum(99999);
 
         gridLayout_3->addWidget(register_z, 1, 3, 1, 1);
 
@@ -390,7 +393,8 @@ public:
 
         register_c = new QSpinBox(registers_gb);
         register_c->setObjectName(QString::fromUtf8("register_c"));
-        register_c->setMaximum(999);
+        register_c->setReadOnly(false);
+        register_c->setMaximum(99999);
 
         gridLayout_3->addWidget(register_c, 2, 1, 1, 1);
 
@@ -401,7 +405,8 @@ public:
 
         register_i = new QSpinBox(registers_gb);
         register_i->setObjectName(QString::fromUtf8("register_i"));
-        register_i->setMaximum(999);
+        register_i->setReadOnly(false);
+        register_i->setMaximum(99999);
 
         gridLayout_3->addWidget(register_i, 2, 3, 1, 1);
 
@@ -423,7 +428,8 @@ public:
 
         register_x = new QSpinBox(registers_gb);
         register_x->setObjectName(QString::fromUtf8("register_x"));
-        register_x->setMaximum(999);
+        register_x->setReadOnly(false);
+        register_x->setMaximum(99999);
 
         gridLayout_3->addWidget(register_x, 3, 1, 1, 1);
 
@@ -434,7 +440,8 @@ public:
 
         register_j = new QSpinBox(registers_gb);
         register_j->setObjectName(QString::fromUtf8("register_j"));
-        register_j->setMaximum(999);
+        register_j->setReadOnly(false);
+        register_j->setMaximum(99999);
 
         gridLayout_3->addWidget(register_j, 3, 3, 1, 1);
 
