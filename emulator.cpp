@@ -37,6 +37,8 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 	DEBUG = false;
 	OPCODE_DEBUGGING = false;
 
+	stepMode = false;
+
 	reset();
 }
 
@@ -81,7 +83,7 @@ void Emulator::step()
 // Reset the emulator
 void Emulator::reset() 
 {
-	stepMode = false;
+	//stepMode = false;
 
 	// Setup literals
 	literals = new word_t[ARG_LITERAL_END - ARG_LITERAL_START];
@@ -196,9 +198,11 @@ void Emulator::run()
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
-		QMutexLocker lock(&mutex);
+		//QMutexLocker lock(&mutex);
 
 		if (!skippingCurrentPass) {
+
+			mutex.lock();
 
 			word_t executingPC = programCounter;
 			instruction_t instruction = memory[programCounter++];
@@ -225,6 +229,8 @@ void Emulator::run()
 			// Execute
 			unsigned int resultWithCarry;		// Some opcodes use internal variable
 			bool skipNext = 0;				// Skip the next instruction
+
+			mutex.unlock();
 
 			switch(opcode) {
 			case OP_NONBASIC:
@@ -435,6 +441,7 @@ void Emulator::run()
 			}
 
 			if (stepMode) {
+
 				setRegisters();
 				// Sending the register updates should only be done in step mode, otherwise the 
 				// GUI events will get overloaded.
@@ -454,6 +461,10 @@ void Emulator::run()
 // Update and return the latest registers
 void Emulator::setRegisters()
 {
+	//QMutexLocker locker(&mutex);
+
+	mutex.lock();
+
 	latestRegisters->a = registers[0];
 	latestRegisters->b = registers[1];
 	latestRegisters->c = registers[2];
@@ -465,7 +476,8 @@ void Emulator::setRegisters()
 	latestRegisters->pc = programCounter;
 	latestRegisters->sp = stackPointer;
 	latestRegisters->o = overflow;
-
+	
+	mutex.unlock();
 }
 
 word_t* Emulator::evaluateArgument(argument_t argument)

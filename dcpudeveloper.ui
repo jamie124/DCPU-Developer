@@ -53,7 +53,7 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_9">
         <item row="0" column="0">
-         <widget class="QTreeView" name="treeView">
+         <widget class="QTreeView" name="project_tree">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -145,7 +145,7 @@
          <item row="3" column="1">
           <widget class="QPushButton" name="toggle_step_button">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="text">
             <string>Enable Step Mode</string>
@@ -476,7 +476,13 @@
     <property name="title">
      <string>Program</string>
     </property>
+    <addaction name="actionCompile"/>
+    <addaction name="separator"/>
     <addaction name="actionRun"/>
+    <addaction name="actionReset"/>
+    <addaction name="separator"/>
+    <addaction name="actionEnable_Step_Mode"/>
+    <addaction name="actionStep"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -593,7 +599,42 @@
     <string>Run</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+R</string>
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="actionStep">
+   <property name="text">
+    <string>Step</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
+  </action>
+  <action name="actionEnable_Step_Mode">
+   <property name="text">
+    <string>Enable Step Mode</string>
+   </property>
+   <property name="shortcut">
+    <string>F4</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="actionCompile">
+   <property name="text">
+    <string>Compile</string>
+   </property>
+   <property name="shortcut">
+    <string>F6</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetShortcut</enum>
    </property>
   </action>
  </widget>

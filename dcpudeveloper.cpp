@@ -29,18 +29,19 @@ QMainWindow(parent),
 	completer->setWrapAround(true);
 
 	editor->setCompleter(completer);
+	editor->setFontPointSize(13);
 
-    QGridLayout *editorLayout = new QGridLayout;
+	QGridLayout *editorLayout = new QGridLayout;
 
-    editorLayout->addWidget(editor);
-    ui->default_editor_tab->setLayout(editorLayout);
+	editorLayout->addWidget(editor);
+	ui->default_editor_tab->setLayout(editorLayout);
 
-    memoryViewer = new MemoryViewer(&glHelper, this);
+	memoryViewer = new MemoryViewer(&glHelper, this);
 
-    QGridLayout *memoryLayout = new QGridLayout;
+	QGridLayout *memoryLayout = new QGridLayout;
 
-    memoryLayout->addWidget(memoryViewer);
-    ui->memory_gb->setLayout(memoryLayout);
+	memoryLayout->addWidget(memoryViewer);
+	ui->memory_gb->setLayout(memoryLayout);
 
 	memoryViewer->setFixedSize(500, 150);
 
@@ -265,8 +266,21 @@ void DCPUDeveloper::addAssemblerMessage(assembler_error_t* error)
 
 void DCPUDeveloper::updateRegisters(registers_t* registers)
 {
-	ui->register_pc->setValue(registers->pc);
+	ui->register_a->setValue(registers->a);
+	ui->register_b->setValue(registers->b);
+	ui->register_c->setValue(registers->c);
 
+	ui->register_x->setValue(registers->x);
+	ui->register_y->setValue(registers->y);
+	ui->register_z->setValue(registers->z);
+
+	ui->register_i->setValue(registers->i);
+	ui->register_j->setValue(registers->j);
+
+	ui->register_pc->setValue(registers->pc);
+	ui->register_sp->setValue(registers->sp);
+
+	ui->register_o->setValue(registers->o);
 }
 
 // Set the max memory scrollbar value

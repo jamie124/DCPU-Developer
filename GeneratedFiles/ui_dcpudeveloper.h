@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Sun Apr 22 00:33:07 2012
+** Created: Sun Apr 22 15:06:48 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -52,12 +52,16 @@ public:
     QAction *actionFind_Selection;
     QAction *actionFind_File;
     QAction *actionRun;
+    QAction *actionStep;
+    QAction *actionEnable_Step_Mode;
+    QAction *actionReset;
+    QAction *actionCompile;
     QWidget *centralWidget;
     QGridLayout *gridLayout;
     QTabWidget *project_tabwidget;
     QWidget *project_tab;
     QGridLayout *gridLayout_9;
-    QTreeView *treeView;
+    QTreeView *project_tree;
     QWidget *disassembly_tab;
     QTabWidget *editors_tabwidget;
     QWidget *default_editor_tab;
@@ -153,6 +157,15 @@ public:
         actionFind_File->setObjectName(QString::fromUtf8("actionFind_File"));
         actionRun = new QAction(DCPUDeveloper);
         actionRun->setObjectName(QString::fromUtf8("actionRun"));
+        actionStep = new QAction(DCPUDeveloper);
+        actionStep->setObjectName(QString::fromUtf8("actionStep"));
+        actionEnable_Step_Mode = new QAction(DCPUDeveloper);
+        actionEnable_Step_Mode->setObjectName(QString::fromUtf8("actionEnable_Step_Mode"));
+        actionReset = new QAction(DCPUDeveloper);
+        actionReset->setObjectName(QString::fromUtf8("actionReset"));
+        actionCompile = new QAction(DCPUDeveloper);
+        actionCompile->setObjectName(QString::fromUtf8("actionCompile"));
+        actionCompile->setShortcutContext(Qt::WidgetShortcut);
         centralWidget = new QWidget(DCPUDeveloper);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         centralWidget->setMinimumSize(QSize(1146, 659));
@@ -170,15 +183,15 @@ public:
         gridLayout_9->setSpacing(6);
         gridLayout_9->setContentsMargins(11, 11, 11, 11);
         gridLayout_9->setObjectName(QString::fromUtf8("gridLayout_9"));
-        treeView = new QTreeView(project_tab);
-        treeView->setObjectName(QString::fromUtf8("treeView"));
+        project_tree = new QTreeView(project_tab);
+        project_tree->setObjectName(QString::fromUtf8("project_tree"));
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
-        sizePolicy.setHeightForWidth(treeView->sizePolicy().hasHeightForWidth());
-        treeView->setSizePolicy(sizePolicy);
+        sizePolicy.setHeightForWidth(project_tree->sizePolicy().hasHeightForWidth());
+        project_tree->setSizePolicy(sizePolicy);
 
-        gridLayout_9->addWidget(treeView, 0, 0, 1, 1);
+        gridLayout_9->addWidget(project_tree, 0, 0, 1, 1);
 
         project_tabwidget->addTab(project_tab, QString());
         disassembly_tab = new QWidget();
@@ -239,7 +252,7 @@ public:
 
         toggle_step_button = new QPushButton(program_control_gb);
         toggle_step_button->setObjectName(QString::fromUtf8("toggle_step_button"));
-        toggle_step_button->setEnabled(false);
+        toggle_step_button->setEnabled(true);
 
         gridLayout_2->addWidget(toggle_step_button, 3, 1, 1, 1);
 
@@ -498,7 +511,13 @@ public:
         menuEdit->addAction(menuFind->menuAction());
         menuFind->addAction(actionFind_Selection);
         menuFind->addAction(actionFind_File);
+        menuProgram->addAction(actionCompile);
+        menuProgram->addSeparator();
         menuProgram->addAction(actionRun);
+        menuProgram->addAction(actionReset);
+        menuProgram->addSeparator();
+        menuProgram->addAction(actionEnable_Step_Mode);
+        menuProgram->addAction(actionStep);
 
         retranslateUi(DCPUDeveloper);
 
@@ -539,7 +558,15 @@ public:
         actionFind_File->setText(QApplication::translate("DCPUDeveloper", "Find in File", 0, QApplication::UnicodeUTF8));
         actionFind_File->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+F", 0, QApplication::UnicodeUTF8));
         actionRun->setText(QApplication::translate("DCPUDeveloper", "Run", 0, QApplication::UnicodeUTF8));
-        actionRun->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+R", 0, QApplication::UnicodeUTF8));
+        actionRun->setShortcut(QApplication::translate("DCPUDeveloper", "F5", 0, QApplication::UnicodeUTF8));
+        actionStep->setText(QApplication::translate("DCPUDeveloper", "Step", 0, QApplication::UnicodeUTF8));
+        actionStep->setShortcut(QApplication::translate("DCPUDeveloper", "F7", 0, QApplication::UnicodeUTF8));
+        actionEnable_Step_Mode->setText(QApplication::translate("DCPUDeveloper", "Enable Step Mode", 0, QApplication::UnicodeUTF8));
+        actionEnable_Step_Mode->setShortcut(QApplication::translate("DCPUDeveloper", "F4", 0, QApplication::UnicodeUTF8));
+        actionReset->setText(QApplication::translate("DCPUDeveloper", "Reset", 0, QApplication::UnicodeUTF8));
+        actionReset->setShortcut(QApplication::translate("DCPUDeveloper", "F3", 0, QApplication::UnicodeUTF8));
+        actionCompile->setText(QApplication::translate("DCPUDeveloper", "Compile", 0, QApplication::UnicodeUTF8));
+        actionCompile->setShortcut(QApplication::translate("DCPUDeveloper", "F6", 0, QApplication::UnicodeUTF8));
         project_tabwidget->setTabText(project_tabwidget->indexOf(project_tab), QApplication::translate("DCPUDeveloper", "Project", 0, QApplication::UnicodeUTF8));
         project_tabwidget->setTabText(project_tabwidget->indexOf(disassembly_tab), QApplication::translate("DCPUDeveloper", "Disassembly", 0, QApplication::UnicodeUTF8));
         editors_tabwidget->setTabText(editors_tabwidget->indexOf(default_editor_tab), QApplication::translate("DCPUDeveloper", "Default", 0, QApplication::UnicodeUTF8));

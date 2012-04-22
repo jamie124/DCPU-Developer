@@ -108,6 +108,7 @@ private:
 	void addToCodeComplete(QString newEntry);
 
 	QAbstractItemModel* modelFromFile(const QString &filename);
+
 };
 
 #endif // DCPUDEVELOPER_H
