@@ -267,7 +267,6 @@ void DCPUDeveloper::addAssemblerMessage(assembler_error_t* error)
 
 void DCPUDeveloper::updateRegisters(registers_ptr registers)
 {
-	//QWeakPointer<registers_t> temp(registers);
 
 	ui->register_a->setValue(registers->a);
 	ui->register_b->setValue(registers->b);

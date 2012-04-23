@@ -14,9 +14,9 @@ Started 7-Apr-2012
 #include <QString>
 #include <QMutex>
 #include <QSharedPointer>
+#include <QVector>
 
 #include <iostream>
-#include <vector>
 
 #include <Windows.h>
 
@@ -87,7 +87,7 @@ typedef struct {
 
 // Pointer typedefs
 typedef QSharedPointer<registers_t> registers_ptr;
-typedef std::vector<word_t> word_vector;
+typedef QVector<word_t> word_vector;
 
 class Emulator : public QThread
 {
@@ -121,7 +121,7 @@ private:
 	word_t getInstructionLength(instruction_t instruction);
 	word_t getNextWordOffset(instruction_t instruction, bool_t which);
 
-	void setRegisters();
+	bool setRegisters();
 
 	void reset();
 

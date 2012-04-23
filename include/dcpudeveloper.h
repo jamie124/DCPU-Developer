@@ -10,6 +10,7 @@
 #include <QThread>
 #include <QCompleter>
 #include <QList>
+#include <QAtomicPointer>
 
 #include "phrases.h"
 #include "assembler.h"
