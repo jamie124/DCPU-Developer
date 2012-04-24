@@ -12,7 +12,6 @@ Started 7-Apr-2012
 
 #include <QThread>
 #include <QString>
-#include <QMutex>
 #include <QSharedPointer>
 #include <QVector>
 
@@ -99,8 +98,6 @@ signals:
 
 private:
 
-	QMutex mutex;
-
 	bool DEBUG;
 	bool OPCODE_DEBUGGING;
 
@@ -109,8 +106,6 @@ private:
     volatile bool emulatorRunning;
 
     QString compiledFilename;
-
-    registers_ptr latestRegisters;
 
 	word_t* evaluateArgument(argument_t argument);
 
@@ -121,11 +116,9 @@ private:
 	word_t getInstructionLength(instruction_t instruction);
 	word_t getNextWordOffset(instruction_t instruction, bool_t which);
 
-	bool setRegisters();
+	registers_ptr getRegisters();
 
 	void reset();
-
-	void cleanupMemory();
 
 protected:
     void run();

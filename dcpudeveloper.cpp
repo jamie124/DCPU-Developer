@@ -102,7 +102,7 @@ void DCPUDeveloper::setupConnections()
 
 	// Emulator
 	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
-		SLOT(updateRegisters(registers_ptr)), Qt::DirectConnection);
+		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 
 	// Memory viewer

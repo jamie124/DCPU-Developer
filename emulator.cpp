@@ -28,8 +28,6 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 	registers = word_vector(NUM_REGISTERS);
 	literals = word_vector(ARG_LITERAL_END - ARG_LITERAL_START);
 
-	latestRegisters = registers_ptr(new registers_t());
-
 	reset();
 }
 
@@ -45,22 +43,17 @@ void Emulator::setFilename(QString filename)
 
 void Emulator::startEmulator()
 {
-	mutex.lock();
-
 	reset();
 
 	qDebug() << "Starting emulator";
-	emulatorRunning = true;
 
-	mutex.unlock();
+	emulatorRunning = true;
 
 	start();
 }
 
 void Emulator::toggleStepMode() 
 {
-	//QMutexLocker locker(&mutex);
-	mutex.lock();
 	if (stepMode) {
 		stepMode = false;
 		skippingCurrentPass = false;
@@ -68,100 +61,40 @@ void Emulator::toggleStepMode()
 		stepMode = true;
 		skippingCurrentPass = true;
 	}
-	mutex.unlock();
 }
 
 // Tell emulator loop to execute one more opcode
 void Emulator::step()
 {
-	mutex.lock();
-
 	skippingCurrentPass = false;
-
-	mutex.unlock();
 }
 
 // Reset the emulator
 void Emulator::reset() 
 {
-	//stepMode = false;
-
-	// Setup literals
-	//literals = new word_t[ARG_LITERAL_END - ARG_LITERAL_START];
-
 	literals.empty();
 
 	for (int i = 0; i < ARG_LITERAL_END - ARG_LITERAL_START; i++) {
 		literals[i] = i;
 	}
 
-	//memory = new word_t[MEMORY_LIMIT];
-	//memory = word_ptr(new word_t(MEMORY_LIMIT));
-
-	// Init memory
 	memory.empty();
 
 	for (int i = 0; i < MEMORY_LIMIT; i++) {
 		memory[i] = 0;
-		//std::cout << &memory[i];
 	}
 
-
-	//registers = new word_t[NUM_REGISTERS];
 	registers.empty();
 
 	for (word_t i = 0; i < NUM_REGISTERS; i++) {
 		registers[i] = 0;
 	}
 
-	//latestRegisters = new registers_t;
-
-	latestRegisters->a = 0;
-	latestRegisters->b = 0;
-	latestRegisters->c = 0;
-	latestRegisters->x = 0;
-	latestRegisters->y = 0;
-	latestRegisters->z = 0;
-	latestRegisters->i = 0;
-	latestRegisters->j = 0;
-	latestRegisters->o = 0;
-	latestRegisters->pc = 0;
-	latestRegisters->sp = 0;
-
-	/*
-	// Colour table
-	colourTable = new word_t[NUM_COLOURS];
-	colourTable[0] = 0; // Black
-	colourTable[1] = 4; // Blue
-	colourTable[2] = 2; // Green
-	colourTable[3] = 6; // Cyan
-	colourTable[4] = 1; // Red
-	colourTable[5] = 5; // Magenta
-	colourTable[6] = 3; // Brown
-	colourTable[7] = 7; // Light Gray
-	colourTable[8] = 8; // Gray
-	colourTable[9] = 12; // Light Blue
-	colourTable[10] = 10; // Light Green
-	colourTable[11] = 14; // Light Cyan
-	colourTable[12] = 9; // Light Red
-	colourTable[13] = 13; // Light Magenta
-	colourTable[14] = 11; // Yellow
-	colourTable[15] = 15; // White
-	*/
-
 	programCounter = 0;
 	stackPointer = 0;
 	overflow = 0;
 
 	cycle = 0;
-}
-
-void Emulator::cleanupMemory()
-{
-	//delete literals;
-	//delete memory;
-	//delete registers;
-	//delete colourTable;
 }
 
 void Emulator::stopEmulator()
@@ -212,11 +145,8 @@ void Emulator::run()
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
-		//QMutexLocker lock(&mutex);
 
-		mutex.lock();
 		if (!skippingCurrentPass) {
-			mutex.unlock();
 
 			word_t executingPC = programCounter;
 			instruction_t instruction = memory[programCounter++];
@@ -224,8 +154,6 @@ void Emulator::run()
 			// Decode
 			opcode_t opcode = getOpcode(instruction);
 			nonbasicOpcode_t nonbasicOpcode;
-
-
 
 			word_t* aLoc;
 			word_t* bLoc;
@@ -247,8 +175,6 @@ void Emulator::run()
 			unsigned int resultWithCarry;		// Some opcodes use internal variable
 			bool skipNext = 0;				// Skip the next instruction
 
-			//QMutexLocker lock(&mutex);
-
 			switch(opcode) {
 			case OP_NONBASIC:
 				skipStore = 1;
@@ -264,9 +190,7 @@ void Emulator::run()
 				default:
 					emit emulationEnded(DCPU_RESERVED_OPCODE);
 
-					mutex.lock();
 					emulatorRunning = false;
-					mutex.unlock();
 
 					break;
 				}
@@ -427,9 +351,7 @@ void Emulator::run()
 					|| (opcode == OP_SUB && getArgument(instruction, 1) == ARG_LITERAL_START + 1))) {
 						qDebug() << "SYSTEM HALTED!";
 
-						mutex.lock();
 						emulatorRunning = false;
-						mutex.unlock();
 						break;
 				}
 
@@ -453,9 +375,9 @@ void Emulator::run()
 				//clearScreen();
 				for (int i = 0; i < TERM_HEIGHT; i++) {
 					for (int j = 0; j < TERM_WIDTH; j +=1) {
-						//mutex.lock();
+
 						//word_t toPrint = memory[CONSOLE_START + i * TERM_WIDTH + j];
-						//mutex.unlock();
+
 						//setScreen(i, j, toPrint);
 					}
 
@@ -466,17 +388,14 @@ void Emulator::run()
 
 			if (stepMode) {
 
-				if (setRegisters()){
-					// Sending the register updates should only be done in step mode, otherwise the 
-					// GUI events will get overloaded.
-					emit registersChanged(latestRegisters);
-				}
+				// Sending the register updates should only be done in step mode, otherwise the 
+				// GUI events will get overloaded.
+				emit registersChanged(getRegisters());
+
 				// Skip next pass
 				skippingCurrentPass = true;
 			}
-		} else {
-			mutex.unlock();
-		}
+		} 
 	}
 
 	//cleanupMemory();
@@ -485,41 +404,27 @@ void Emulator::run()
 }
 
 // Update and return the latest registers
-bool Emulator::setRegisters()
+registers_ptr Emulator::getRegisters()
 {
-	//QMutexLocker locker(&mutex);
+	registers_ptr latestRegisters(new registers_t());
 
-	if (mutex.tryLock()) {
+	latestRegisters->a = registers[0];
+	latestRegisters->b = registers[1];
+	latestRegisters->c = registers[2];
+	latestRegisters->x = registers[3];
+	latestRegisters->y = registers[4];
+	latestRegisters->z = registers[5];
+	latestRegisters->i = registers[6];
+	latestRegisters->j = registers[7];
+	latestRegisters->pc = programCounter;
+	latestRegisters->sp = stackPointer;
+	latestRegisters->o = overflow;
 
-		//std::cout << "Trying to set registers: ";
-
-		latestRegisters->a = registers[0];
-		latestRegisters->b = registers[1];
-		latestRegisters->c = registers[2];
-		latestRegisters->x = registers[3];
-		latestRegisters->y = registers[4];
-		latestRegisters->z = registers[5];
-		latestRegisters->i = registers[6];
-		latestRegisters->j = registers[7];
-		latestRegisters->pc = programCounter;
-		latestRegisters->sp = stackPointer;
-		latestRegisters->o = overflow;
-
-		mutex.unlock();
-
-		return true;
-	} else {
-		qDebug() << "Couldn't get lock on registers.";
-
-		return false;
-	}
-
-
+	return latestRegisters;
 }
 
 word_t* Emulator::evaluateArgument(argument_t argument)
 {
-	QMutexLocker lock(&mutex);
 
 	if (argument >= ARG_REG_START && argument < ARG_REG_END) {
 		// Register value
@@ -685,7 +590,6 @@ bool_t Emulator::usesNextWord(argument_t argument)
 // Is argument constant
 bool_t Emulator::isConst(argument_t argument)
 {
-	QMutexLocker locker(&mutex);
 	return (argument >= ARG_LITERAL_START && argument < ARG_LITERAL_END)
 		|| argument == ARG_NEXTWORD;
 }
@@ -724,8 +628,6 @@ instruction_t Emulator::swapByteOrder(instruction_t instruction)
 
 bool Emulator::inStepMode() 
 {
-	QMutexLocker locker(&mutex);
-
 	return stepMode;
 }
 

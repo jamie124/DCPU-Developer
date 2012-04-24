@@ -2,7 +2,6 @@
 #define _ASSEMBLER_H
 
 #include <QThread>
-#include <QMutex>
 
 #include "phrases.h"
 #include "emulator.h"
@@ -42,7 +41,6 @@ signals:
 	void sendAssemblerMessage(assembler_error_t*);
 
 private:
-	QMutex mutex;
 
 	volatile bool assemblerRunning;
 	volatile int lineNumber;
