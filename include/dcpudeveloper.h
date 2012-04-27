@@ -10,7 +10,8 @@
 #include <QThread>
 #include <QCompleter>
 #include <QList>
-#include <QAtomicPointer>
+#include <QSharedPointer>
+#include <QMetaType>
 
 #include "phrases.h"
 #include "assembler.h"
@@ -23,6 +24,8 @@
 static QString VERSION_NUMBER = "0.2";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";
 static QString COMPILED_TEMP_FILENAME = "dcpu_temp.bin";
+
+Q_DECLARE_METATYPE(word_vector)
 
 namespace Ui {
 class DCPUDeveloper;
@@ -41,9 +44,10 @@ public:
 
 private slots:
 	// Assembler UI update requests
-	void addAssemblerMessage(assembler_error_t* error);
+	void assemblerUpdate(assembler_update_t* error);
 
 	// Emulator UI update requests
+	void setFullMemoryBlock(memory_array memory);
     void updateRegisters(registers_ptr registers);
 	void endEmulation(int endCode);
 
@@ -99,7 +103,7 @@ private:
 
     QString currentFilename;
 
-    int running;
+    bool assemblerRunning, emulatorRunning;
 
 	void resetMessages();
     void appendLogMessage(QString message);
@@ -110,6 +114,8 @@ private:
 
 	QAbstractItemModel* modelFromFile(const QString &filename);
 
+	void createAndRunAssembler();
+	void createAndRunEmulator(QString binFile);
 };
 
 #endif // DCPUDEVELOPER_H

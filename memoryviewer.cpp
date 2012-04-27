@@ -14,6 +14,7 @@ MemoryViewer::MemoryViewer(GLHelper *glHelper, QWidget *parent)
 
 MemoryViewer::~MemoryViewer(void)
 {
+	memoryMap.clear();
 }
 
 void MemoryViewer::setMemoryMap(QMap<int, int> map) 

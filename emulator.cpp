@@ -33,7 +33,15 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 
 Emulator::~Emulator(void)
 {
-	wait();
+	memory.clear();
+	memory.squeeze();
+	registers.clear();
+	registers.squeeze();
+	literals.clear();
+
+	emulatorRunning = false;
+
+	this->wait();
 }
 
 void Emulator::setFilename(QString filename)
@@ -72,19 +80,19 @@ void Emulator::step()
 // Reset the emulator
 void Emulator::reset() 
 {
-	literals.empty();
+	//literals.clear();
 
 	for (int i = 0; i < ARG_LITERAL_END - ARG_LITERAL_START; i++) {
 		literals[i] = i;
 	}
 
-	memory.empty();
+	//memory.clear();
 
 	for (int i = 0; i < MEMORY_LIMIT; i++) {
 		memory[i] = 0;
 	}
 
-	registers.empty();
+	//registers.clear();
 
 	for (word_t i = 0; i < NUM_REGISTERS; i++) {
 		registers[i] = 0;
@@ -99,7 +107,13 @@ void Emulator::reset()
 
 void Emulator::stopEmulator()
 {
+	memory.clear();
+	registers.clear();
+	literals.clear();
+
 	emulatorRunning = false;
+
+	this->wait();
 }
 
 
@@ -140,11 +154,21 @@ void Emulator::run()
 
 	program.close();
 
+	// Send the initial memory block to main thread
+	memory_array memoryDump = new int[MEMORY_LIMIT];
+
+	for (int j = 0; j < MEMORY_LIMIT; j++) {
+		memoryDump[j] = memory.at(j);
+	}
+
+	//emit fullMemorySync(memoryDump);
 
 	bool videoDirty = false;
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
+
+		qDebug() << "Running";
 
 		if (!skippingCurrentPass) {
 
@@ -367,38 +391,30 @@ void Emulator::run()
 			if (skipNext) {
 				programCounter += getInstructionLength(memory[programCounter]);
 			}
-
-
-			// TODO: Update video memory
-
+			
 			if (videoDirty) {
-				//clearScreen();
+				clearScreen();
 				for (int i = 0; i < TERM_HEIGHT; i++) {
 					for (int j = 0; j < TERM_WIDTH; j +=1) {
 
-						//word_t toPrint = memory[CONSOLE_START + i * TERM_WIDTH + j];
+						word_t toPrint = memory[CONSOLE_START + i * TERM_WIDTH + j];
 
-						//setScreen(i, j, toPrint);
+						setScreen(i, j, toPrint);
 					}
 
-					//std::cout << std::endl;
 				}
 				videoDirty = false;
 			}
 
+			// TODO: Add a way to toggle this
+			emit registersChanged(getRegisters());
+		
 			if (stepMode) {
-
-				// Sending the register updates should only be done in step mode, otherwise the 
-				// GUI events will get overloaded.
-				emit registersChanged(getRegisters());
-
 				// Skip next pass
 				skippingCurrentPass = true;
 			}
 		} 
 	}
-
-	//cleanupMemory();
 
 	emit emulationEnded(DCPU_SUCCESSFUL);
 }
@@ -637,12 +653,6 @@ void Emulator::setScreen(word_t row, word_t column, word_t character)
 
 	setCursorPos(column, row);
 
-	/*
-	word_t colourData = character >> 7;
-	word_t foreColour = colourData >> 5;
-	word_t backColour = (colourData >> 1) & 0xF;
-	bool_t blinkBit = colourData & 0x1;
-	*/
 	char letter = (character & 0x7F);
 
 	if (letter == '\0') {

@@ -6,7 +6,7 @@
 #include <QGridLayout>
 #include <QSizePolicy>
 #include <QTimer>
-#include <QWeakPointer>
+//#include <QWeakPointer>
 
 #include "include/dcpudeveloper.h"
 
@@ -66,9 +66,10 @@ QMainWindow(parent),
 	// Setup syntax highlighting
 	highlighter = new Highlighter(editor->document());
 
-	running = 0;
+	assemblerRunning = false;
+	emulatorRunning = false;
 
-	assembler = new Assembler();
+	//assembler = new Assembler();
 	emulator = new Emulator();
 	phrases = new Phrases();
 
@@ -79,56 +80,25 @@ DCPUDeveloper::~DCPUDeveloper()
 {
 	delete ui;
 	delete editor;
-	//delete highlighter;
-
-	assembler->stopEmulator();
-
-	delete assembler;
 
 	delete phrases;
 
-	emulator->stopEmulator();
+	delete memoryViewer;
 
-	delete emulator;
+	//emulator->stopEmulator();
+
+	//delete emulator;
 
 }
 
 void DCPUDeveloper::setupConnections() 
 {
 	// Setup thread slots
-	// Assembler
-	connect(assembler, SIGNAL(sendAssemblerMessage(assembler_error_t*)), this,
-		SLOT(addAssemblerMessage(assembler_error_t*)));
-
-	// Emulator
-	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
-		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
-	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 
 	// Memory viewer
 	QTimer *timer = new QTimer(this);
 
-	// TEMPORARY
-	QMap<int, int> tempMap;
-
-	tempMap[0] = 1;
-	tempMap[1] = 2;
-	tempMap[2] = 3;
-	tempMap[3] = 4;
-	tempMap[4] = 5;
-	tempMap[5] = 6;
-	tempMap[6] = 7;
-	tempMap[7] = 8;
-	tempMap[8] = 9;
-	tempMap[9] = 10;
-	tempMap[10] = 11;
-	tempMap[11] = 12;
-	tempMap[12] = 13;
-
-	memoryViewer->setMemoryMap(tempMap);
-
 	connect(timer, SIGNAL(timeout()), memoryViewer, SLOT(animate()));
-	connect(timer, SIGNAL(setScrollbarValue(int)), memoryViewer, SLOT(updateScrollbarValue(int)));
 
 	timer->start(30);
 }
@@ -146,7 +116,6 @@ void DCPUDeveloper::addToCodeComplete(QString newEntry)
 		}
 	}
 	completer->setModel(new QStringListModel(codeList, completer));
-
 }
 
 QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
@@ -178,6 +147,40 @@ QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
 #endif
 	return new QStringListModel(words, completer);
 
+}
+
+// Setup and new assembler thread and start it.
+void DCPUDeveloper::createAndRunAssembler()
+{
+	ui->compile_button->setEnabled(false);
+
+	assembler = new Assembler;
+
+	connect(assembler, SIGNAL(sendAssemblerMessage(assembler_update_t*)), this,
+		SLOT(assemblerUpdate(assembler_update_t*)));
+
+	assembler->setFilename(TEMP_FILENAME.toStdString());
+
+	assembler->startAssembler();
+}
+
+// Setup and new assembler thread and start it.
+void DCPUDeveloper::createAndRunEmulator(QString binFile)
+{
+	ui->run_button->setEnabled(false);
+
+	emulator = new Emulator;
+
+	//qRegisterMetaType<word_vector>();
+	connect(emulator, SIGNAL(fullMemorySync(memory_array)), this, 
+		SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
+	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
+		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
+	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+
+	emulator->setFilename(binFile);
+
+	emulator->startEmulator();
 }
 
 void DCPUDeveloper::on_actionOpen_triggered()
@@ -219,9 +222,8 @@ void DCPUDeveloper::on_compile_button_clicked()
 
 	appendLogMessage("File saved, starting compile.");
 
-	assembler->setFilename(TEMP_FILENAME.toStdString());
+	createAndRunAssembler();
 
-	assembler->startEmulator();
 }
 
 void DCPUDeveloper::appendLogMessage(QString message)
@@ -239,23 +241,40 @@ void DCPUDeveloper::on_run_button_clicked()
 {
 	resetMessages();
 
-	emulator->setFilename(COMPILED_TEMP_FILENAME);
+	//emulator->setFilename(COMPILED_TEMP_FILENAME);
 
-	if (running == 0){
+	if (!emulatorRunning ){
+		/*
 		emulator->startEmulator();
 
 		appendLogMessage("Emulator running.");
 
-		running = 1;
+		emulatorRunning = true;
+		*/
+		createAndRunEmulator(COMPILED_TEMP_FILENAME);
 
 		ui->run_button->setText("Stop");
-	} 
+
+	} else {
+		emulator->stopEmulator();
+
+		delete emulator;
+
+		appendLogMessage("User stopped emulator");
+
+		emulatorRunning = false;
+	}
 }
 
-void DCPUDeveloper::addAssemblerMessage(assembler_error_t* error)
+void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 {
 	if (error->errorCode == ASSEMBLER_SUCESSFUL) {
 		ui->run_button->setEnabled(true);
+		ui->compile_button->setEnabled(true);
+
+		assembler->stopAssembler();
+
+		delete assembler;
 	} else {
 		ui->run_button->setEnabled(false);
 	}
@@ -265,17 +284,30 @@ void DCPUDeveloper::addAssemblerMessage(assembler_error_t* error)
 	delete error;
 }
 
+void DCPUDeveloper::setFullMemoryBlock(memory_array memory)
+{
+	QMap<int, int> temp;
+
+	for(int i = 0; i < MEMORY_LIMIT; i++) {
+		temp[i] = memory[i];
+	}
+
+	delete memory;
+
+	memoryViewer->setMemoryMap(temp);
+
+}
+
 void DCPUDeveloper::updateRegisters(registers_ptr registers)
 {
-
 	ui->register_a->setValue(registers->a);
 	ui->register_b->setValue(registers->b);
 	ui->register_c->setValue(registers->c);
-	
+
 	ui->register_x->setValue(registers->x);
 	ui->register_y->setValue(registers->y);
 	ui->register_z->setValue(registers->z);
-	
+
 	ui->register_i->setValue(registers->i);
 	ui->register_j->setValue(registers->j);
 
@@ -283,43 +315,6 @@ void DCPUDeveloper::updateRegisters(registers_ptr registers)
 	ui->register_sp->setValue(registers->sp);
 
 	ui->register_o->setValue(registers->o);
-
-
-	/*
-	ui->register_a->setValue(temp.value->a);
-	ui->register_b->setValue(temp.value->b);
-	ui->register_c->setValue(temp.value->c);
-
-	ui->register_x->setValue(temp.value->x);
-	ui->register_y->setValue(temp.value->y);
-	ui->register_z->setValue(temp.value->z);
-
-	ui->register_i->setValue(temp.value->i);
-	ui->register_j->setValue(temp.value->j);
-
-	ui->register_pc->setValue(temp.value->pc);
-	ui->register_sp->setValue(temp.value->sp);
-
-	ui->register_o->setValue(temp.value->o);
-	*/
-
-	/*
-	ui->register_a->setValue(1);
-	ui->register_b->setValue(1);
-	ui->register_c->setValue(1);
-
-	ui->register_x->setValue(1);
-	ui->register_y->setValue(1);
-	ui->register_z->setValue(1);
-
-	ui->register_i->setValue(1);
-	ui->register_j->setValue(1);
-
-	ui->register_pc->setValue(1);
-	ui->register_sp->setValue(1);
-
-	ui->register_o->setValue(1);
-	*/
 }
 
 // Set the max memory scrollbar value
@@ -332,9 +327,14 @@ void DCPUDeveloper::endEmulation(int endCode)
 {
 	appendLogMessage(phrases->getResponseMessage(endCode));
 
+	ui->run_button->setEnabled(true);
 	ui->run_button->setText("Run");
 
-	running = 0;
+	emulatorRunning = false;
+
+	emulator->stopEmulator();
+
+	delete emulator;
 }
 
 void DCPUDeveloper::on_toggle_step_button_clicked()

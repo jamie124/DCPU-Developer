@@ -31,14 +31,14 @@ typedef struct assembledInstruction {
 typedef struct {
 	int errorCode;
 	int lineNumber;
-} assembler_error_t;
+} assembler_update_t;
 
 class Assembler : public QThread
 {
 	Q_OBJECT
 
 signals:
-	void sendAssemblerMessage(assembler_error_t*);
+	void sendAssemblerMessage(assembler_update_t*);
 
 private:
 
@@ -70,8 +70,8 @@ public:
 
 	void setFilename(std::string filename);
 
-	void startEmulator();
-	void stopEmulator();
+	void startAssembler();
+	void stopAssembler();
 
 };
 

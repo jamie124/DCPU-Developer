@@ -330,17 +330,19 @@ std::string replace(std::string& str, const std::string& from, const std::string
 
 }
 
-void Assembler::startEmulator()
+void Assembler::startAssembler()
 {
-	qDebug() << "Starting emulator";
+	qDebug() << "Starting assembler";
 	assemblerRunning = true;
 
 	start();
 }
 
-void Assembler::stopEmulator()
+void Assembler::stopAssembler()
 {
 	assemblerRunning = false;
+
+	wait();
 }
 
 void Assembler::setFilename(std::string filename)
@@ -552,7 +554,7 @@ void Assembler::run()
 
 void Assembler::assemblerError(int errorCode, int lineNumber)
 {
-	assembler_error_t* error = new assembler_error_t;
+	assembler_update_t* error = new assembler_update_t;
 
 	error->errorCode = errorCode;
 	error->lineNumber = lineNumber;

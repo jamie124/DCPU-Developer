@@ -27,6 +27,7 @@ typedef argument_t nonbasicOpcode_t;
 typedef unsigned char bool_t;
 
 // Opcodes
+// TODO: Enum this
 static const int OP_NONBASIC = 0;
 static const int OP_SET = 1;
 static const int OP_ADD = 2;
@@ -87,12 +88,14 @@ typedef struct {
 // Pointer typedefs
 typedef QSharedPointer<registers_t> registers_ptr;
 typedef QVector<word_t> word_vector;
+typedef int* memory_array;
 
 class Emulator : public QThread
 {
     Q_OBJECT
 
 signals:
+	void fullMemorySync(memory_array);
     void registersChanged(registers_ptr);
 	void emulationEnded(int);
 
@@ -121,7 +124,7 @@ private:
 	void reset();
 
 protected:
-    void run();
+	void run();
 
 public:
    explicit Emulator(QObject* parent = 0);
@@ -153,7 +156,7 @@ private:
 	word_vector memory;
 	word_vector registers;
 	word_vector literals;
-	word_t* colourTable;
+	//word_t* colourTable;
 
 	word_t programCounter;
 	word_t stackPointer;
