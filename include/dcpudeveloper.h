@@ -104,6 +104,7 @@ private:
     QString currentFilename;
 
     bool assemblerRunning, emulatorRunning;
+	bool inStepMode;
 
 	void resetMessages();
     void appendLogMessage(QString message);

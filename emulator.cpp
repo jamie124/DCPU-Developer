@@ -60,14 +60,20 @@ void Emulator::startEmulator()
 	start();
 }
 
+void Emulator::setStepMode(bool stepMode)
+{
+		this->stepMode = stepMode;
+}
+
 void Emulator::toggleStepMode() 
 {
-	if (stepMode) {
-		stepMode = false;
-		skippingCurrentPass = false;
+	//QMutexLocker locker(&mutex);
+	if (this->stepMode) {
+		this->stepMode = false;
+		this->skippingCurrentPass = false;
 	} else {
-		stepMode = true;
-		skippingCurrentPass = true;
+		this->stepMode = true;
+		this->skippingCurrentPass = true;
 	}
 }
 
@@ -119,9 +125,7 @@ void Emulator::stopEmulator()
 
 void Emulator::run()
 {
-	//clearScreen();
-
-	if (stepMode) {
+	if (this->stepMode) {
 		skippingCurrentPass = true; 
 	} else {
 		skippingCurrentPass = false;
@@ -168,9 +172,7 @@ void Emulator::run()
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
 
-		qDebug() << "Running";
-
-		if (!skippingCurrentPass) {
+		if (skippingCurrentPass == false) {
 
 			word_t executingPC = programCounter;
 			instruction_t instruction = memory[programCounter++];
