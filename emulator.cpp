@@ -186,6 +186,8 @@ void Emulator::run()
 			word_t* bLoc;
 			bool skipStore;
 
+			qDebug() << opcode;
+
 			if (opcode == OP_NONBASIC) {
 				nonbasicOpcode = (nonbasicOpcode_t) getArgument(instruction, 0);
 				aLoc = evaluateArgument(getArgument(instruction, 1), false);
@@ -396,6 +398,7 @@ void Emulator::run()
 			}
 			
 			if (videoDirty) {
+				/*
 				clearScreen();
 				for (int i = 0; i < TERM_HEIGHT; i++) {
 					for (int j = 0; j < TERM_WIDTH; j +=1) {
@@ -407,6 +410,7 @@ void Emulator::run()
 
 				}
 				videoDirty = false;
+				*/
 			}
 
 			// TODO: Add a way to toggle this

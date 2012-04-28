@@ -14,3 +14,4 @@ Debug/
 Win32/
 ipch/
 *.bin
+*.suo
