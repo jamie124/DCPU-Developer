@@ -1,9 +1,9 @@
 /**
-DEmulator Emulator.
+DCPU Emulator.
 Written by James Whitwell, 2012.
 
-Emulator emulation class
-This code orginally based on dcpu-emu https://bitbucket.org/interfect/dcpu-emu
+DCPU emulation class
+This code was started as a port of dcpu-emu https://bitbucket.org/interfect/dcpu-emu
 
 Started 7-Apr-2012 
 */
@@ -155,11 +155,12 @@ void Emulator::run()
 	program.close();
 
 	// Send the initial memory block to main thread
-	memory_array memoryDump = new int[MEMORY_LIMIT];
-
+	//memory_array memoryDump = new int[MEMORY_LIMIT];
+	/*
 	for (int j = 0; j < MEMORY_LIMIT; j++) {
 		memoryDump[j] = memory.at(j);
 	}
+	*/
 
 	//emit fullMemorySync(memoryDump);
 
@@ -167,8 +168,6 @@ void Emulator::run()
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
-
-		qDebug() << "Running";
 
 		if (!skippingCurrentPass) {
 
@@ -185,11 +184,11 @@ void Emulator::run()
 
 			if (opcode == OP_NONBASIC) {
 				nonbasicOpcode = (nonbasicOpcode_t) getArgument(instruction, 0);
-				aLoc = evaluateArgument(getArgument(instruction, 1));
+				aLoc = evaluateArgument(getArgument(instruction, 1), false);
 				skipStore = 1;
 			} else {
-				aLoc = evaluateArgument(getArgument(instruction, 0));
-				bLoc = evaluateArgument(getArgument(instruction, 1));
+				aLoc = evaluateArgument(getArgument(instruction, 0), true);
+				bLoc = evaluateArgument(getArgument(instruction, 1), false);
 				skipStore = isConst(getArgument(instruction, 0));		// If literal
 			}
 
@@ -439,7 +438,7 @@ registers_ptr Emulator::getRegisters()
 	return latestRegisters;
 }
 
-word_t* Emulator::evaluateArgument(argument_t argument)
+word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 {
 
 	if (argument >= ARG_REG_START && argument < ARG_REG_END) {
@@ -488,13 +487,25 @@ word_t* Emulator::evaluateArgument(argument_t argument)
 
 	// Single values
 	switch(argument) {
-	case ARG_POP:
+	case ARG_PUSH_POP:
 		// Value at stack address, increments stack counter
-		if (DEBUG) {
-			std::cout << "POP" << std::endl;
-		}
+		if (inA){
+			// Push
 
-		return &memory[stackPointer++];
+			if (DEBUG) {
+				std::cout << "PUSH" << std::endl;
+			 }
+
+			return &memory[--stackPointer];
+		} else {
+			// Pop
+
+			if (DEBUG) {
+				std::cout << "POP" << std::endl;
+			}
+
+			return &memory[stackPointer++];
+		}
 		break;
 
 	case ARG_PEEK:
@@ -503,9 +514,20 @@ word_t* Emulator::evaluateArgument(argument_t argument)
 			std::cout << "PEEK" << std::endl;
 		}
 
-		return &memory[stackPointer];
+		return &memory[stackPointer + sizeof(word_t)];
 		break;
 
+	case ARG_PICK:
+		// Value at stack address plus next word
+		if (DEBUG) {
+			std::cout << "PEEK" << std::endl;
+		}
+
+		return &memory[stackPointer];
+
+		break;
+
+		/*
 	case ARG_PUSH:
 		// Decreases stack address, returns value at stack address
 		if (DEBUG) {
@@ -514,6 +536,7 @@ word_t* Emulator::evaluateArgument(argument_t argument)
 
 		return &memory[--stackPointer];
 		break;
+		*/
 
 	case ARG_SP:
 		// Current stack pointer value
@@ -533,7 +556,7 @@ word_t* Emulator::evaluateArgument(argument_t argument)
 		return &programCounter;
 		break;
 
-	case ARG_O:
+	case ARG_EX:
 		// Overflow
 		if (DEBUG) {
 			std::cout << "overflow" << std::endl;
@@ -554,9 +577,9 @@ word_t* Emulator::evaluateArgument(argument_t argument)
 
 	case ARG_NEXTWORD:
 		// Next word of ram - literal
-		if (DEBUG) {
+		//if (DEBUG) {
 			std::cout << memory[programCounter] << std::endl;
-		}
+		//}
 
 		cycle++;
 		return &memory[programCounter++];
@@ -578,30 +601,7 @@ argument_t Emulator::getArgument(instruction_t instruction, bool_t which)
 	return ((instruction >> 4) >> 6 * which) & 0x3F;
 }
 
-instruction_t Emulator::setOpcode(instruction_t instruction, opcode_t opcode)
-{
-	// Clear low 4 bits and OR in opcode
-	return (instruction & 0xFFF0) | opcode; 
-}
 
-instruction_t Emulator::setArgument(instruction_t instruction, bool_t which, argument_t argument)
-{
-	if (!which) {
-		// A argument
-		return (instruction & 0xFC0F) | (((word_t) argument) << 4);
-	} else {
-		// B argument
-		return (instruction & 0x03FF) | (((word_t) argument) << 10);		
-	}
-}
-
-// Check if argument references next word
-bool_t Emulator::usesNextWord(argument_t argument)
-{
-	return (argument >= ARG_REG_NEXTWORD_INDEX_START && argument < ARG_REG_NEXTWORD_INDEX_END)
-		|| argument == ARG_NEXTWORD_INDEX
-		|| argument == ARG_NEXTWORD;
-}
 
 // Is argument constant
 bool_t Emulator::isConst(argument_t argument)
@@ -615,9 +615,9 @@ word_t Emulator::getInstructionLength(instruction_t instruction)
 {
 	if (getOpcode(instruction) == OP_NONBASIC) {
 		// 1 argument
-		return 1 + usesNextWord(getArgument(instruction, 1));
+		return 1 + Utils::usesNextWord(getArgument(instruction, 1));
 	} else {
-		return 1 + usesNextWord(getArgument(instruction, 0)) + usesNextWord(getArgument(instruction, 1));
+		return 1 + Utils::usesNextWord(getArgument(instruction, 0)) + Utils::usesNextWord(getArgument(instruction, 1));
 	}
 }
 
@@ -626,20 +626,14 @@ word_t Emulator::getNextWordOffset(instruction_t instruction, bool_t which)
 {
 	if (getOpcode(instruction) == OP_NONBASIC) {
 		// 1 argument, 1 extra word
-		return (which == 0) && usesNextWord(getArgument(instruction, 1));
+		return (which == 0) && Utils::usesNextWord(getArgument(instruction, 1));
 	} else {
-		if (!usesNextWord(getArgument(instruction, which))) {
+		if (!Utils::usesNextWord(getArgument(instruction, which))) {
 			return 0;
 		}
 
-		return 1 + (which && usesNextWord(getArgument(instruction, 0)));
+		return 1 + (which && Utils::usesNextWord(getArgument(instruction, 0)));
 	}
-}
-
-// Reverse the byte order
-instruction_t Emulator::swapByteOrder(instruction_t instruction)
-{
-	return (instruction<<8) | (instruction>>8);
 }
 
 bool Emulator::inStepMode() 

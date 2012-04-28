@@ -19,15 +19,12 @@ Started 7-Apr-2012
 
 #include <Windows.h>
 
-typedef unsigned short word_t;
-typedef word_t instruction_t;
-typedef unsigned char argument_t;
-typedef unsigned char opcode_t;
-typedef argument_t nonbasicOpcode_t;
-typedef unsigned char bool_t;
+#include "constants.h"
+#include "utils.h"
 
 // Opcodes
 // TODO: Enum this
+/*
 static const int OP_NONBASIC = 0;
 static const int OP_SET = 1;
 static const int OP_ADD = 2;
@@ -44,9 +41,11 @@ static const int OP_IFE = 12;
 static const int OP_IFN = 13;
 static const int OP_IFG = 14;
 static const int OP_IFB = 15;
+*/
 
-static const int OP_JSR = 1;
+//static const int OP_JSR = 1;
 
+/*
 static const word_t ARG_REG_START = 0;
 static const word_t ARG_REG_END = 8;
 static const word_t ARG_REG_INDEX_START = 8;
@@ -63,6 +62,8 @@ static const word_t ARG_NEXTWORD_INDEX = 30;
 static const word_t ARG_NEXTWORD = 31;
 static const word_t ARG_LITERAL_START = 32;
 static const word_t ARG_LITERAL_END = 64;
+*/
+
 
 const long MEMORY_LIMIT = 0x10000;
 const int NUM_REGISTERS = 8;
@@ -110,7 +111,7 @@ private:
 
     QString compiledFilename;
 
-	word_t* evaluateArgument(argument_t argument);
+	word_t* evaluateArgument(argument_t argument, bool inA);
 
 	opcode_t getOpcode(instruction_t instruction);
 	argument_t getArgument(instruction_t instruction, bool_t which);
@@ -140,12 +141,6 @@ public:
 	void toggleStepMode();
 
 	void step();
-
-	static bool_t usesNextWord(argument_t argument);
-	static instruction_t setOpcode(instruction_t instruction, opcode_t opcode);
-	static instruction_t setArgument(instruction_t instruction, bool_t which, argument_t argument);
-
-	static instruction_t swapByteOrder(instruction_t instruction);
 
 	void setScreen(word_t row, word_t column, word_t character);
 	void setCursorPos(int x, int y);

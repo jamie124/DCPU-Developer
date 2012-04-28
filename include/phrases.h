@@ -6,6 +6,7 @@
 #include <QMap>
 
 // Return codes
+/*
 static const enum { 
 	// General
 	SOURCE_FILE_MISSING, BIN_FILE_MISSING,
@@ -14,12 +15,9 @@ static const enum {
 	// Assembler
 	ASSEMBLER_SUCESSFUL, ASSEMBLER_FAILED, 
 };
+*/
 
-// Assembler errors
-static const enum {
-	ASSEMBLER_EMPTY_ARG_STR, ASSEMBLER_INVALID_LITERAL, ASSEMBLER_INVALID_REG_NAME,
-	ASSEMBLER_INVALID_REG, ASSEMBLER_UNTERM_LABEL, ASSEMBLER_UNRESOLVED_LABEL_A, ASSEMBLER_UNRESOLVED_LABEL_B
-};
+
 
 class Phrases
 {

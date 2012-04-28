@@ -33,20 +33,24 @@ opcode_t Assembler::opcodeFor(char* command)
 		return OP_MUL;
 	}
 
+	if (!strcmp(command, "mli")) {
+		return OP_MLI;
+	}
+
 	if (!strcmp(command, "div")) {
 		return OP_DIV;
+	}
+
+	if (!strcmp(command, "dvi")) {
+		return OP_DVI;
 	}
 
 	if (!strcmp(command, "mod")) {
 		return OP_MOD;
 	}
 
-	if (!strcmp(command, "shl")) {
-		return OP_SHL;
-	}
-
-	if (!strcmp(command, "shr")) {
-		return OP_SHR;
+	if (!strcmp(command, "mdi")){
+		return OP_MDI;
 	}
 
 	if (!strcmp(command, "and")) {
@@ -61,6 +65,26 @@ opcode_t Assembler::opcodeFor(char* command)
 		return OP_XOR;
 	}
 
+	if (!strcmp(command, "shr")) {
+		return OP_SHR;
+	}
+
+	if (!strcmp(command, "asr")) {
+		return OP_ASR;
+	}
+
+	if (!strcmp(command, "shl")) {
+		return OP_SHL;
+	}
+
+	if (!strcmp(command, "ifb")) {
+		return OP_IFB;
+	}
+
+	if (!strcmp(command, "ifc")) {
+		return OP_IFC;
+	}
+
 	if (!strcmp(command, "ife")) {
 		return OP_IFE;
 	}
@@ -72,8 +96,29 @@ opcode_t Assembler::opcodeFor(char* command)
 	if (!strcmp(command, "ifg")) {
 		return OP_IFG;
 	}
-	if (!strcmp(command, "ifb")) {
-		return OP_IFB;
+
+	if (!strcmp(command, "ifa")) {
+		return OP_IFA;
+	}
+
+	if (!strcmp(command, "ifl")) {
+		return OP_IFL;
+	}
+
+	if (!strcmp(command, "adx")) {
+		return OP_ADX;
+	}
+
+	if (!strcmp(command, "sbx")) {
+		return OP_SBX;
+	}
+
+	if (!strcmp(command, "sti")) {
+		return OP_STI;
+	}
+
+	if (!strcmp(command, "std")) {
+		return OP_STD;
 	}
 
 	// Assume non-basic
@@ -270,19 +315,20 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 			}
 		}
 	}
+
 	// Check for reserved words
+	if (!strcmp(arg, "push")) {
+		toReturn.argument = ARG_PUSH_POP;
+		return toReturn;
+	}
+
 	if (!strcmp(arg, "pop")) {
-		toReturn.argument = ARG_POP;
+		toReturn.argument = ARG_PUSH_POP;
 		return toReturn;
 	}
 
 	if (!strcmp(arg, "peek")) {
 		toReturn.argument = ARG_PEEK;
-		return toReturn;
-	}
-
-	if (!strcmp(arg, "push")) {
-		toReturn.argument = ARG_PUSH;
 		return toReturn;
 	}
 
@@ -296,8 +342,8 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 		return toReturn;
 	}
 
-	if (!strcmp(arg, "o")) {
-		toReturn.argument = ARG_O;
+	if (!strcmp(arg, "ex")) {
+		toReturn.argument = ARG_EX;
 		return toReturn;
 	}
 
@@ -510,7 +556,7 @@ void Assembler::run()
 		if (instruction->data != NULL) {
 			// Reverse endianess
 			for (int i = 0; i < instruction->dataLength; i++) {
-				instruction->data[i] = Emulator::swapByteOrder(instruction->data[i]);
+				instruction->data[i] = Utils::swapByteOrder(instruction->data[i]);
 			}
 
 			qDebug() << "DATA: " << instruction->dataLength << " words";
@@ -519,9 +565,9 @@ void Assembler::run()
 		}
 
 		instruction_t packed = 0;
-        packed = Emulator::setOpcode(packed, instruction->opcode);
-        packed = Emulator::setArgument(packed, 0, instruction->a.argument);
-        packed = Emulator::setArgument(packed, 1, instruction->b.argument);
+        packed = Utils::setOpcode(packed, instruction->opcode);
+        packed = Utils::setArgument(packed, 0, instruction->a.argument);
+        packed = Utils::setArgument(packed, 1, instruction->b.argument);
 
 		instruction_t swapped = (packed>>8) | (packed<<8);
 
@@ -529,7 +575,7 @@ void Assembler::run()
 		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped;
 		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
 
-        if (instruction->opcode != OP_NONBASIC && Emulator::usesNextWord(instruction->a.argument)) {
+        if (instruction->opcode != OP_NONBASIC && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
 
 			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord << " Swapped: " << swapped;
@@ -537,7 +583,7 @@ void Assembler::run()
 			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 		}
 
-        if (Emulator::usesNextWord(instruction->b.argument)) {
+        if (Utils::usesNextWord(instruction->b.argument)) {
 			swapped = (instruction->b.nextWord>>8) | (instruction->b.nextWord<<8);
 
 			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord << " Swapped: " << swapped;
@@ -916,7 +962,7 @@ void Assembler::processArg1(char* command, char* arg, word_t &address, char* lab
 	// Advance address
 	address++;
 
-    if (Emulator::usesNextWord(instruction->a.argument)) {
+    if (Utils::usesNextWord(instruction->a.argument)) {
 		address++;
 	}
 }
@@ -962,7 +1008,7 @@ void Assembler::processArg2(char* command, char* arg, word_t &address, char* lab
 			assemblerError(instruction->b.errorCode, lineNumber);
 		}
 
-        if (Emulator::usesNextWord(instruction->b.argument)) {
+        if (Utils::usesNextWord(instruction->b.argument)) {
 			address++;
 		}
 	}

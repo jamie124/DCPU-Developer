@@ -172,8 +172,10 @@ void DCPUDeveloper::createAndRunEmulator(QString binFile)
 	emulator = new Emulator;
 
 	//qRegisterMetaType<word_vector>();
+	/*
 	connect(emulator, SIGNAL(fullMemorySync(memory_array)), this, 
 		SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
+		*/
 	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
 		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);

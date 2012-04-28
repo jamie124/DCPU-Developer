@@ -14,4 +14,4 @@ set pc, print_string_loop
 set pc, crash
 
 :hello 
-dat "Hello world", 0
+dat "Hello world", 0 

@@ -179,6 +179,7 @@
     <ClCompile Include="Release\moc_memoryviewer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_dcpudeveloper.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="include\glhelper.h" />
     <ClInclude Include="include\parser.h" />
     <ClInclude Include="include\phrases.h" />
+    <ClInclude Include="include\utils.h" />
     <CustomBuild Include="include\memoryviewer.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing memoryviewer.h...</Message>
