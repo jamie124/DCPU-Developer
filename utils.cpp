@@ -26,7 +26,7 @@ instruction_t Utils::setArgument(instruction_t instruction, bool_t which, argume
 {
 	if (!which) {
 		// A argument
-		return (instruction & 0xFC0F) | (((word_t) argument) << 4);
+		return (instruction & 0xFC1F) | (((word_t) argument) << 4);
 	} else {
 		// B argument
 		return (instruction & 0x03FF) | (((word_t) argument) << 10);		

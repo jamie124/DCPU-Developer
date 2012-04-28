@@ -186,7 +186,7 @@ void Emulator::run()
 			word_t* bLoc;
 			bool skipStore;
 
-			qDebug() << opcode;
+			//qDebug() << "Instruction:" << instruction << "Opcode:" << opcode;
 
 			if (opcode == OP_NONBASIC) {
 				nonbasicOpcode = (nonbasicOpcode_t) getArgument(instruction, 0);
@@ -352,6 +352,9 @@ void Emulator::run()
 			case OP_IFN:
 				// Skip next instruction if A == B
 				skipStore = 1;
+
+				qDebug() << *aLoc << " " << *bLoc;
+
 				skipNext = !!(*aLoc == *bLoc);
 				cycle += (2 + skipNext);
 				break;
@@ -398,7 +401,7 @@ void Emulator::run()
 			}
 			
 			if (videoDirty) {
-				/*
+			
 				clearScreen();
 				for (int i = 0; i < TERM_HEIGHT; i++) {
 					for (int j = 0; j < TERM_WIDTH; j +=1) {
@@ -410,7 +413,7 @@ void Emulator::run()
 
 				}
 				videoDirty = false;
-				*/
+			
 			}
 
 			// TODO: Add a way to toggle this
@@ -585,9 +588,9 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 
 	case ARG_NEXTWORD:
 		// Next word of ram - literal
-		//if (DEBUG) {
+		if (DEBUG) {
 			std::cout << memory[programCounter] << std::endl;
-		//}
+		}
 
 		cycle++;
 		return &memory[programCounter++];
@@ -600,7 +603,7 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 // Get an opcode from instruction
 opcode_t Emulator::getOpcode(instruction_t instruction)
 {
-	return instruction & 0xF;
+	return instruction & 0x1F;
 }
 
 argument_t Emulator::getArgument(instruction_t instruction, bool_t which)

@@ -34,7 +34,7 @@ opcode_t Assembler::opcodeFor(char* command)
 	}
 
 	if (!strcmp(command, "mli")) {
-		return OP_MLI;
+		//return OP_MLI;
 	}
 
 	if (!strcmp(command, "div")) {
@@ -42,7 +42,7 @@ opcode_t Assembler::opcodeFor(char* command)
 	}
 
 	if (!strcmp(command, "dvi")) {
-		return OP_DVI;
+		//return OP_DVI;
 	}
 
 	if (!strcmp(command, "mod")) {
@@ -50,7 +50,7 @@ opcode_t Assembler::opcodeFor(char* command)
 	}
 
 	if (!strcmp(command, "mdi")){
-		return OP_MDI;
+		//return OP_MDI;
 	}
 
 	if (!strcmp(command, "and")) {
@@ -70,7 +70,7 @@ opcode_t Assembler::opcodeFor(char* command)
 	}
 
 	if (!strcmp(command, "asr")) {
-		return OP_ASR;
+		//return OP_ASR;
 	}
 
 	if (!strcmp(command, "shl")) {
@@ -82,7 +82,7 @@ opcode_t Assembler::opcodeFor(char* command)
 	}
 
 	if (!strcmp(command, "ifc")) {
-		return OP_IFC;
+		//return OP_IFC;
 	}
 
 	if (!strcmp(command, "ife")) {
@@ -97,6 +97,7 @@ opcode_t Assembler::opcodeFor(char* command)
 		return OP_IFG;
 	}
 
+	/*
 	if (!strcmp(command, "ifa")) {
 		return OP_IFA;
 	}
@@ -120,7 +121,7 @@ opcode_t Assembler::opcodeFor(char* command)
 	if (!strcmp(command, "std")) {
 		return OP_STD;
 	}
-
+	*/
 	// Assume non-basic
 	return OP_NONBASIC;
 }
@@ -565,14 +566,20 @@ void Assembler::run()
 		}
 
 		instruction_t packed = 0;
+
+		qDebug() << instruction->opcode;
+
         packed = Utils::setOpcode(packed, instruction->opcode);
+
         packed = Utils::setArgument(packed, 0, instruction->a.argument);
+
         packed = Utils::setArgument(packed, 1, instruction->b.argument);
 
 		instruction_t swapped = (packed>>8) | (packed<<8);
 
 		// Save instruction
-		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped;
+		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
+		
 		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
 
         if (instruction->opcode != OP_NONBASIC && Utils::usesNextWord(instruction->a.argument)) {
@@ -950,6 +957,8 @@ void Assembler::processArg1(char* command, char* arg, word_t &address, char* lab
 
 	// Determine opcode
 	instruction->opcode = opcodeFor(command);
+
+	//qDebug() << "Command: " << command << "Opcode: " << instruction->opcode;
 
 	instruction->a = argumentFor(arg);
 

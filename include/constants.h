@@ -84,6 +84,25 @@ static const enum {
 	ASSEMBLER_INVALID_REG, ASSEMBLER_UNTERM_LABEL, ASSEMBLER_UNRESOLVED_LABEL_A, ASSEMBLER_UNRESOLVED_LABEL_B
 };
 
+/*
+static const int OP_NONBASIC = 0;
+static const int OP_SET = 1;
+static const int OP_ADD = 2;
+static const int OP_SUB = 3;
+static const int OP_MUL = 4;
+static const int OP_DIV = 5;
+static const int OP_MOD = 6;
+static const int OP_SHL = 7;
+static const int OP_SHR = 8;
+static const int OP_AND = 9;
+static const int OP_BOR = 10;
+static const int OP_XOR = 11;
+static const int OP_IFE = 12;
+static const int OP_IFN = 19;
+static const int OP_IFG = 14;
+static const int OP_IFB = 15;
+*/
+
 static const word_t ARG_REG_START = 0;
 static const word_t ARG_REG_END = 8;
 static const word_t ARG_REG_INDEX_START = 8;
