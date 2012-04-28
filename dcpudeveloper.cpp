@@ -68,9 +68,10 @@ QMainWindow(parent),
 
 	assemblerRunning = false;
 	emulatorRunning = false;
+	inStepMode = false;
 
 	//assembler = new Assembler();
-	emulator = new Emulator();
+	//emulator = new Emulator();
 	phrases = new Phrases();
 
 	setupConnections();
@@ -167,7 +168,7 @@ void DCPUDeveloper::createAndRunAssembler()
 // Setup and new assembler thread and start it.
 void DCPUDeveloper::createAndRunEmulator(QString binFile)
 {
-	ui->run_button->setEnabled(false);
+	//ui->run_button->setEnabled(false);
 
 	emulator = new Emulator;
 
@@ -181,6 +182,8 @@ void DCPUDeveloper::createAndRunEmulator(QString binFile)
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 
 	emulator->setFilename(binFile);
+
+	emulator->setStepMode(inStepMode);
 
 	emulator->startEmulator();
 }
@@ -254,6 +257,8 @@ void DCPUDeveloper::on_run_button_clicked()
 		emulatorRunning = true;
 		*/
 		createAndRunEmulator(COMPILED_TEMP_FILENAME);
+
+		emulatorRunning = true;
 
 		ui->run_button->setText("Stop");
 
@@ -341,20 +346,28 @@ void DCPUDeveloper::endEmulation(int endCode)
 
 void DCPUDeveloper::on_toggle_step_button_clicked()
 {
-	emulator->toggleStepMode();
+	if (!inStepMode) {
+		inStepMode = true;
 
-	if (emulator->inStepMode()) {
 		ui->toggle_step_button->setText("Disable Step Mode");
 		ui->step_button->setEnabled(true);
 	} else {
+		inStepMode = false;
+
 		ui->toggle_step_button->setText("Enable Step Mode");
 		ui->step_button->setEnabled(false);
+	}
+
+	if (emulatorRunning) {
+		emulator->toggleStepMode();
 	}
 }
 
 void DCPUDeveloper::on_step_button_clicked()
 {
-	emulator->step();
+	if (emulatorRunning){
+		emulator->step();
+	}
 }
 
 void DCPUDeveloper::on_actionRun_triggered()

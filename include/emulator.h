@@ -138,6 +138,7 @@ public:
 
 	bool inStepMode();
 
+	void setStepMode(bool stepMode);
 	void toggleStepMode();
 
 	void step();
