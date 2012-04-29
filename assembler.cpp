@@ -571,6 +571,8 @@ void Assembler::run()
 
         packed = Utils::setOpcode(packed, instruction->opcode);
 
+		qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
+
         packed = Utils::setArgument(packed, 0, instruction->a.argument);
 
         packed = Utils::setArgument(packed, 1, instruction->b.argument);

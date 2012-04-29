@@ -186,8 +186,6 @@ void Emulator::run()
 			word_t* bLoc;
 			bool skipStore;
 
-			//qDebug() << "Instruction:" << instruction << "Opcode:" << opcode;
-
 			if (opcode == OP_NONBASIC) {
 				nonbasicOpcode = (nonbasicOpcode_t) getArgument(instruction, 0);
 				aLoc = evaluateArgument(getArgument(instruction, 1), false);
@@ -197,6 +195,16 @@ void Emulator::run()
 				bLoc = evaluateArgument(getArgument(instruction, 1), false);
 				skipStore = isConst(getArgument(instruction, 0));		// If literal
 			}
+
+			/*
+			argument_t temp =  ((instruction >> 4) >> 6 * 0) & 0x3E;
+			argument_t temp2 =  ((instruction >> 4) >> 6 * 1);// & 0x3E;
+			qDebug() << "Opcode:" << opcode << "Instruction: " << instruction << "Arg A:" << temp << "Arg B: " << temp2;
+
+			temp =  ((instruction >> 4) >> 6 * 0) & 0x3F;
+			temp2 =  ((instruction >> 4) >> 6 * 1) & 0x3F;
+			qDebug() << "Opcode:" << opcode << "Instruction: " << instruction << "Arg A:" << temp << "Arg B: " << temp2;
+			*/
 
 			word_t result = 0;
 
@@ -353,7 +361,7 @@ void Emulator::run()
 				// Skip next instruction if A == B
 				skipStore = 1;
 
-				qDebug() << *aLoc << " " << *bLoc;
+				//qDebug() << *aLoc << " " << *bLoc;
 
 				skipNext = !!(*aLoc == *bLoc);
 				cycle += (2 + skipNext);
@@ -609,7 +617,16 @@ opcode_t Emulator::getOpcode(instruction_t instruction)
 argument_t Emulator::getArgument(instruction_t instruction, bool_t which)
 {
 	// First 6 bits for true, second 6 for false
-	return ((instruction >> 4) >> 6 * which) & 0x3F;
+	//return ((instruction >> 4) >> 6 * which) & 0x3F;
+	
+	if (which == 0){
+		// Argument A
+		return (instruction >> 4) & 0x3E;
+	} else {
+		// Argument B
+		return ((instruction >> 4) >> 6);
+	}
+	
 }
 
 
