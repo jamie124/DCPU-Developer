@@ -51,6 +51,9 @@ private slots:
     void updateRegisters(registers_ptr registers);
 	void endEmulation(int endCode);
 
+	// Highlighter requests
+	void addToCodeComplete(QString newEntry, bool removing);
+
 	// Memory Viewer timer
 	void updateScrollbarValue(int value);
 
@@ -110,8 +113,6 @@ private:
     void appendLogMessage(QString message);
 
 	void setupConnections();
-
-	void addToCodeComplete(QString newEntry);
 
 	QAbstractItemModel* modelFromFile(const QString &filename);
 

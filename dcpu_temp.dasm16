@@ -1,16 +1,17 @@
 set pc, main_loop
 
-:main_loop set i, 0
+:main_loop 
+set i, 0
 set a, 0x8000
 
-:print_string_loop
+:print_string_loop 
 bor [a], [hello+i]
 add a, 1
 add i, 1
-ife i, 12
+ife i, 12 
 set pc, print_string_loop
 
-:crash
+:crash 
 set pc, crash
 
 :hello 

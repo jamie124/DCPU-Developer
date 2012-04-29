@@ -6,7 +6,6 @@
 #include <QGridLayout>
 #include <QSizePolicy>
 #include <QTimer>
-//#include <QWeakPointer>
 
 #include "include/dcpudeveloper.h"
 
@@ -70,8 +69,6 @@ QMainWindow(parent),
 	emulatorRunning = false;
 	inStepMode = false;
 
-	//assembler = new Assembler();
-	//emulator = new Emulator();
 	phrases = new Phrases();
 
 	setupConnections();
@@ -85,16 +82,12 @@ DCPUDeveloper::~DCPUDeveloper()
 	delete phrases;
 
 	delete memoryViewer;
-
-	//emulator->stopEmulator();
-
-	//delete emulator;
-
 }
 
 void DCPUDeveloper::setupConnections() 
 {
-	// Setup thread slots
+	connect(highlighter, SIGNAL(addToCodeComplete(QString, bool)), this, 
+		SLOT(addToCodeComplete(QString, bool)));
 
 	// Memory viewer
 	QTimer *timer = new QTimer(this);
@@ -105,17 +98,23 @@ void DCPUDeveloper::setupConnections()
 }
 
 
-void DCPUDeveloper::addToCodeComplete(QString newEntry)
+void DCPUDeveloper::addToCodeComplete(QString newEntry, bool removing)
 {
 	QStringList codeList;
 
 	if (!codeCompleteList.contains(newEntry)){
 		codeCompleteList << newEntry;
-
-		for (int i = 0; i < codeCompleteList.size(); i++) {
-			codeList << codeCompleteList[i];
+	} else {
+		if (removing) {
+			codeCompleteList.removeOne(newEntry);
 		}
 	}
+
+	for (int i = 0; i < codeCompleteList.size(); i++) {
+		codeList << codeCompleteList[i];
+	}
+
+
 	completer->setModel(new QStringListModel(codeList, completer));
 }
 
@@ -175,8 +174,8 @@ void DCPUDeveloper::createAndRunEmulator(QString binFile)
 	//qRegisterMetaType<word_vector>();
 	/*
 	connect(emulator, SIGNAL(fullMemorySync(memory_array)), this, 
-		SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
-		*/
+	SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
+	*/
 	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
 		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);

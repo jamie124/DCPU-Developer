@@ -10,11 +10,23 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 
 	// Keywords
 	QStringList keywordPatterns;
-	keywordPatterns << "\\bset\\b" << "\\badd\\b" << "\\bsub\\b"
-		<< "\\bmul\\b" << "\\bdiv\\b" << "\\bmod\\b"
-		<< "\\bshl\\b" << "\\bshr\\b" << "\\band\\b"
-		<< "\\bbor\\b" << "\\bxor\\b" << "\\bife\\b"
-		<< "\\bifn\\b" << "\\bifg\\b" << "\\bifb\\b" << "\\bdat\\b";
+	keywordPatterns 
+		// Basic Set, Add, Sub
+		<< "\\bset\\b" << "\\badd\\b" << "\\bsub\\b"
+		// Multi / Divide / Mod
+		<< "\\bmul\\b" << "\\bmli\\b" << "\\bdiv\\b"  << "\\bdvi\\b" 
+		<< "\\bmod\\b" << "\\bmdi\\b"
+		// Binary Operations
+		<< "\\band\\b" << "\\bbor\\b" << "\\bxor\\b"
+		<< "\\bshr\\b" << "\\basr\\b" << "\\bshl\\b" 
+		// If's
+		<< "\\bifb\\b" << "\\bifc\\b" << "\\bife\\b" << "\\bifn\\b" << "\\bifg\\b" 
+		<< "\\bifa\\b" << "\\bifl\\b" << "\\bifu\\b"
+		// Overflow
+		<< "\\badx\\b" << "\\bsbx\\b"
+		// Set with Inc / Dec
+		<< "\\bsti\\b" << "\\bstd\\b"
+		<< "\\bdat\\b";
 
 	foreach (const QString &pattern, keywordPatterns) {
 		rule.pattern = QRegExp(pattern);
@@ -51,7 +63,13 @@ void Highlighter::highlightBlock(const QString &text)
 			setFormat(index, length, rule.format);
 
 			if (text.contains(QRegExp(":[^ ]*"))) {
-				qDebug() << text.mid(text.indexOf(":") + 1, length - 1);
+				if (text.contains(" ")) {
+					qDebug() << "Adding " << text.mid(text.indexOf(":") + 1, length - 1);
+					emit addToCodeComplete(text.mid(text.indexOf(":") + 1, length - 1), false);
+				} else {
+					qDebug() << "Removing " << text.mid(text.indexOf(":") + 1, length - 1);
+					emit addToCodeComplete(text.mid(text.indexOf(":") + 1, length - 1), true);
+				}
 			}
 			index = expression.indexIn(text, index + length);
 		}
