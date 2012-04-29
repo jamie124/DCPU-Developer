@@ -107,6 +107,7 @@ void Emulator::reset()
 	programCounter = 0;
 	stackPointer = 0;
 	overflow = 0;
+	currentOpcode = 0;
 
 	cycle = 0;
 }
@@ -238,10 +239,6 @@ void Emulator::run()
 				result = *bLoc;
 				cycle += 1;
 
-				if (OPCODE_DEBUGGING) {
-					setCursorPos(TERM_WIDTH + 6, 2);
-					std::cout << "SET A to " << *bLoc;
-				}
 				break;
 
 			case OP_ADD:
@@ -250,10 +247,6 @@ void Emulator::run()
 				overflow = (result < *aLoc || result < *bLoc);
 				cycle += 2;
 
-				if (OPCODE_DEBUGGING) {
-					setCursorPos(TERM_WIDTH + 6, 2);
-					std::cout << "ADD " << *bLoc << " to A";
-				}
 				break;
 
 			case OP_SUB:
@@ -262,27 +255,28 @@ void Emulator::run()
 				overflow = (result > *aLoc) ? 0xFFFF : 0;
 				cycle += 2;
 
-				if (OPCODE_DEBUGGING) {
-					setCursorPos(TERM_WIDTH + 6, 2);
-					std::cout << "SUB " << *bLoc << " FROM A";
-				}
 				break;
 
 			case OP_MUL:
 				// Multiple A by B, set O
 				resultWithCarry = (unsigned int) *aLoc * (unsigned int) *bLoc;
 				result = (word_t) (resultWithCarry & 0xFFFF);	// Low word
-				overflow = (word_t) (resultWithCarry >> 16);	// High word
+				overflow = (resultWithCarry >> 16);
 				cycle += 2;
 
-				if (OPCODE_DEBUGGING) {
-					setCursorPos(TERM_WIDTH + 6, 2);
-					std::cout << "MUL A by " << *bLoc;
-				}
+				break;
+
+			case OP_MLI:
+				// Multiple A by B
+				resultWithCarry = (int) *aLoc * (int) *bLoc;
+				result = (word_t) (resultWithCarry & 0xFFFF);	// Low word
+				overflow = (resultWithCarry >> 16);
+				cycle += 2;
+
 				break;
 
 			case OP_DIV:
-				// Divide A by B, set O
+				// Divide A by B, set EX
 				if (*bLoc != 0) {
 					resultWithCarry = ((unsigned int) *aLoc << 16) / (unsigned int) *bLoc;
 					result = (word_t) (resultWithCarry >> 16);		// High word
@@ -294,42 +288,45 @@ void Emulator::run()
 
 				cycle += 3;
 
-				if (OPCODE_DEBUGGING) {
-					setCursorPos(TERM_WIDTH + 6, 2);
-					std::cout << "DIV A by " << *bLoc;
+				break;
+
+			case OP_DVI:
+				// Divide A by B, set EX. Signed
+				if (*bLoc != 0) {
+					resultWithCarry = ((int) *aLoc << 16) / (int) *bLoc;
+					result = (word_t) (resultWithCarry >> 16);		// High word
+					overflow = (word_t) (resultWithCarry & 0xFFFF);	// Low word
+				} else {
+					result = 0;
+					overflow = 0;
 				}
+
+				cycle += 3;
+
 				break;
 
 			case OP_MOD:
 				// Remainder of A over B
 				if (*bLoc != 0) {
-					result = *aLoc % *bLoc;
+					result = (unsigned int) *aLoc % (unsigned int) *bLoc;
 				} else {
 					result = 0;
 				}
 
 				cycle += 3;
 
-				if (OPCODE_DEBUGGING) {
-					setCursorPos(TERM_WIDTH + 6, 2);
-					std::cout << "Remainder of A over  " << *bLoc;
+				break;
+
+			case OP_MDI:
+				// Remainder of A over B. Signed
+				if (*bLoc != 0) {
+					result = (int) *aLoc % (int) *bLoc;
+				} else {
+					result = 0;
 				}
-				break;
 
-			case OP_SHL:
-				// Shift A left B places, set O
-				resultWithCarry = (unsigned int) *aLoc << *bLoc;
-				result = (word_t) (resultWithCarry & 0xFFFF);
-				overflow = (word_t) (resultWithCarry >> 16);
-				cycle += 2;
-				break;
+				cycle += 3;
 
-			case OP_SHR:
-				// Shift A right B places, set O
-				resultWithCarry = (unsigned int) *aLoc >> *bLoc;
-				result = (word_t) (resultWithCarry >> 16);
-				overflow = (word_t) (resultWithCarry & 0xFFFF);
-				cycle += 2;
 				break;
 
 			case OP_AND:
@@ -350,37 +347,123 @@ void Emulator::run()
 				cycle += 1;
 				break;
 
-			case OP_IFE:
-				// Skip next instruction if A != B
+			case OP_SHR:
+				// Shift A right B places, set O
+				resultWithCarry = (unsigned int) *aLoc >> *bLoc;
+				result = (word_t) (resultWithCarry >> 16);
+				overflow = (word_t) (resultWithCarry & 0xFFFF);
+				cycle += 2;
+				break;
+
+			case OP_ASR:
+				// Arithmetic Shift A right B places, set O
+				resultWithCarry = (int) *aLoc >> (unsigned int) *bLoc;
+				result = (word_t) (resultWithCarry >> 16);
+				overflow = (word_t) (resultWithCarry & 0xFFFF);
+				cycle += 2;
+				break;
+
+			case OP_SHL:
+				// Shift A left B places, set O
+				resultWithCarry = (unsigned int) *aLoc << *bLoc;
+				result = (word_t) (resultWithCarry & 0xFFFF);
+				overflow = (word_t) (resultWithCarry >> 16);
+				cycle += 2;
+				break;
+
+			case OP_IFB:
+				// Skip next instruction if (A & B) != 0
 				skipStore = 1;
-				skipNext = !!(*aLoc != *bLoc);
+				skipNext = (((unsigned int)*aLoc & (unsigned int)*bLoc) != 0);
+				cycle += (2 + skipNext);
+				break;
+
+			case OP_IFC:
+				// Skip next instruction if (A & B) == 0
+				skipStore = 1;
+				skipNext = (((unsigned int)*aLoc & (unsigned int)*bLoc) == 0);
+				cycle += (2 + skipNext);
+				break;
+
+			case OP_IFE:
+				// Skip next instruction if A == B
+				skipStore = 1;
+				skipNext = ((unsigned int)*aLoc == (unsigned int)*bLoc);
 				cycle += (2 + skipNext);		// 2, +1 if skipped
 				break;
 
 			case OP_IFN:
-				// Skip next instruction if A == B
+				// Skip next instruction if A != B
 				skipStore = 1;
-
-				//qDebug() << *aLoc << " " << *bLoc;
-
-				skipNext = !!(*aLoc == *bLoc);
+				skipNext = ((unsigned int)*aLoc != (unsigned int)*bLoc);
 				cycle += (2 + skipNext);
 				break;
 
 			case OP_IFG:
-				// Skip next instruction if A <= B
+				// Skip next instruction if A < B
 				skipStore = 1;
-				skipNext = !!(*aLoc <= *bLoc);
+				skipNext = ((unsigned int)*aLoc < (unsigned int)*bLoc);
 				cycle += (2 + skipNext);
 				break;
 
-			case OP_IFB:
-				// Skip next instruction if (A & B) == 0
+			case OP_IFA:
+				// Skip next instruction if A > B. Signed
 				skipStore = 1;
-				skipNext = (!(*aLoc & *bLoc));
+				skipNext = (*aLoc < *bLoc);
 				cycle += (2 + skipNext);
 				break;
 
+			case OP_IFL:
+				// Skip next instruction if A < B
+				skipStore = 1;
+				skipNext = ((unsigned int)*aLoc < (unsigned int)*bLoc);
+				cycle += (2 + skipNext);
+				break;
+
+			case OP_IFU:
+				// Skip next instruction if A < B. Signed
+				skipStore = 1;
+				skipNext = (*aLoc < *bLoc);
+				cycle += (2 + skipNext);
+				break;
+
+			case OP_ADX:
+				// Set A to A + B + EX
+				skipStore = 1;
+				result = (*aLoc + *bLoc + overflow);
+
+				overflow = (result > sizeof(word_t)) ? 1 : 0; 
+
+				cycle += 3;
+				break;
+
+			case OP_SBX:
+				// Set A to A - B + EX
+				skipStore = 1;
+				result = (*aLoc - *bLoc + overflow);
+
+				overflow = (result < 0) ? 0xffff : 0; 
+
+				cycle += 3;
+				break;
+
+			case OP_STI:
+				// Set A to B then decrease I and J by 1
+				result = *bLoc;
+				registers[6] += 1;
+				registers[7] += 1;
+
+				cycle += 2;
+				break;
+
+			case OP_STD:
+				// Set A to B then decrease I and J by 1
+				result = *bLoc;
+				registers[6] -= 1;
+				registers[7] -= 1;
+
+				cycle += 2;
+				break;
 			}
 
 			// Store result back in A, if it's not being skipped

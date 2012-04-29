@@ -7,7 +7,7 @@ set a, 0x8000
 bor [a], [hello+i]
 add a, 1
 add i, 1
-ifn i, 12
+ife i, 12
 set pc, print_string_loop
 
 :crash

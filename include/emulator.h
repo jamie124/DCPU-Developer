@@ -84,6 +84,7 @@ const int NUM_COLOURS = 16;
 typedef struct {
     int a, b, c, x, y, z, i, j, o;
     long pc, sp;
+	word_t opcode;
 } registers_t;
 
 // Pointer typedefs
@@ -158,6 +159,7 @@ private:
 	word_t stackPointer;
 	word_t overflow;
 	word_t cycle;
+	word_t currentOpcode;
 
 	word_t keyboardPosition;
 };
