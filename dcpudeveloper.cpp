@@ -51,17 +51,6 @@ QMainWindow(parent),
 	ui->memory_scrollbar->setMaximum(glHelper.getTotalRows());
 	ui->memory_scrollbar->setSingleStep(glHelper.getRowsPerWindow());
 
-	QFile file(TEMP_FILENAME);
-
-	if (!file.open(QIODevice::ReadOnly)) {
-		QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-	}
-
-	QTextStream in(&file);
-	editor->setText(in.readAll());
-
-	file.close();
-
 	// Setup syntax highlighting
 	highlighter = new Highlighter(editor->document());
 
@@ -72,10 +61,15 @@ QMainWindow(parent),
 	phrases = new Phrases();
 
 	setupConnections();
+
+	// Load Config
+	loadSettings();
 }
 
 DCPUDeveloper::~DCPUDeveloper()
 {
+	saveSettings();
+
 	delete ui;
 	delete editor;
 
@@ -86,6 +80,10 @@ DCPUDeveloper::~DCPUDeveloper()
 
 void DCPUDeveloper::setupConnections() 
 {
+	// Editor modified
+	connect(editor, SIGNAL(textChanged()), this, SLOT(editorChanged()));
+
+	// Add code completion 
 	connect(highlighter, SIGNAL(addToCodeComplete(QString, bool)), this, 
 		SLOT(addToCodeComplete(QString, bool)));
 
@@ -102,20 +100,36 @@ void DCPUDeveloper::addToCodeComplete(QString newEntry, bool removing)
 {
 	QStringList codeList;
 
-	if (!codeCompleteList.contains(newEntry)){
-		codeCompleteList << newEntry;
-	} else {
-		if (removing) {
-			codeCompleteList.removeOne(newEntry);
+	if (newEntry != "") {
+		if (!codeCompleteList.contains(newEntry)){
+			if (!removing) {
+				codeCompleteList << newEntry;
+			}
+		} else {
+			if (removing) {
+				codeCompleteList.removeOne(newEntry);
+			}
 		}
+
+		for (int i = 0; i < codeCompleteList.size(); i++) {
+			codeList << codeCompleteList[i];
+		}
+
+		completer->setModel(new QStringListModel(codeList, completer));
 	}
+}
 
-	for (int i = 0; i < codeCompleteList.size(); i++) {
-		codeList << codeCompleteList[i];
+// Editor text changed
+void DCPUDeveloper::editorChanged()
+{
+	int tabIndex = ui->editors_tabwidget->currentIndex();
+	QString tabText = ui->editors_tabwidget->tabText(tabIndex);
+
+	if (!tabText.contains("*")){
+		tabText += "*";
+
+		ui->editors_tabwidget->setTabText(tabIndex, tabText);
 	}
-
-
-	completer->setModel(new QStringListModel(codeList, completer));
 }
 
 QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
@@ -167,8 +181,6 @@ void DCPUDeveloper::createAndRunAssembler()
 // Setup and new assembler thread and start it.
 void DCPUDeveloper::createAndRunEmulator(QString binFile)
 {
-	//ui->run_button->setEnabled(false);
-
 	emulator = new Emulator;
 
 	//qRegisterMetaType<word_vector>();
@@ -185,6 +197,39 @@ void DCPUDeveloper::createAndRunEmulator(QString binFile)
 	emulator->setStepMode(inStepMode);
 
 	emulator->startEmulator();
+}
+
+void DCPUDeveloper::saveSettings()
+{
+	QSettings settings("./dcpu_developer.ini", QSettings::IniFormat);
+
+	settings.beginGroup("files");
+	settings.setValue("previous_file", currentFilename);
+	settings.endGroup();
+}
+
+void DCPUDeveloper::loadSettings()
+{
+	QSettings settings("./dcpu_developer.ini", QSettings::IniFormat);
+
+	settings.beginGroup("files");
+	currentFilename = settings.value("previous_file").toString();
+	settings.endGroup();
+
+	if (currentFilename != "") {
+		QFile file(currentFilename);
+
+		if (!file.open(QIODevice::ReadOnly)) {
+			QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+		}
+
+		QTextStream in(&file);
+		editor->setText(in.readAll());
+
+		file.close();
+
+		ui->editors_tabwidget->setTabText(ui->editors_tabwidget->currentIndex(), currentFilename);
+	}
 }
 
 void DCPUDeveloper::on_actionOpen_triggered()
@@ -245,16 +290,8 @@ void DCPUDeveloper::on_run_button_clicked()
 {
 	resetMessages();
 
-	//emulator->setFilename(COMPILED_TEMP_FILENAME);
-
 	if (!emulatorRunning ){
-		/*
-		emulator->startEmulator();
 
-		appendLogMessage("Emulator running.");
-
-		emulatorRunning = true;
-		*/
 		createAndRunEmulator(COMPILED_TEMP_FILENAME);
 
 		emulatorRunning = true;
@@ -374,11 +411,6 @@ void DCPUDeveloper::on_actionRun_triggered()
 
 }
 
-void DCPUDeveloper::on_actionSave_triggered()
-{
-
-}
-
 void DCPUDeveloper::on_actionCut_triggered()
 {
 
@@ -414,4 +446,47 @@ void DCPUDeveloper::on_actionAbout_triggered()
 void DCPUDeveloper::on_memory_scrollbar_valueChanged(int value)
 {
 	glHelper.setRowOffset(value);
+}
+
+void DCPUDeveloper::on_actionSave_triggered()
+{
+	if (currentFilename != "") {
+		QFile file(currentFilename);
+		if (!file.open(QIODevice::WriteOnly)) {
+			qDebug() << "Could not save file";
+		} else {
+			QTextStream stream(&file);
+			stream << editor->toPlainText();
+			stream.flush();
+			file.close();
+
+			// Remove file modified indicator from tab
+			ui->editors_tabwidget->setTabText(ui->editors_tabwidget->currentIndex(), currentFilename);
+		}
+	} else {
+		// Call Save dialog
+		on_actionSave_As_triggered();
+	}
+}
+
+void DCPUDeveloper::on_actionSave_As_triggered()
+{
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+		tr("Dasm16 Source File (*.dasm16)"));
+
+	if (fileName != "") {
+		QFile file(fileName);
+		if (!file.open(QIODevice::WriteOnly)) {
+			qDebug() << "Could not save file";
+		} else {
+			QTextStream stream(&file);
+			stream << editor->toPlainText();
+			stream.flush();
+			file.close();
+
+			ui->editors_tabwidget->setTabText(ui->editors_tabwidget->currentIndex(), fileName);
+
+			currentFilename = fileName;
+		}
+	}
 }

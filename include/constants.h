@@ -120,6 +120,8 @@ static const word_t ARG_NEXTWORD = 31;
 static const word_t ARG_LITERAL_START = 32;
 static const word_t ARG_LITERAL_END = 64;
 
+static const word_t SIZE = 0x10000;
+
 typedef struct {
 	int errorCode;
 	int lineNumber;

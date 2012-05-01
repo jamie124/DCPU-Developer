@@ -211,7 +211,7 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 		}
 
 		if (argValue < ARG_LITERAL_END - ARG_LITERAL_START) {
-			toReturn.argument = ARG_LITERAL_START + argValue;
+			toReturn.argument = ARG_LITERAL_START + (argValue == 0xffff ? 0x00 : 0x01 + argValue);
 
 			return toReturn;
 		}
@@ -568,13 +568,19 @@ void Assembler::run()
 
 		qDebug() << instruction->opcode;
 
-        packed = Utils::setOpcode(packed, instruction->opcode);
+		//packed = Utils::setOpcode(packed, instruction->opcode);
 
-		qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
+		//qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
 
-        packed = Utils::setArgument(packed, 0, instruction->a.argument);
+       // packed = Utils::setArgument(packed, 0, instruction->a.argument);
+       // packed = Utils::setArgument(packed, 1, instruction->b.argument);
 
-        packed = Utils::setArgument(packed, 1, instruction->b.argument);
+		packed = Utils::pack(instruction->opcode, instruction->a.argument, instruction->b.argument);
+		/*
+		packed = Utils::pack(packed, instruction->opcode, 0);
+		packed = Utils::pack(packed, instruction->a.argument, 0);
+		packed = Utils::pack(packed, instruction->b.argument, 1);
+		*/
 
 		instruction_t swapped = (packed>>8) | (packed<<8);
 

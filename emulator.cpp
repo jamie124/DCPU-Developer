@@ -123,6 +123,16 @@ void Emulator::stopEmulator()
 	this->wait();
 }
 
+// Borrowed from https://github.com/fogleman/DCPU-16/blob/master/emulator/emulator.c
+int divMod(int x, int *quo)
+{
+	int quotient = x / SIZE;
+	if (x < 0 && x % SIZE) {
+		quotient--;
+	}
+	*quo = quotient;
+	return x % SIZE;
+}
 
 void Emulator::run()
 {
@@ -196,6 +206,8 @@ void Emulator::run()
 				bLoc = evaluateArgument(getArgument(instruction, 1), false);
 				skipStore = isConst(getArgument(instruction, 0));		// If literal
 			}
+
+			//qDebug() << opcode << *aLoc << *bLoc;
 
 			/*
 			argument_t temp =  ((instruction >> 4) >> 6 * 0) & 0x3E;
@@ -388,7 +400,9 @@ void Emulator::run()
 			case OP_IFE:
 				// Skip next instruction if A == B
 				skipStore = 1;
+
 				skipNext = ((unsigned int)*aLoc == (unsigned int)*bLoc);
+
 				cycle += (2 + skipNext);		// 2, +1 if skipped
 				break;
 
@@ -702,12 +716,17 @@ argument_t Emulator::getArgument(instruction_t instruction, bool_t which)
 	// First 6 bits for true, second 6 for false
 	//return ((instruction >> 4) >> 6 * which) & 0x3F;
 	
+	//qDebug() << instruction;
 	if (which == 0){
 		// Argument A
-		return (instruction >> 4) & 0x3E;
+		qDebug() << ((instruction >> 5) & 0x1F);
+		return (instruction >> 5) & 0x1F;
+		//return (instruction >> 4) & 0x3E;
 	} else {
 		// Argument B
-		return ((instruction >> 4) >> 6);
+		qDebug() << ((instruction >> 10) & 0x3F);
+		return (instruction >> 10) & 0x3F;
+		//return ((instruction >> 4) >> 6);
 	}
 	
 }

@@ -45,6 +45,18 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 	rule.pattern = QRegExp(";[^\n]*");
 	rule.format = singleLineCommentFormat;
 	highlightingRules.append(rule);
+
+	// Register
+	registerFormat.setForeground(Qt::darkRed);
+	rule.pattern = QRegExp("[ a|b|c|x|y|z|i|j|pc|sp]+,");
+	rule.format = registerFormat;
+	highlightingRules.append(rule);
+
+	// Dat String
+	datStringFormat.setForeground(Qt::red);
+	rule.pattern = QRegExp("\"[a-zA-Z1-9!. ]+\"");
+	rule.format = datStringFormat;
+	highlightingRules.append(rule);
 }
 
 

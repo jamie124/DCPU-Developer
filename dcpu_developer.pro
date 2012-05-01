@@ -18,7 +18,8 @@ SOURCES += main.cpp\
     highlighter.cpp \
     editor.cpp \
     memoryviewer.cpp \
-    glhelper.cpp
+    glhelper.cpp \
+    utils.cpp
 
 HEADERS  += dcpudeveloper.h \
     emulator.h \
@@ -33,6 +34,8 @@ HEADERS  += dcpudeveloper.h \
     include/constants.h \
     include/assembler.h \
     include/memoryviewer.h \
-    include/glhelper.h
+    include/glhelper.h \
+    include/utils.h \
+    include/constants.h
 
 FORMS    += dcpudeveloper.ui

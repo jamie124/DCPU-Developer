@@ -33,6 +33,8 @@ private:
 	QTextCharFormat keywordFormat;
 	QTextCharFormat labelFormat;
 	QTextCharFormat singleLineCommentFormat;
+	QTextCharFormat registerFormat;
+	QTextCharFormat datStringFormat;
 
 };
 

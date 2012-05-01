@@ -11,7 +11,7 @@
 #include <QCompleter>
 #include <QList>
 #include <QSharedPointer>
-#include <QMetaType>
+#include <QSettings>
 
 #include "phrases.h"
 #include "assembler.h"
@@ -57,6 +57,8 @@ private slots:
 	// Memory Viewer timer
 	void updateScrollbarValue(int value);
 
+	void editorChanged();
+
     void on_actionOpen_triggered();
 
     void on_actionExit_triggered();
@@ -86,6 +88,8 @@ private slots:
     void on_actionAbout_triggered();
 
     void on_memory_scrollbar_valueChanged(int value);
+
+    void on_actionSave_As_triggered();
 
 private:
     Ui::DCPUDeveloper *ui;
@@ -118,6 +122,9 @@ private:
 
 	void createAndRunAssembler();
 	void createAndRunEmulator(QString binFile);
+
+	void saveSettings();
+	void loadSettings();
 };
 
 #endif // DCPUDEVELOPER_H

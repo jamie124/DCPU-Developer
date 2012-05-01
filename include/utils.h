@@ -17,6 +17,8 @@ public:
 	Utils(void);
 	~Utils(void);
 
+	static instruction_t pack(opcode_t opcode, argument_t argA, argument_t argB);
+
 	static bool_t usesNextWord(argument_t argument);
 	static instruction_t setOpcode(instruction_t instruction, opcode_t opcode);
 	static instruction_t setArgument(instruction_t instruction, bool_t which, argument_t argument);
