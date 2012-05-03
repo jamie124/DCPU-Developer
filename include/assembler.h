@@ -3,8 +3,9 @@
 
 #include <QThread>
 
+#include "constants.h"
+#include "utils.h"
 #include "phrases.h"
-#include "emulator.h"
 
 const int MAX_CHARS = 1024;
 

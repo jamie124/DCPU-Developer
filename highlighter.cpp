@@ -10,14 +10,27 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 
 	// Keywords
 	QStringList keywordPatterns;
-	keywordPatterns << "\\bset\\b" << "\\badd\\b" << "\\bsub\\b"
-		<< "\\bmul\\b" << "\\bdiv\\b" << "\\bmod\\b"
-		<< "\\bshl\\b" << "\\bshr\\b" << "\\band\\b"
-		<< "\\bbor\\b" << "\\bxor\\b" << "\\bife\\b"
-		<< "\\bifn\\b" << "\\bifg\\b" << "\\bifb\\b" << "\\bdat\\b";
+	keywordPatterns 
+		// Basic Set, Add, Sub
+		<< "set" << "add" << "sub"
+		// Multi / Divide / Mod
+		<< "mul" << "mli" << "div"  << "dvi" 
+		<< "mod" << "mdi"
+		// Binary Operations
+		<< "and" << "bor" << "xor"
+		<< "shr" << "asr" << "shl" 
+		// If's
+		<< "ifb" << "ifc" << "ife" << "ifn" << "ifg" 
+		<< "ifa" << "ifl" << "ifu"
+		// Overflow
+		<< "adx" << "sbx"
+		// Set with Inc / Dec
+		<< "sti" << "std"
+		<< "dat";
 
 	foreach (const QString &pattern, keywordPatterns) {
-		rule.pattern = QRegExp(pattern);
+		QString test = "(" + pattern + ")|(" + pattern.toUpper() + ")";
+		rule.pattern = QRegExp(test);
 		rule.format = keywordFormat;
 		highlightingRules.append(rule);
 	}
@@ -32,6 +45,18 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 	singleLineCommentFormat.setForeground(Qt::darkGreen);
 	rule.pattern = QRegExp(";[^\n]*");
 	rule.format = singleLineCommentFormat;
+	highlightingRules.append(rule);
+
+	// Register
+	registerFormat.setForeground(Qt::darkRed);
+	rule.pattern = QRegExp("[ a|b|c|x|y|z|i|j|pc|sp]+,");
+	rule.format = registerFormat;
+	highlightingRules.append(rule);
+
+	// Dat String
+	datStringFormat.setForeground(Qt::red);
+	rule.pattern = QRegExp("\"[a-zA-Z1-9!. ]+\"");
+	rule.format = datStringFormat;
 	highlightingRules.append(rule);
 }
 
@@ -51,7 +76,13 @@ void Highlighter::highlightBlock(const QString &text)
 			setFormat(index, length, rule.format);
 
 			if (text.contains(QRegExp(":[^ ]*"))) {
-				qDebug() << text.mid(text.indexOf(":") + 1, length - 1);
+				if (text.contains(" ")) {
+					qDebug() << "Adding " << text.mid(text.indexOf(":") + 1, length - 1);
+					emit addToCodeComplete(text.mid(text.indexOf(":") + 1, length - 1), false);
+				} else {
+					qDebug() << "Removing " << text.mid(text.indexOf(":") + 1, length - 1);
+					emit addToCodeComplete(text.mid(text.indexOf(":") + 1, length - 1), true);
+				}
 			}
 			index = expression.indexIn(text, index + length);
 		}

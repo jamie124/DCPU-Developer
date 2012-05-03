@@ -13,6 +13,9 @@ public:
 	Highlighter(QTextDocument *parent = 0);
 	~Highlighter(void);
 
+signals:
+	void addToCodeComplete(QString, bool);
+
 protected:
 	void highlightBlock(const QString &text);
 
@@ -30,6 +33,9 @@ private:
 	QTextCharFormat keywordFormat;
 	QTextCharFormat labelFormat;
 	QTextCharFormat singleLineCommentFormat;
+	QTextCharFormat registerFormat;
+	QTextCharFormat datStringFormat;
+
 };
 
 #endif

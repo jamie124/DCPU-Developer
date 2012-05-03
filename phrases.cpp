@@ -1,3 +1,4 @@
+#include "include/constants.h"
 #include "include/phrases.h"
 
 Phrases::Phrases(void)

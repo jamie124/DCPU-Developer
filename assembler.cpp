@@ -33,20 +33,24 @@ opcode_t Assembler::opcodeFor(char* command)
 		return OP_MUL;
 	}
 
+	if (!strcmp(command, "mli")) {
+		return OP_MLI;
+	}
+
 	if (!strcmp(command, "div")) {
 		return OP_DIV;
+	}
+
+	if (!strcmp(command, "dvi")) {
+		return OP_DVI;
 	}
 
 	if (!strcmp(command, "mod")) {
 		return OP_MOD;
 	}
 
-	if (!strcmp(command, "shl")) {
-		return OP_SHL;
-	}
-
-	if (!strcmp(command, "shr")) {
-		return OP_SHR;
+	if (!strcmp(command, "mdi")){
+		return OP_MDI;
 	}
 
 	if (!strcmp(command, "and")) {
@@ -61,6 +65,26 @@ opcode_t Assembler::opcodeFor(char* command)
 		return OP_XOR;
 	}
 
+	if (!strcmp(command, "shr")) {
+		return OP_SHR;
+	}
+
+	if (!strcmp(command, "asr")) {
+		return OP_ASR;
+	}
+
+	if (!strcmp(command, "shl")) {
+		return OP_SHL;
+	}
+
+	if (!strcmp(command, "ifb")) {
+		return OP_IFB;
+	}
+
+	if (!strcmp(command, "ifc")) {
+		return OP_IFC;
+	}
+
 	if (!strcmp(command, "ife")) {
 		return OP_IFE;
 	}
@@ -72,10 +96,31 @@ opcode_t Assembler::opcodeFor(char* command)
 	if (!strcmp(command, "ifg")) {
 		return OP_IFG;
 	}
-	if (!strcmp(command, "ifb")) {
-		return OP_IFB;
+
+	if (!strcmp(command, "ifa")) {
+		return OP_IFA;
 	}
 
+	if (!strcmp(command, "ifl")) {
+		return OP_IFL;
+	}
+
+	if (!strcmp(command, "adx")) {
+		return OP_ADX;
+	}
+
+	if (!strcmp(command, "sbx")) {
+		return OP_SBX;
+	}
+
+	if (!strcmp(command, "sti")) {
+		return OP_STI;
+	}
+
+	if (!strcmp(command, "std")) {
+		return OP_STD;
+	}
+	
 	// Assume non-basic
 	return OP_NONBASIC;
 }
@@ -97,28 +142,28 @@ int Assembler::registerFor(char regName)
 {
 	switch(regName) {
 	case 'a':
-		return 0;
+		return REG_A;
 		break;
 	case 'b':
-		return 1;
+		return REG_B;
 		break;
 	case 'c':
-		return 2;
+		return REG_C;
 		break;
 	case 'x':
-		return 3;
+		return REG_X;
 		break;
 	case 'y':
-		return 4;
+		return REG_Y;
 		break;
 	case 'z':
-		return 5;
+		return REG_Z;
 		break;
 	case 'i':
-		return 6;
+		return REG_I;
 		break;
 	case 'j':
-		return 7;
+		return REG_J;
 		break;
 	default:
 		return -1;
@@ -165,11 +210,22 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 			return toReturn;
 		}
 
+		/*
+		if (argValue == ARG_LITERAL_START) {
+			toReturn.argument = 0xffff;
+
+			return toReturn;
+		} else if (argValue >= 0x21) {
+			toReturn.argument = argValue - 0x21;
+		}
+		*/
+
 		if (argValue < ARG_LITERAL_END - ARG_LITERAL_START) {
-			toReturn.argument = ARG_LITERAL_START + argValue;
+			toReturn.argument = ARG_LITERAL_START + (argValue == 0xffff ? 0x00 : (0x01 + argValue));
 
 			return toReturn;
 		}
+	
 
 		toReturn.argument = ARG_NEXTWORD;
 		toReturn.nextWord = argValue;
@@ -270,19 +326,20 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 			}
 		}
 	}
+
 	// Check for reserved words
+	if (!strcmp(arg, "push")) {
+		toReturn.argument = ARG_PUSH_POP;
+		return toReturn;
+	}
+
 	if (!strcmp(arg, "pop")) {
-		toReturn.argument = ARG_POP;
+		toReturn.argument = ARG_PUSH_POP;
 		return toReturn;
 	}
 
 	if (!strcmp(arg, "peek")) {
 		toReturn.argument = ARG_PEEK;
-		return toReturn;
-	}
-
-	if (!strcmp(arg, "push")) {
-		toReturn.argument = ARG_PUSH;
 		return toReturn;
 	}
 
@@ -296,8 +353,8 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 		return toReturn;
 	}
 
-	if (!strcmp(arg, "o")) {
-		toReturn.argument = ARG_O;
+	if (!strcmp(arg, "ex")) {
+		toReturn.argument = ARG_EX;
 		return toReturn;
 	}
 
@@ -510,7 +567,7 @@ void Assembler::run()
 		if (instruction->data != NULL) {
 			// Reverse endianess
 			for (int i = 0; i < instruction->dataLength; i++) {
-				instruction->data[i] = Emulator::swapByteOrder(instruction->data[i]);
+				instruction->data[i] = Utils::swapByteOrder(instruction->data[i]);
 			}
 
 			qDebug() << "DATA: " << instruction->dataLength << " words";
@@ -519,17 +576,35 @@ void Assembler::run()
 		}
 
 		instruction_t packed = 0;
-        packed = Emulator::setOpcode(packed, instruction->opcode);
-        packed = Emulator::setArgument(packed, 0, instruction->a.argument);
-        packed = Emulator::setArgument(packed, 1, instruction->b.argument);
+
+		//qDebug() << instruction->opcode;
+
+		//packed = Utils::setOpcode(packed, instruction->opcode);
+
+		//qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
+
+       // packed = Utils::setArgument(packed, 0, instruction->a.argument);
+       // packed = Utils::setArgument(packed, 1, instruction->b.argument);
+
+		packed = Utils::pack(instruction->opcode, instruction->a.argument, instruction->b.argument);
+		/*
+		packed = Utils::pack(packed, instruction->opcode, 0);
+		packed = Utils::pack(packed, instruction->a.argument, 0);
+		packed = Utils::pack(packed, instruction->b.argument, 1);
+		*/
+
+		//qDebug() << instruction->opcode << instruction->a.argument << instruction->b.argument;
+
+		//printf("%x\n", packed);
 
 		instruction_t swapped = (packed>>8) | (packed<<8);
 
 		// Save instruction
-		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped;
+		//qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
+		
 		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
 
-        if (instruction->opcode != OP_NONBASIC && Emulator::usesNextWord(instruction->a.argument)) {
+        if (instruction->opcode != OP_NONBASIC && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
 
 			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord << " Swapped: " << swapped;
@@ -537,7 +612,7 @@ void Assembler::run()
 			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 		}
 
-        if (Emulator::usesNextWord(instruction->b.argument)) {
+        if (Utils::usesNextWord(instruction->b.argument)) {
 			swapped = (instruction->b.nextWord>>8) | (instruction->b.nextWord<<8);
 
 			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord << " Swapped: " << swapped;
@@ -905,6 +980,8 @@ void Assembler::processArg1(char* command, char* arg, word_t &address, char* lab
 	// Determine opcode
 	instruction->opcode = opcodeFor(command);
 
+	//qDebug() << "Command: " << command << "Opcode: " << instruction->opcode;
+
 	instruction->a = argumentFor(arg);
 
 	instruction->a.lineNumber = lineNumber;
@@ -916,7 +993,7 @@ void Assembler::processArg1(char* command, char* arg, word_t &address, char* lab
 	// Advance address
 	address++;
 
-    if (Emulator::usesNextWord(instruction->a.argument)) {
+    if (Utils::usesNextWord(instruction->a.argument)) {
 		address++;
 	}
 }
@@ -962,7 +1039,7 @@ void Assembler::processArg2(char* command, char* arg, word_t &address, char* lab
 			assemblerError(instruction->b.errorCode, lineNumber);
 		}
 
-        if (Emulator::usesNextWord(instruction->b.argument)) {
+        if (Utils::usesNextWord(instruction->b.argument)) {
 			address++;
 		}
 	}

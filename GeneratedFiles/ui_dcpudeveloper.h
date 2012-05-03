@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Tue Apr 24 19:35:05 2012
+** Created: Sun Apr 29 17:24:50 2012
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -56,6 +56,7 @@ public:
     QAction *actionEnable_Step_Mode;
     QAction *actionReset;
     QAction *actionCompile;
+    QAction *actionSave_As;
     QWidget *centralWidget;
     QGridLayout *gridLayout;
     QTabWidget *project_tabwidget;
@@ -124,9 +125,13 @@ public:
     {
         if (DCPUDeveloper->objectName().isEmpty())
             DCPUDeveloper->setObjectName(QString::fromUtf8("DCPUDeveloper"));
-        DCPUDeveloper->resize(1146, 700);
-        DCPUDeveloper->setMinimumSize(QSize(1146, 700));
-        DCPUDeveloper->setMaximumSize(QSize(1146, 700));
+        DCPUDeveloper->resize(1200, 700);
+        QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(DCPUDeveloper->sizePolicy().hasHeightForWidth());
+        DCPUDeveloper->setSizePolicy(sizePolicy);
+        DCPUDeveloper->setMinimumSize(QSize(1200, 700));
         actionExit = new QAction(DCPUDeveloper);
         actionExit->setObjectName(QString::fromUtf8("actionExit"));
         actionNew = new QAction(DCPUDeveloper);
@@ -166,6 +171,8 @@ public:
         actionCompile = new QAction(DCPUDeveloper);
         actionCompile->setObjectName(QString::fromUtf8("actionCompile"));
         actionCompile->setShortcutContext(Qt::WidgetShortcut);
+        actionSave_As = new QAction(DCPUDeveloper);
+        actionSave_As->setObjectName(QString::fromUtf8("actionSave_As"));
         centralWidget = new QWidget(DCPUDeveloper);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         centralWidget->setMinimumSize(QSize(1146, 659));
@@ -176,6 +183,7 @@ public:
         project_tabwidget = new QTabWidget(centralWidget);
         project_tabwidget->setObjectName(QString::fromUtf8("project_tabwidget"));
         project_tabwidget->setMinimumSize(QSize(300, 0));
+        project_tabwidget->setMaximumSize(QSize(300, 16777215));
         project_tabwidget->setTabPosition(QTabWidget::North);
         project_tab = new QWidget();
         project_tab->setObjectName(QString::fromUtf8("project_tab"));
@@ -185,9 +193,6 @@ public:
         gridLayout_9->setObjectName(QString::fromUtf8("gridLayout_9"));
         project_tree = new QTreeView(project_tab);
         project_tree->setObjectName(QString::fromUtf8("project_tree"));
-        QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
         sizePolicy.setHeightForWidth(project_tree->sizePolicy().hasHeightForWidth());
         project_tree->setSizePolicy(sizePolicy);
 
@@ -476,7 +481,7 @@ public:
         DCPUDeveloper->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(DCPUDeveloper);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 1146, 21));
+        menuBar->setGeometry(QRect(0, 0, 1200, 21));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
         menuHelp = new QMenu(menuBar);
@@ -501,6 +506,7 @@ public:
         menuBar->addAction(menuHelp->menuAction());
         menuFile->addAction(actionNew);
         menuFile->addAction(actionSave);
+        menuFile->addAction(actionSave_As);
         menuFile->addAction(actionOpen);
         menuFile->addSeparator();
         menuFile->addAction(actionExit);
@@ -528,7 +534,7 @@ public:
 
         retranslateUi(DCPUDeveloper);
 
-        project_tabwidget->setCurrentIndex(0);
+        project_tabwidget->setCurrentIndex(1);
         editors_tabwidget->setCurrentIndex(0);
         build_debug_tabwidget->setCurrentIndex(2);
 
@@ -574,6 +580,8 @@ public:
         actionReset->setShortcut(QApplication::translate("DCPUDeveloper", "F3", 0, QApplication::UnicodeUTF8));
         actionCompile->setText(QApplication::translate("DCPUDeveloper", "Compile", 0, QApplication::UnicodeUTF8));
         actionCompile->setShortcut(QApplication::translate("DCPUDeveloper", "F6", 0, QApplication::UnicodeUTF8));
+        actionSave_As->setText(QApplication::translate("DCPUDeveloper", "Save As", 0, QApplication::UnicodeUTF8));
+        actionSave_As->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+Shift+S", 0, QApplication::UnicodeUTF8));
         project_tabwidget->setTabText(project_tabwidget->indexOf(project_tab), QApplication::translate("DCPUDeveloper", "Project", 0, QApplication::UnicodeUTF8));
         project_tabwidget->setTabText(project_tabwidget->indexOf(disassembly_tab), QApplication::translate("DCPUDeveloper", "Disassembly", 0, QApplication::UnicodeUTF8));
         editors_tabwidget->setTabText(editors_tabwidget->indexOf(default_editor_tab), QApplication::translate("DCPUDeveloper", "Default", 0, QApplication::UnicodeUTF8));
