@@ -19,7 +19,7 @@ Utils::~Utils(void)
 instruction_t Utils::pack(opcode_t opcode, argument_t argA, argument_t argB)
 {
 	// Format 5 bit opcode, 5 bit argB, 6 bit argA
-	return ((argB & 0x3F) << 10)  | ((argA & 0x1F) << 5) | opcode;
+	return (argB << 10)  | (argA << 5) | opcode;
 }
 
 instruction_t Utils::setOpcode(instruction_t instruction, opcode_t opcode)

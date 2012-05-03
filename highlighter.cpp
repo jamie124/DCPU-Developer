@@ -12,24 +12,25 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 	QStringList keywordPatterns;
 	keywordPatterns 
 		// Basic Set, Add, Sub
-		<< "\\bset\\b" << "\\badd\\b" << "\\bsub\\b"
+		<< "set" << "add" << "sub"
 		// Multi / Divide / Mod
-		<< "\\bmul\\b" << "\\bmli\\b" << "\\bdiv\\b"  << "\\bdvi\\b" 
-		<< "\\bmod\\b" << "\\bmdi\\b"
+		<< "mul" << "mli" << "div"  << "dvi" 
+		<< "mod" << "mdi"
 		// Binary Operations
-		<< "\\band\\b" << "\\bbor\\b" << "\\bxor\\b"
-		<< "\\bshr\\b" << "\\basr\\b" << "\\bshl\\b" 
+		<< "and" << "bor" << "xor"
+		<< "shr" << "asr" << "shl" 
 		// If's
-		<< "\\bifb\\b" << "\\bifc\\b" << "\\bife\\b" << "\\bifn\\b" << "\\bifg\\b" 
-		<< "\\bifa\\b" << "\\bifl\\b" << "\\bifu\\b"
+		<< "ifb" << "ifc" << "ife" << "ifn" << "ifg" 
+		<< "ifa" << "ifl" << "ifu"
 		// Overflow
-		<< "\\badx\\b" << "\\bsbx\\b"
+		<< "adx" << "sbx"
 		// Set with Inc / Dec
-		<< "\\bsti\\b" << "\\bstd\\b"
-		<< "\\bdat\\b";
+		<< "sti" << "std"
+		<< "dat";
 
 	foreach (const QString &pattern, keywordPatterns) {
-		rule.pattern = QRegExp(pattern);
+		QString test = "(" + pattern + ")|(" + pattern.toUpper() + ")";
+		rule.pattern = QRegExp(test);
 		rule.format = keywordFormat;
 		highlightingRules.append(rule);
 	}

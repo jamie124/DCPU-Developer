@@ -105,7 +105,6 @@ static const word_t REG_PC = 0x1c;
 static const word_t REG_EX = 0x1d;
 static const word_t REG_IA = 0xff;
 
-
 static const word_t ARG_REG_START = 0;
 static const word_t ARG_REG_END = 8;
 static const word_t ARG_REG_INDEX_START = 8;

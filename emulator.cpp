@@ -207,7 +207,7 @@ void Emulator::run()
 				skipStore = isConst(getArgument(instruction, 0));		// If literal
 			}
 
-			//qDebug() << opcode << *aLoc << *bLoc;
+			qDebug() << opcode << *aLoc << *bLoc;
 
 			/*
 			argument_t temp =  ((instruction >> 4) >> 6 * 0) & 0x3E;
@@ -609,7 +609,7 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 			std::cout << "literal " << argument - ARG_LITERAL_START << std::endl;
 		}
 
-		return &literals[argument - ARG_LITERAL_START];
+		return &literals[argument - 0x21];
 		}
 	}
 

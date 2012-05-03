@@ -142,28 +142,28 @@ int Assembler::registerFor(char regName)
 {
 	switch(regName) {
 	case 'a':
-		return 0;
+		return REG_A;
 		break;
 	case 'b':
-		return 1;
+		return REG_B;
 		break;
 	case 'c':
-		return 2;
+		return REG_C;
 		break;
 	case 'x':
-		return 3;
+		return REG_X;
 		break;
 	case 'y':
-		return 4;
+		return REG_Y;
 		break;
 	case 'z':
-		return 5;
+		return REG_Z;
 		break;
 	case 'i':
-		return 6;
+		return REG_I;
 		break;
 	case 'j':
-		return 7;
+		return REG_J;
 		break;
 	default:
 		return -1;
@@ -221,7 +221,7 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 		*/
 
 		if (argValue < ARG_LITERAL_END - ARG_LITERAL_START) {
-			toReturn.argument = ARG_LITERAL_START + (argValue == 0xffff ? 0x00 : argValue);
+			toReturn.argument = ARG_LITERAL_START + (argValue == 0xffff ? 0x00 : (0x01 + argValue));
 
 			return toReturn;
 		}
