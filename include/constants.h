@@ -84,24 +84,27 @@ static const enum {
 	ASSEMBLER_INVALID_REG, ASSEMBLER_UNTERM_LABEL, ASSEMBLER_UNRESOLVED_LABEL_A, ASSEMBLER_UNRESOLVED_LABEL_B
 };
 
-/*
-static const int OP_NONBASIC = 0;
-static const int OP_SET = 1;
-static const int OP_ADD = 2;
-static const int OP_SUB = 3;
-static const int OP_MUL = 4;
-static const int OP_DIV = 5;
-static const int OP_MOD = 6;
-static const int OP_SHL = 7;
-static const int OP_SHR = 8;
-static const int OP_AND = 9;
-static const int OP_BOR = 10;
-static const int OP_XOR = 11;
-static const int OP_IFE = 12;
-static const int OP_IFN = 19;
-static const int OP_IFG = 14;
-static const int OP_IFB = 15;
-*/
+// Registers
+static const word_t REG_A = 0x0;
+static const word_t REG_B = 0x1;
+static const word_t REG_C = 0x2;
+static const word_t REG_X = 0x3;
+static const word_t REG_Y = 0x4;
+static const word_t REG_Z = 0x5;
+static const word_t REG_I = 0x6;
+static const word_t REG_J = 0x7;
+
+// Fake Registers
+static const word_t PUSH = 0x18;
+static const word_t POP = 0x18;
+static const word_t PEEK = 0x19;
+
+// Special registers
+static const word_t REG_SP = 0x1b;
+static const word_t REG_PC = 0x1c;
+static const word_t REG_EX = 0x1d;
+static const word_t REG_IA = 0xff;
+
 
 static const word_t ARG_REG_START = 0;
 static const word_t ARG_REG_END = 8;
@@ -120,7 +123,8 @@ static const word_t ARG_NEXTWORD = 31;
 static const word_t ARG_LITERAL_START = 32;
 static const word_t ARG_LITERAL_END = 64;
 
-static const word_t SIZE = 0x10000;
+static const unsigned long MAX_SIZE = 0x10000;
+static const word_t MAX_VALUE = 0xffff;
 
 typedef struct {
 	int errorCode;

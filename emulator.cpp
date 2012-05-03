@@ -106,7 +106,7 @@ void Emulator::reset()
 
 	programCounter = 0;
 	stackPointer = 0;
-	overflow = 0;
+	ex = 0;
 	currentOpcode = 0;
 
 	cycle = 0;
@@ -126,12 +126,12 @@ void Emulator::stopEmulator()
 // Borrowed from https://github.com/fogleman/DCPU-16/blob/master/emulator/emulator.c
 int divMod(int x, int *quo)
 {
-	int quotient = x / SIZE;
-	if (x < 0 && x % SIZE) {
+	int quotient = x / MAX_SIZE;
+	if (x < 0 && x % MAX_SIZE) {
 		quotient--;
 	}
 	*quo = quotient;
-	return x % SIZE;
+	return x % MAX_SIZE;
 }
 
 void Emulator::run()
@@ -224,6 +224,7 @@ void Emulator::run()
 			// Execute
 			unsigned int resultWithCarry;		// Some opcodes use internal variable
 			bool skipNext = 0;				// Skip the next instruction
+			int quo;
 
 			switch(opcode) {
 			case OP_NONBASIC:
@@ -255,34 +256,32 @@ void Emulator::run()
 
 			case OP_ADD:
 				// Add B to A, sets O
-				result = *aLoc + *bLoc;
-				overflow = (result < *aLoc || result < *bLoc);
+				result = divMod(*aLoc + *bLoc, &quo);
+				ex = quo ? 1 : 0;
 				cycle += 2;
 
 				break;
 
 			case OP_SUB:
 				// Subtracts B from a, sets O
-				result = *aLoc - *bLoc;
-				overflow = (result > *aLoc) ? 0xFFFF : 0;
+				result = divMod(*aLoc - *bLoc, &quo);
+				ex = quo ? MAX_VALUE : 0;
 				cycle += 2;
 
 				break;
 
 			case OP_MUL:
 				// Multiple A by B, set O
-				resultWithCarry = (unsigned int) *aLoc * (unsigned int) *bLoc;
-				result = (word_t) (resultWithCarry & 0xFFFF);	// Low word
-				overflow = (resultWithCarry >> 16);
+				result = divMod(*aLoc * *bLoc, &quo);
+				ex = quo % MAX_SIZE;
 				cycle += 2;
 
 				break;
 
 			case OP_MLI:
 				// Multiple A by B
-				resultWithCarry = (int) *aLoc * (int) *bLoc;
-				result = (word_t) (resultWithCarry & 0xFFFF);	// Low word
-				overflow = (resultWithCarry >> 16);
+				result = divMod((unsigned short)*aLoc * (unsigned short)*bLoc, &quo);
+				ex = quo % MAX_SIZE;
 				cycle += 2;
 
 				break;
@@ -290,12 +289,11 @@ void Emulator::run()
 			case OP_DIV:
 				// Divide A by B, set EX
 				if (*bLoc != 0) {
-					resultWithCarry = ((unsigned int) *aLoc << 16) / (unsigned int) *bLoc;
-					result = (word_t) (resultWithCarry >> 16);		// High word
-					overflow = (word_t) (resultWithCarry & 0xFFFF);	// Low word
+					ex = ((*aLoc << 16) / *bLoc) % MAX_SIZE;
+					result = (*aLoc / *bLoc) % MAX_SIZE;
 				} else {
 					result = 0;
-					overflow = 0;
+					ex = 0;
 				}
 
 				cycle += 3;
@@ -305,12 +303,11 @@ void Emulator::run()
 			case OP_DVI:
 				// Divide A by B, set EX. Signed
 				if (*bLoc != 0) {
-					resultWithCarry = ((int) *aLoc << 16) / (int) *bLoc;
-					result = (word_t) (resultWithCarry >> 16);		// High word
-					overflow = (word_t) (resultWithCarry & 0xFFFF);	// Low word
+					ex = (((unsigned short)*aLoc << 16) / (unsigned short)*bLoc) % MAX_SIZE;
+					result = (*aLoc / *bLoc) % MAX_SIZE;
 				} else {
 					result = 0;
-					overflow = 0;
+					ex = 0;
 				}
 
 				cycle += 3;
@@ -320,7 +317,7 @@ void Emulator::run()
 			case OP_MOD:
 				// Remainder of A over B
 				if (*bLoc != 0) {
-					result = (unsigned int) *aLoc % (unsigned int) *bLoc;
+					result = (*aLoc % *bLoc) % MAX_SIZE;
 				} else {
 					result = 0;
 				}
@@ -332,7 +329,7 @@ void Emulator::run()
 			case OP_MDI:
 				// Remainder of A over B. Signed
 				if (*bLoc != 0) {
-					result = (int) *aLoc % (int) *bLoc;
+					result = ((unsigned short)*aLoc % (unsigned short)*bLoc) % MAX_SIZE;
 				} else {
 					result = 0;
 				}
@@ -343,57 +340,59 @@ void Emulator::run()
 
 			case OP_AND:
 				// Binary AND of A and B
-				result = *aLoc & *bLoc;
+				result = (*aLoc & *bLoc) % MAX_SIZE;
 				cycle += 1;
 				break;
 
 			case OP_BOR:
 				// Binary OR of A and B
-				result = *aLoc | *bLoc;
+				result = (*aLoc | *bLoc) % MAX_SIZE;
 				cycle += 1;
 				break;
 
 			case OP_XOR:
 				// Binary XOR of A and B
-				result = *aLoc ^ *bLoc;
+				result = (*aLoc ^ *bLoc) % MAX_SIZE;
 				cycle += 1;
 				break;
 
 			case OP_SHR:
 				// Shift A right B places, set O
-				resultWithCarry = (unsigned int) *aLoc >> *bLoc;
-				result = (word_t) (resultWithCarry >> 16);
-				overflow = (word_t) (resultWithCarry & 0xFFFF);
-				cycle += 2;
+				ex = ((*aLoc << 16) >> *bLoc) % MAX_SIZE;
+				result = (*aLoc >> *bLoc) % MAX_SIZE;
+
+				cycle += 1;
 				break;
 
 			case OP_ASR:
 				// Arithmetic Shift A right B places, set O
-				resultWithCarry = (int) *aLoc >> (unsigned int) *bLoc;
-				result = (word_t) (resultWithCarry >> 16);
-				overflow = (word_t) (resultWithCarry & 0xFFFF);
-				cycle += 2;
+				ex = (((unsigned short)*aLoc << 16) >> *bLoc) % MAX_SIZE;
+				result = ((unsigned short)*aLoc >> *bLoc) % MAX_SIZE;
+
+				cycle += 1;
 				break;
 
 			case OP_SHL:
 				// Shift A left B places, set O
-				resultWithCarry = (unsigned int) *aLoc << *bLoc;
-				result = (word_t) (resultWithCarry & 0xFFFF);
-				overflow = (word_t) (resultWithCarry >> 16);
-				cycle += 2;
+				ex = ((*aLoc << *bLoc) >> 16) % MAX_SIZE;
+				result = (*aLoc << *bLoc) % MAX_SIZE;
+
+				cycle += 1;
 				break;
 
 			case OP_IFB:
 				// Skip next instruction if (A & B) != 0
 				skipStore = 1;
-				skipNext = (((unsigned int)*aLoc & (unsigned int)*bLoc) != 0);
+				skipNext = (*aLoc & *bLoc) != 0 ? 0 : 1;
+
 				cycle += (2 + skipNext);
 				break;
 
 			case OP_IFC:
 				// Skip next instruction if (A & B) == 0
 				skipStore = 1;
-				skipNext = (((unsigned int)*aLoc & (unsigned int)*bLoc) == 0);
+				skipNext = (*aLoc & *bLoc) == 0 ? 0 : 1;
+
 				cycle += (2 + skipNext);
 				break;
 
@@ -401,52 +400,58 @@ void Emulator::run()
 				// Skip next instruction if A == B
 				skipStore = 1;
 
-				skipNext = ((unsigned int)*aLoc == (unsigned int)*bLoc);
+				skipNext = (*aLoc == *bLoc) ? 0 : 1;
+				
+				//qDebug() << skipNext << argA << argB;
 
-				cycle += (2 + skipNext);		// 2, +1 if skipped
+				cycle += (2 + skipNext);
 				break;
 
 			case OP_IFN:
 				// Skip next instruction if A != B
 				skipStore = 1;
-				skipNext = ((unsigned int)*aLoc != (unsigned int)*bLoc);
+				skipNext = (*aLoc != *bLoc) ? 0 : 1;
+
 				cycle += (2 + skipNext);
 				break;
 
 			case OP_IFG:
 				// Skip next instruction if A < B
 				skipStore = 1;
-				skipNext = ((unsigned int)*aLoc < (unsigned int)*bLoc);
+				skipNext = (*aLoc > *bLoc) ? 0 : 1;
+
 				cycle += (2 + skipNext);
 				break;
 
 			case OP_IFA:
 				// Skip next instruction if A > B. Signed
 				skipStore = 1;
-				skipNext = (*aLoc < *bLoc);
+				skipNext = ((unsigned short)*aLoc > (unsigned short)*bLoc) ? 0 : 1;
+
 				cycle += (2 + skipNext);
 				break;
 
 			case OP_IFL:
 				// Skip next instruction if A < B
 				skipStore = 1;
-				skipNext = ((unsigned int)*aLoc < (unsigned int)*bLoc);
+				skipNext = (*aLoc < *bLoc) ? 0 : 1;
+
 				cycle += (2 + skipNext);
 				break;
 
 			case OP_IFU:
 				// Skip next instruction if A < B. Signed
 				skipStore = 1;
-				skipNext = (*aLoc < *bLoc);
+				skipNext = ((unsigned short)*aLoc < (unsigned short)*bLoc) ? 0 : 1;
+
 				cycle += (2 + skipNext);
 				break;
 
 			case OP_ADX:
 				// Set A to A + B + EX
 				skipStore = 1;
-				result = (*aLoc + *bLoc + overflow);
-
-				overflow = (result > sizeof(word_t)) ? 1 : 0; 
+				result = divMod(*aLoc + *bLoc + ex, &quo);
+				ex = quo ? 1 : 0;
 
 				cycle += 3;
 				break;
@@ -454,9 +459,8 @@ void Emulator::run()
 			case OP_SBX:
 				// Set A to A - B + EX
 				skipStore = 1;
-				result = (*aLoc - *bLoc + overflow);
-
-				overflow = (result < 0) ? 0xffff : 0; 
+				result = divMod(*aLoc - *bLoc + ex, &quo);
+				ex = quo ? 1 : 0;
 
 				cycle += 3;
 				break;
@@ -477,6 +481,10 @@ void Emulator::run()
 				registers[7] -= 1;
 
 				cycle += 2;
+				break;
+
+			default:
+				cycle += 1;
 				break;
 			}
 
@@ -549,7 +557,7 @@ registers_ptr Emulator::getRegisters()
 	latestRegisters->j = registers[7];
 	latestRegisters->pc = programCounter;
 	latestRegisters->sp = stackPointer;
-	latestRegisters->o = overflow;
+	latestRegisters->o = ex;
 
 	return latestRegisters;
 }
@@ -593,12 +601,16 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 	}
 
 	if (argument >= ARG_LITERAL_START && argument < ARG_LITERAL_END) {
+		if (argument == ARG_LITERAL_START) {
+			return 0;
+		} else {
 		// Literal value 0-31 - does nothing on assign
 		if (DEBUG) {
 			std::cout << "literal " << argument - ARG_LITERAL_START << std::endl;
 		}
 
 		return &literals[argument - ARG_LITERAL_START];
+		}
 	}
 
 	// Single values
@@ -678,7 +690,7 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 			std::cout << "overflow" << std::endl;
 		}
 
-		return &overflow;
+		return &ex;
 		break;
 
 	case ARG_NEXTWORD_INDEX:
@@ -719,14 +731,10 @@ argument_t Emulator::getArgument(instruction_t instruction, bool_t which)
 	//qDebug() << instruction;
 	if (which == 0){
 		// Argument A
-		qDebug() << ((instruction >> 5) & 0x1F);
 		return (instruction >> 5) & 0x1F;
-		//return (instruction >> 4) & 0x3E;
 	} else {
 		// Argument B
-		qDebug() << ((instruction >> 10) & 0x3F);
 		return (instruction >> 10) & 0x3F;
-		//return ((instruction >> 4) >> 6);
 	}
 	
 }

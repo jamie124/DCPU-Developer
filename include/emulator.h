@@ -157,7 +157,7 @@ private:
 
 	word_t programCounter;
 	word_t stackPointer;
-	word_t overflow;
+	word_t ex;
 	word_t cycle;
 	word_t currentOpcode;
 

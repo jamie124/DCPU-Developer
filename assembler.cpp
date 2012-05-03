@@ -210,11 +210,22 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 			return toReturn;
 		}
 
+		/*
+		if (argValue == ARG_LITERAL_START) {
+			toReturn.argument = 0xffff;
+
+			return toReturn;
+		} else if (argValue >= 0x21) {
+			toReturn.argument = argValue - 0x21;
+		}
+		*/
+
 		if (argValue < ARG_LITERAL_END - ARG_LITERAL_START) {
-			toReturn.argument = ARG_LITERAL_START + (argValue == 0xffff ? 0x00 : 0x01 + argValue);
+			toReturn.argument = ARG_LITERAL_START + (argValue == 0xffff ? 0x00 : argValue);
 
 			return toReturn;
 		}
+	
 
 		toReturn.argument = ARG_NEXTWORD;
 		toReturn.nextWord = argValue;
@@ -566,7 +577,7 @@ void Assembler::run()
 
 		instruction_t packed = 0;
 
-		qDebug() << instruction->opcode;
+		//qDebug() << instruction->opcode;
 
 		//packed = Utils::setOpcode(packed, instruction->opcode);
 
@@ -582,10 +593,14 @@ void Assembler::run()
 		packed = Utils::pack(packed, instruction->b.argument, 1);
 		*/
 
+		//qDebug() << instruction->opcode << instruction->a.argument << instruction->b.argument;
+
+		//printf("%x\n", packed);
+
 		instruction_t swapped = (packed>>8) | (packed<<8);
 
 		// Save instruction
-		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
+		//qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
 		
 		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
 
