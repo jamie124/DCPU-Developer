@@ -33,62 +33,6 @@
     </size>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QTabWidget" name="project_tabwidget">
-      <property name="minimumSize">
-       <size>
-        <width>300</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>300</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="tabPosition">
-       <enum>QTabWidget::North</enum>
-      </property>
-      <property name="currentIndex">
-       <number>1</number>
-      </property>
-      <widget class="QWidget" name="project_tab">
-       <attribute name="title">
-        <string>Project</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_9">
-        <item row="0" column="0">
-         <widget class="QTreeView" name="project_tree">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="disassembly_tab">
-       <attribute name="title">
-        <string>Disassembly</string>
-       </attribute>
-      </widget>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QTabWidget" name="editors_tabwidget">
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="default_editor_tab">
-       <attribute name="title">
-        <string>Default</string>
-       </attribute>
-      </widget>
-     </widget>
-    </item>
     <item row="1" column="0">
      <widget class="QGroupBox" name="program_control_gb">
       <property name="title">
@@ -161,6 +105,18 @@
         </layout>
        </item>
       </layout>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QTabWidget" name="editors_tabwidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="default_editor_tab">
+       <attribute name="title">
+        <string>Default</string>
+       </attribute>
+      </widget>
      </widget>
     </item>
     <item row="1" column="1">
@@ -441,6 +397,60 @@
          </widget>
         </item>
        </layout>
+      </widget>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QTabWidget" name="project_tabwidget">
+      <property name="minimumSize">
+       <size>
+        <width>300</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>300</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="tabPosition">
+       <enum>QTabWidget::North</enum>
+      </property>
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="project_tab">
+       <attribute name="title">
+        <string>Project</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_9">
+        <item row="0" column="0">
+         <widget class="QTreeView" name="project_tree">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="disassembly_tab">
+       <attribute name="title">
+        <string>Disassembly</string>
+       </attribute>
+       <widget class="QListView" name="disassembly_list">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>291</width>
+          <height>401</height>
+         </rect>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>

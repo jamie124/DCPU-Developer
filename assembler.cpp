@@ -1,4 +1,6 @@
 #include <QDebug>
+#include <QFile>
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -402,7 +404,7 @@ void Assembler::stopAssembler()
 	wait();
 }
 
-void Assembler::setFilename(std::string filename)
+void Assembler::setFilename(const QString filename)
 {
 	sourceFilename = filename;
 }
@@ -411,23 +413,33 @@ void Assembler::run()
 {
 	lineNumber = 0;
 
-	std::string compiledFilename = replace(sourceFilename, "dasm16", "bin");
+	std::string compiledFilename = replace(sourceFilename.toStdString(), "dasm16", "bin");
+	std::string debugFilename = "debug_" + replace(sourceFilename.toStdString(), "dasm16", "dbg");
 
-    std::ifstream sourceFile(sourceFilename);
+	std::ifstream sourceFile(sourceFilename.toStdString());
 
 	if (!sourceFile.is_open()) {
-		qDebug() << "ERROR: Could not open source file " << sourceFilename.c_str();
+		qDebug() << "ERROR: Could not open source file " << sourceFilename;
 		assemblerError(SOURCE_FILE_MISSING, lineNumber);
 	}
 
 	// TODO: Add automatic file naming
 	FILE* compiledFile = fopen(compiledFilename.c_str(), "wb");
-
+	
 	if (!compiledFile) {
 		qDebug() << "ERROR: Could not open output file " << compiledFilename.c_str();
 
 		assemblerError(BIN_FILE_MISSING, lineNumber);
 	}
+
+	QFile debugFile(debugFilename.c_str());
+
+	if (!debugFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+		qDebug() << "ERROR: Unable to write a debug info file " << debugFilename.c_str();
+	}
+
+	// Open debug stream
+	QTextStream debugOut(&debugFile);
 
 	char lineBuffer[MAX_CHARS];
 
@@ -603,6 +615,7 @@ void Assembler::run()
 		//qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
 		
 		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
+		debugOut << "Test";
 
         if (instruction->opcode != OP_NONBASIC && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
@@ -620,11 +633,18 @@ void Assembler::run()
 		}
 	}
 
-	qDebug() << "Program compiled successfully.";
+	qDebug() << "Compile finished.";
 
 	assemblerError(ASSEMBLER_SUCESSFUL, 0);
 
+	// Close files
+
+	//delete[] command;
+
 	fclose(compiledFile);
+
+	//debugOut.flush();
+	debugFile.close();
 }
 
 void Assembler::assemblerError(int errorCode, int lineNumber)

@@ -1,8 +1,8 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Sun Apr 29 17:24:50 2012
-**      by: Qt User Interface Compiler version 4.8.1
+** Created: Sun Dec 2 13:43:10 2012
+**      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -20,6 +20,7 @@
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
 #include <QtGui/QLabel>
+#include <QtGui/QListView>
 #include <QtGui/QMainWindow>
 #include <QtGui/QMenu>
 #include <QtGui/QMenuBar>
@@ -59,13 +60,6 @@ public:
     QAction *actionSave_As;
     QWidget *centralWidget;
     QGridLayout *gridLayout;
-    QTabWidget *project_tabwidget;
-    QWidget *project_tab;
-    QGridLayout *gridLayout_9;
-    QTreeView *project_tree;
-    QWidget *disassembly_tab;
-    QTabWidget *editors_tabwidget;
-    QWidget *default_editor_tab;
     QGroupBox *program_control_gb;
     QGridLayout *gridLayout_7;
     QGridLayout *gridLayout_2;
@@ -76,6 +70,8 @@ public:
     QPushButton *run_button;
     QPushButton *step_button;
     QPushButton *toggle_step_button;
+    QTabWidget *editors_tabwidget;
+    QWidget *default_editor_tab;
     QTabWidget *build_debug_tabwidget;
     QWidget *messages_tab;
     QGridLayout *gridLayout_5;
@@ -112,6 +108,12 @@ public:
     QSpinBox *register_j;
     QGroupBox *memory_gb;
     QScrollBar *memory_scrollbar;
+    QTabWidget *project_tabwidget;
+    QWidget *project_tab;
+    QGridLayout *gridLayout_9;
+    QTreeView *project_tree;
+    QWidget *disassembly_tab;
+    QListView *disassembly_list;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuHelp;
@@ -180,39 +182,6 @@ public:
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-        project_tabwidget = new QTabWidget(centralWidget);
-        project_tabwidget->setObjectName(QString::fromUtf8("project_tabwidget"));
-        project_tabwidget->setMinimumSize(QSize(300, 0));
-        project_tabwidget->setMaximumSize(QSize(300, 16777215));
-        project_tabwidget->setTabPosition(QTabWidget::North);
-        project_tab = new QWidget();
-        project_tab->setObjectName(QString::fromUtf8("project_tab"));
-        gridLayout_9 = new QGridLayout(project_tab);
-        gridLayout_9->setSpacing(6);
-        gridLayout_9->setContentsMargins(11, 11, 11, 11);
-        gridLayout_9->setObjectName(QString::fromUtf8("gridLayout_9"));
-        project_tree = new QTreeView(project_tab);
-        project_tree->setObjectName(QString::fromUtf8("project_tree"));
-        sizePolicy.setHeightForWidth(project_tree->sizePolicy().hasHeightForWidth());
-        project_tree->setSizePolicy(sizePolicy);
-
-        gridLayout_9->addWidget(project_tree, 0, 0, 1, 1);
-
-        project_tabwidget->addTab(project_tab, QString());
-        disassembly_tab = new QWidget();
-        disassembly_tab->setObjectName(QString::fromUtf8("disassembly_tab"));
-        project_tabwidget->addTab(disassembly_tab, QString());
-
-        gridLayout->addWidget(project_tabwidget, 0, 0, 1, 1);
-
-        editors_tabwidget = new QTabWidget(centralWidget);
-        editors_tabwidget->setObjectName(QString::fromUtf8("editors_tabwidget"));
-        default_editor_tab = new QWidget();
-        default_editor_tab->setObjectName(QString::fromUtf8("default_editor_tab"));
-        editors_tabwidget->addTab(default_editor_tab, QString());
-
-        gridLayout->addWidget(editors_tabwidget, 0, 1, 1, 1);
-
         program_control_gb = new QGroupBox(centralWidget);
         program_control_gb->setObjectName(QString::fromUtf8("program_control_gb"));
         gridLayout_7 = new QGridLayout(program_control_gb);
@@ -266,6 +235,14 @@ public:
 
 
         gridLayout->addWidget(program_control_gb, 1, 0, 1, 1);
+
+        editors_tabwidget = new QTabWidget(centralWidget);
+        editors_tabwidget->setObjectName(QString::fromUtf8("editors_tabwidget"));
+        default_editor_tab = new QWidget();
+        default_editor_tab->setObjectName(QString::fromUtf8("default_editor_tab"));
+        editors_tabwidget->addTab(default_editor_tab, QString());
+
+        gridLayout->addWidget(editors_tabwidget, 0, 1, 1, 1);
 
         build_debug_tabwidget = new QTabWidget(centralWidget);
         build_debug_tabwidget->setObjectName(QString::fromUtf8("build_debug_tabwidget"));
@@ -478,6 +455,34 @@ public:
 
         gridLayout->addWidget(build_debug_tabwidget, 1, 1, 1, 1);
 
+        project_tabwidget = new QTabWidget(centralWidget);
+        project_tabwidget->setObjectName(QString::fromUtf8("project_tabwidget"));
+        project_tabwidget->setMinimumSize(QSize(300, 0));
+        project_tabwidget->setMaximumSize(QSize(300, 16777215));
+        project_tabwidget->setTabPosition(QTabWidget::North);
+        project_tab = new QWidget();
+        project_tab->setObjectName(QString::fromUtf8("project_tab"));
+        gridLayout_9 = new QGridLayout(project_tab);
+        gridLayout_9->setSpacing(6);
+        gridLayout_9->setContentsMargins(11, 11, 11, 11);
+        gridLayout_9->setObjectName(QString::fromUtf8("gridLayout_9"));
+        project_tree = new QTreeView(project_tab);
+        project_tree->setObjectName(QString::fromUtf8("project_tree"));
+        sizePolicy.setHeightForWidth(project_tree->sizePolicy().hasHeightForWidth());
+        project_tree->setSizePolicy(sizePolicy);
+
+        gridLayout_9->addWidget(project_tree, 0, 0, 1, 1);
+
+        project_tabwidget->addTab(project_tab, QString());
+        disassembly_tab = new QWidget();
+        disassembly_tab->setObjectName(QString::fromUtf8("disassembly_tab"));
+        disassembly_list = new QListView(disassembly_tab);
+        disassembly_list->setObjectName(QString::fromUtf8("disassembly_list"));
+        disassembly_list->setGeometry(QRect(0, 0, 291, 401));
+        project_tabwidget->addTab(disassembly_tab, QString());
+
+        gridLayout->addWidget(project_tabwidget, 0, 0, 1, 1);
+
         DCPUDeveloper->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(DCPUDeveloper);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
@@ -534,9 +539,9 @@ public:
 
         retranslateUi(DCPUDeveloper);
 
-        project_tabwidget->setCurrentIndex(1);
         editors_tabwidget->setCurrentIndex(0);
         build_debug_tabwidget->setCurrentIndex(2);
+        project_tabwidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(DCPUDeveloper);
@@ -582,9 +587,6 @@ public:
         actionCompile->setShortcut(QApplication::translate("DCPUDeveloper", "F6", 0, QApplication::UnicodeUTF8));
         actionSave_As->setText(QApplication::translate("DCPUDeveloper", "Save As", 0, QApplication::UnicodeUTF8));
         actionSave_As->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+Shift+S", 0, QApplication::UnicodeUTF8));
-        project_tabwidget->setTabText(project_tabwidget->indexOf(project_tab), QApplication::translate("DCPUDeveloper", "Project", 0, QApplication::UnicodeUTF8));
-        project_tabwidget->setTabText(project_tabwidget->indexOf(disassembly_tab), QApplication::translate("DCPUDeveloper", "Disassembly", 0, QApplication::UnicodeUTF8));
-        editors_tabwidget->setTabText(editors_tabwidget->indexOf(default_editor_tab), QApplication::translate("DCPUDeveloper", "Default", 0, QApplication::UnicodeUTF8));
         program_control_gb->setTitle(QApplication::translate("DCPUDeveloper", "Program Control", 0, QApplication::UnicodeUTF8));
         cycle_label->setText(QApplication::translate("DCPUDeveloper", "Cycle: 0", 0, QApplication::UnicodeUTF8));
         compile_button->setText(QApplication::translate("DCPUDeveloper", "Compile", 0, QApplication::UnicodeUTF8));
@@ -593,6 +595,7 @@ public:
         run_button->setText(QApplication::translate("DCPUDeveloper", "Run", 0, QApplication::UnicodeUTF8));
         step_button->setText(QApplication::translate("DCPUDeveloper", "Step", 0, QApplication::UnicodeUTF8));
         toggle_step_button->setText(QApplication::translate("DCPUDeveloper", "Enable Step Mode", 0, QApplication::UnicodeUTF8));
+        editors_tabwidget->setTabText(editors_tabwidget->indexOf(default_editor_tab), QApplication::translate("DCPUDeveloper", "Default", 0, QApplication::UnicodeUTF8));
         build_debug_tabwidget->setTabText(build_debug_tabwidget->indexOf(messages_tab), QApplication::translate("DCPUDeveloper", "Messages", 0, QApplication::UnicodeUTF8));
         build_debug_tabwidget->setTabText(build_debug_tabwidget->indexOf(errors_tab), QApplication::translate("DCPUDeveloper", "Errors", 0, QApplication::UnicodeUTF8));
         registers_gb->setTitle(QApplication::translate("DCPUDeveloper", "Registers", 0, QApplication::UnicodeUTF8));
@@ -609,6 +612,8 @@ public:
         label_8->setText(QApplication::translate("DCPUDeveloper", "J:", 0, QApplication::UnicodeUTF8));
         memory_gb->setTitle(QApplication::translate("DCPUDeveloper", "Memory View", 0, QApplication::UnicodeUTF8));
         build_debug_tabwidget->setTabText(build_debug_tabwidget->indexOf(registers_tab), QApplication::translate("DCPUDeveloper", "Debug Info", 0, QApplication::UnicodeUTF8));
+        project_tabwidget->setTabText(project_tabwidget->indexOf(project_tab), QApplication::translate("DCPUDeveloper", "Project", 0, QApplication::UnicodeUTF8));
+        project_tabwidget->setTabText(project_tabwidget->indexOf(disassembly_tab), QApplication::translate("DCPUDeveloper", "Disassembly", 0, QApplication::UnicodeUTF8));
         menuFile->setTitle(QApplication::translate("DCPUDeveloper", "File", 0, QApplication::UnicodeUTF8));
         menuHelp->setTitle(QApplication::translate("DCPUDeveloper", "Help", 0, QApplication::UnicodeUTF8));
         menuTools->setTitle(QApplication::translate("DCPUDeveloper", "Tools", 0, QApplication::UnicodeUTF8));

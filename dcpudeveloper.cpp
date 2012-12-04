@@ -7,6 +7,8 @@
 #include <QSizePolicy>
 #include <QTimer>
 
+#include <QStandardItemModel>
+
 #include "include/dcpudeveloper.h"
 
 #include "ui_dcpudeveloper.h"
@@ -64,6 +66,14 @@ QMainWindow(parent),
 
 	// Load Config
 	loadSettings();
+
+	QStandardItemModel *testData = new QStandardItemModel(this);
+
+	QStandardItem *test = new QStandardItem();
+
+	testData->appendRow(new QStandardItem(QString("0000:\t0000 0000")));
+
+	ui->disassembly_list->setModel(testData);
 }
 
 DCPUDeveloper::~DCPUDeveloper()
@@ -173,7 +183,7 @@ void DCPUDeveloper::createAndRunAssembler()
 	connect(assembler, SIGNAL(sendAssemblerMessage(assembler_update_t*)), this,
 		SLOT(assemblerUpdate(assembler_update_t*)));
 
-	assembler->setFilename(TEMP_FILENAME.toStdString());
+	assembler->setFilename(TEMP_FILENAME);
 
 	assembler->startAssembler();
 }

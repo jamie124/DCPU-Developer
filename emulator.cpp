@@ -13,6 +13,7 @@ Started 7-Apr-2012
 #include <QDebug>
 #include <QFile>
 #include <QByteArray>
+#include <QDataStream>
 
 #include "include/phrases.h"
 #include "include/emulator.h"
@@ -207,7 +208,7 @@ void Emulator::run()
 				skipStore = isConst(getArgument(instruction, 0));		// If literal
 			}
 
-			qDebug() << opcode << *aLoc << *bLoc;
+			//qDebug() << opcode << *aLoc << *bLoc;
 
 			/*
 			argument_t temp =  ((instruction >> 4) >> 6 * 0) & 0x3E;

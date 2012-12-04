@@ -2,6 +2,7 @@
 #define _ASSEMBLER_H
 
 #include <QThread>
+#include <QString>
 
 #include "constants.h"
 #include "utils.h"
@@ -46,7 +47,7 @@ private:
 	volatile bool assemblerRunning;
 	volatile int lineNumber;
 
-	std::string sourceFilename;
+	QString sourceFilename;
 
 	void assemblerError(int errorCode, int lineNumber);
 
@@ -69,7 +70,7 @@ public:
 	explicit Assembler(QObject* parent = 0);
 	~Assembler(void);
 
-	void setFilename(std::string filename);
+	void setFilename(const QString filename);
 
 	void startAssembler();
 	void stopAssembler();
