@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <QScopedPointer>
+
 #include "include/phrases.h"
 #include "include/assembler.h"
 
@@ -375,6 +377,7 @@ argumentStruct_t Assembler::argumentFor(char* arg)
 	char* label = (char*) malloc(strlen(arg) + 1);
 	strcpy(label, arg);
 
+
 	toReturn.labelReference = label;
 	return toReturn;
 }
@@ -452,12 +455,15 @@ void Assembler::run()
 	assembledInstruction_t* tail = NULL;
 	assembledInstruction_t* instruction = NULL;
 
-	char command[MAX_CHARS], label[MAX_CHARS], arg1[MAX_CHARS], arg2[MAX_CHARS], data[MAX_CHARS];
+	QString command, label, arg1, arg2, data;
+
+	//char* tempBuffer;
 
 	bool skipTillNextLine = false;	
-
+	
 	while (1) {
 		// Reset variables
+		/*
 		for (int i = 0; i < MAX_CHARS; i++) {
 			data[i] = '\0';
 
@@ -469,6 +475,15 @@ void Assembler::run()
 			arg1[i] = '\0';
 			arg2[i] = '\0';
 		}
+		*/
+		if (!skipTillNextLine) {
+			label = "";
+		}
+
+		command = "";
+		data = "";
+		arg1 = "";
+		arg2 = "";
 
 		if (skipTillNextLine) {
 			skipTillNextLine = false;
@@ -485,8 +500,8 @@ void Assembler::run()
 
 		// Check if whole line is a blank
 		if (strlen(temp) == 0) {
-			if (strlen(label) > 0) {
-				processCommand("", "", address, label, head, tail, instruction);
+			if (label.length() > 0) {
+				processCommand(command, data, address, label, head, tail, instruction);
 			}
 		} else {
 			// Non blank line, start processing
@@ -495,6 +510,7 @@ void Assembler::run()
 			if (temp[0] == ':') {
 				processLine(temp, data, label, skipTillNextLine, command, arg1, arg2, true);
 
+
 				qDebug() << "label: " << label << " "; 
 
 			} else {
@@ -502,14 +518,16 @@ void Assembler::run()
 			}
 
 			if (!skipTillNextLine) {
-
+				
 				processCommand(command, data, address, label, head, tail, instruction);
 
+				/*
 				if (strcmp(command, "dat") != 0) {
 					processArg1(command, arg1, address, label, instruction);
 					processArg2(command, arg2, address, label, instruction);
 				}
-
+				*/
+				
 				qDebug() << "\tCommand: " << command << " Arg1: " << arg1 << " Arg2: " << arg2 << " Dat: " << data;
 			}
 		}
@@ -698,10 +716,11 @@ char* Assembler::cleanString(char *rawLine)
 
 // Split up the line and work out what values are in it.
 // This is sort of shit, will need to update this at some point.
-int Assembler::processLine(char *currentLine, char *data, char *label, bool &functionOnNextLine, char *command, char *arg1, char *arg2, bool containsLabel)
-{
+int Assembler::processLine(char * currentLine, QString &data, QString &label, bool &functionOnNextLine, QString &command, QString &arg1, QString &arg2, bool containsLabel) {
 	int lineIndex = 0;						// Current position in line
 	int itemIndex = 0;						// Current position in item being stored
+
+	char *tempBuffer = new char[MAX_CHARS];
 
 	if (containsLabel) {
 		// Don't include ':' in label
@@ -711,10 +730,12 @@ int Assembler::processLine(char *currentLine, char *data, char *label, bool &fun
 		while (currentLine[lineIndex] != ' '  && currentLine[lineIndex] != '\t' 
 			&& currentLine[lineIndex] != '\n' && currentLine[lineIndex] != '\0') {
 
-				label[itemIndex++] = tolower(currentLine[lineIndex++]); 
+				tempBuffer[itemIndex++] = tolower(currentLine[lineIndex++]); 
 		}
 
-		label[itemIndex++] = '\0';
+		tempBuffer[itemIndex++] = '\0';
+
+		label = QString(tempBuffer);
 
 		int tempLineIndex = lineIndex;
 
@@ -741,10 +762,13 @@ int Assembler::processLine(char *currentLine, char *data, char *label, bool &fun
 
 	} 
 
+	// Reset buffer
+	memset(&tempBuffer[0], 0, sizeof(tempBuffer));
+
 	itemIndex = 0;
 
 	//lineIndex++;
-
+	
 	// Check if label is on the same line as first statement
 	if ((currentLine[lineIndex] >= 32 && currentLine[lineIndex] < 127) && 
 		(currentLine[lineIndex] != ' ' || currentLine[lineIndex] != '\t')) {
@@ -754,8 +778,9 @@ int Assembler::processLine(char *currentLine, char *data, char *label, bool &fun
 			}
 
 			while (currentLine[lineIndex] != ' ') {
-				command[itemIndex++] = currentLine[lineIndex++];
+				tempBuffer[itemIndex++] = currentLine[lineIndex++];
 			}
+
 	} else {
 		lineIndex = 0;
 		while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
@@ -763,32 +788,37 @@ int Assembler::processLine(char *currentLine, char *data, char *label, bool &fun
 		}
 
 		while (currentLine[lineIndex] != ' ' || currentLine[lineIndex] == '\t') {
-			command[itemIndex++] = currentLine[lineIndex++];
+			tempBuffer[itemIndex++] = currentLine[lineIndex++];
 		}
 	}
 
 
-	command[itemIndex++] = '\0';
+	tempBuffer[itemIndex++] = '\0';
+
+	command = QString(tempBuffer);
 
 	itemIndex = 0;
+	
+	// Reset buffer
+	memset(&tempBuffer[0], 0, sizeof(tempBuffer));
 
 	// Check if remaining data belongs to 'dat' command.
-	int i = strcmp(command, "dat");
-	if (strcmp(command, "dat") == 0) {
+
+	if (command == "dat") {
 		while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
 			lineIndex++;
 		}
 
 		while (currentLine[lineIndex] != '\0' && currentLine[lineIndex] != ';' 
 			&& currentLine[lineIndex] != '0' && currentLine[lineIndex] != '\n'){
-				data[itemIndex++] = currentLine[lineIndex++];
+				tempBuffer[itemIndex++] = currentLine[lineIndex++];
 		}
 
-		data[itemIndex++] = '\0';
+		tempBuffer[itemIndex++] = '\0';
+
+		data = QString(tempBuffer);
 
 	} else {
-
-		itemIndex = 0;
 
 		while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
 			lineIndex++;
@@ -807,13 +837,18 @@ int Assembler::processLine(char *currentLine, char *data, char *label, bool &fun
 					return -1;
 				}
 
-				arg1[itemIndex++] = currentLine[lineIndex++];
+				tempBuffer[itemIndex++] = currentLine[lineIndex++];
 			}
 		}
 
-		arg1[itemIndex++] = '\0';
+		tempBuffer[itemIndex++] = '\0';
+
+		arg1 = QString(tempBuffer);
 
 		itemIndex = 0;
+
+		// Reset buffer
+		memset(&tempBuffer[0], 0, sizeof(tempBuffer));
 
 		// Find second arg, optional
 		// Find start of second arg
@@ -839,28 +874,32 @@ int Assembler::processLine(char *currentLine, char *data, char *label, bool &fun
 			while (currentLine[lineIndex] != '\0' && currentLine[lineIndex] != ' ' 
 				&& currentLine[lineIndex] != '\t' && currentLine[lineIndex] != '\n'){
 
-					arg2[itemIndex++] = currentLine[lineIndex++];
+					tempBuffer[itemIndex++] = currentLine[lineIndex++];
 			}
 
 
-			arg2[itemIndex++] = '\0';
+			tempBuffer[itemIndex++] = '\0';
 		} else {
-			arg2[0] = '\0';
+			tempBuffer[0] = '\0';
 		}
 
+		arg2 = QString(tempBuffer);
+
 	}
-	itemIndex = 0;
+	
+	delete[] tempBuffer;
+	
+	//itemIndex = 0;
 }
 
 // Process the command
-int Assembler::processCommand(char* command, char *data, word_t &address, char* label, assembledInstruction_t *&head,  assembledInstruction_t *&tail, assembledInstruction_t *&instruction)
-{
+int Assembler::processCommand(QString &command, QString &data, word_t &address, QString &label, assembledInstruction_t *&head,  assembledInstruction_t *&tail, assembledInstruction_t *&instruction) {
 	int i = 0, index = 0;
 
-	while (command[i] != '\0') {
-		command[i] = tolower(command[i]);
-		i++;
-	}
+	QScopedPointer<const char> dataBuffer(_strdup(data.toStdString().c_str()));
+
+	command = command.toLower();
+
 
 	instruction = new assembledInstruction_t;
 	if (head == NULL) {
@@ -873,23 +912,23 @@ int Assembler::processCommand(char* command, char *data, word_t &address, char* 
 
 	instruction->next = NULL;
 	instruction->address = address;
-	instruction->label = _strdup(label);
+	instruction->label = label.toStdString().c_str();
 
 	instruction->data = NULL;
 
-	if (!strcmp(command, "dat")) {
+	if (command == "dat") {
 		instruction->data = (word_t*) malloc(MAX_CHARS * sizeof(word_t));
 		instruction->dataLength = 0;
 
 		while(1) {
 
-			int nextChar = data[index++];
+			int nextChar = dataBuffer.data()[index++];
 			if (nextChar == '"') {
 				qDebug() << "Reading string.";
 
 				bool_t escaped = 0;
 				while(1) {
-					nextChar = data[index++];
+					nextChar = dataBuffer.data()[index++];
 					char toPut;
 
 					if (escaped) {
@@ -933,7 +972,7 @@ int Assembler::processCommand(char* command, char *data, word_t &address, char* 
 
 				std::cout << std::endl;
 			} else {
-				int nextNextChar = data[index++];
+				int nextNextChar = dataBuffer.data()[index++];
 
 				if (nextNextChar == -1) {
 					break;
@@ -946,13 +985,13 @@ int Assembler::processCommand(char* command, char *data, word_t &address, char* 
 					// Hex literal
 					qDebug() << "Reading hex literal";
 
-					if (!sscanf(data, "0x%hx", &instruction->data[instruction->dataLength]) == 1) {
+					if (!sscanf(dataBuffer.data(), "0x%hx", &instruction->data[instruction->dataLength]) == 1) {
 						qDebug() << "ERROR: Expected hex literal";
 						return -1;
 					}
 
 					instruction->dataLength++;
-				} else if(sscanf(data, "%hu", &instruction->data[instruction->dataLength]) == 1) {
+				} else if(sscanf(dataBuffer.data(), "%hu", &instruction->data[instruction->dataLength]) == 1) {
 					// Decimal literal
 					qDebug() << "Reading decimal literal";
 					instruction->dataLength++;
@@ -973,7 +1012,7 @@ int Assembler::processCommand(char* command, char *data, word_t &address, char* 
 }
 
 // Process argument 1
-void Assembler::processArg1(char* command, char* arg, word_t &address, char* label, assembledInstruction_t *&instruction)
+void Assembler::processArg1(QString &command, QString &arg, word_t &address, char* label, assembledInstruction_t *&instruction)
 {
 	int i = 0;
 
@@ -981,9 +1020,9 @@ void Assembler::processArg1(char* command, char* arg, word_t &address, char* lab
 	char tempArg[MAX_CHARS], preservedArg[MAX_CHARS];
 	int j = 0, temp = 0;
 
-	int len = strlen(arg);
+	int len = arg.length();
 
-	memcpy(tempArg, arg, len + 1);
+	memcpy(tempArg, arg.toStdString().c_str(), len + 1);
 
 	while (arg[i] != '\0') {
 		if (arg[i] == ',') {
@@ -1016,13 +1055,15 @@ void Assembler::processArg1(char* command, char* arg, word_t &address, char* lab
     if (Utils::usesNextWord(instruction->a.argument)) {
 		address++;
 	}
+	
 }
 
 // Process argument 2
-void Assembler::processArg2(char* command, char* arg, word_t &address, char* label, assembledInstruction_t *&instruction)
+void Assembler::processArg2(QString &command, QString &arg, word_t &address, char* label, assembledInstruction_t *&instruction)
 {
 	int i = 0;
 
+	/*
 	bool preserveArg = false;
 	char tempArg[MAX_CHARS], preservedArg[MAX_CHARS];
 	int j = 0, temp = 0;
@@ -1037,7 +1078,7 @@ void Assembler::processArg2(char* command, char* arg, word_t &address, char* lab
 		instruction->a.labelReference = NULL;
 
 	} else {
-		memcpy(tempArg, arg, len + 1);
+		//memcpy(tempArg, arg, len + 1);
 
 		while (arg[i] != '\0') {
 			if (arg[i] == ',') {
@@ -1063,4 +1104,5 @@ void Assembler::processArg2(char* command, char* arg, word_t &address, char* lab
 			address++;
 		}
 	}
+	*/
 }

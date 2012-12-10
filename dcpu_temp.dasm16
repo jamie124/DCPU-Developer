@@ -90,7 +90,7 @@ SET [0x80B6], 0x0F48
 SET [0x80B7], 0x0F44
 SET [0x80B8], 0x0F20
 SET PC, end
-:end                 
+:end
 SET PC, end
           ;12345678901234567890123456789012; data
 :str1 DAT "                                ",0

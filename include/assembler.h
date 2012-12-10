@@ -20,7 +20,7 @@ typedef struct argumentStruct {
 } argumentStruct_t;
 
 typedef struct assembledInstruction {
-	char* label;
+	const char* label;
 	word_t* data;
 	word_t dataLength;
 	word_t address;
@@ -57,11 +57,11 @@ private:
 	argumentStruct_t argumentFor(char* arg);
 
 	char* cleanString(char *rawLine);
-	int processLine(char *currentLine, char *data, char *label, bool &functionOnNextLine, char *command, char *arg1, char *arg2, bool containsLabel);
+	int processLine(char * currentLine, QString &data, QString &label, bool &functionOnNextLine, QString &command, QString &arg1, QString &arg2, bool containsLabel);
 
-	int processCommand(char* command, char* data, word_t &address, char* label, assembledInstruction_t *&head,  assembledInstruction_t *&tail, assembledInstruction_t *&instruction);
-	void processArg1(char* command, char* arg, word_t &address, char* label, assembledInstruction_t *&instruction);
-	void processArg2(char* command, char* arg, word_t &address, char* label, assembledInstruction_t *&instruction);
+	int processCommand(QString &command, QString &data, word_t &address, QString &label, assembledInstruction_t *&head,  assembledInstruction_t *&tail, assembledInstruction_t *&instruction);
+	void processArg1(QString &command, QString &arg, word_t &address, char* label, assembledInstruction_t *&instruction);
+	void processArg2(QString &command, QString &arg, word_t &address, char* label, assembledInstruction_t *&instruction);
 
 protected:
 	void run();
