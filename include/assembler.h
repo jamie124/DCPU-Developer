@@ -13,7 +13,7 @@ const int MAX_CHARS = 1024;
 typedef struct argumentStruct {
 	argument_t argument;
 	word_t nextWord;
-	char* labelReference;		// If NULL, nextWord is valid, otherwise nextWord should point to this
+	QString labelReference;		// If NULL, nextWord is valid, otherwise nextWord should point to this
 	bool badArgument;
 	int errorCode;
 	int lineNumber;				// For debugging
@@ -51,17 +51,18 @@ private:
 
 	void assemblerError(int errorCode, int lineNumber);
 
-	opcode_t opcodeFor(char* command);
-	nonbasicOpcode_t nonbasicOpcodeFor(char* command);
+	opcode_t opcodeFor(const QString command);
+	nonbasicOpcode_t nonbasicOpcodeFor(QString command);
+
 	int registerFor(char regName);
-	argumentStruct_t argumentFor(char* arg);
+	argumentStruct_t argumentFor(const QString arg);
 
 	char* cleanString(char *rawLine);
 	int processLine(char * currentLine, QString &data, QString &label, bool &functionOnNextLine, QString &command, QString &arg1, QString &arg2, bool containsLabel);
 
 	int processCommand(QString &command, QString &data, word_t &address, QString &label, assembledInstruction_t *&head,  assembledInstruction_t *&tail, assembledInstruction_t *&instruction);
-	void processArg1(QString &command, QString &arg, word_t &address, char* label, assembledInstruction_t *&instruction);
-	void processArg2(QString &command, QString &arg, word_t &address, char* label, assembledInstruction_t *&instruction);
+	void processArg1(QString &command, QString &arg, word_t &address, QString &label, assembledInstruction_t *&instruction);
+	void processArg2(QString &command, QString &arg, word_t &address, QString &label, assembledInstruction_t *&instruction);
 
 protected:
 	void run();
