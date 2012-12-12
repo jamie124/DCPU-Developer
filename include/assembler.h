@@ -55,7 +55,7 @@ private:
 	nonbasicOpcode_t nonbasicOpcodeFor(QString command);
 
 	int registerFor(char regName);
-	argumentStruct_t argumentFor(const QString arg);
+	argumentStruct_t argumentFor(QString arg);
 
 	char* cleanString(char *rawLine);
 	int processLine(char * currentLine, QString &data, QString &label, bool &functionOnNextLine, QString &command, QString &arg1, QString &arg2, bool containsLabel);

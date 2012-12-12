@@ -3,7 +3,7 @@
 ;SET [0x8000], A
 SET J, 0              ;setting counter
 :loop
-SET A, [str1+J]       ;setting strings
+SET A, [str1 +J]       ;setting strings
 SET B, [str2+J]
 SET C, [str3+J]
 SET X, [str4+J]

@@ -176,7 +176,7 @@ int Assembler::registerFor(char regName)
 }
 
 // Get argument value for string
-argumentStruct_t Assembler::argumentFor(const QString arg) {
+argumentStruct_t Assembler::argumentFor(QString arg) {
 
 	QScopedPointer<const char> tempBuffer(_strdup(arg.toStdString().c_str()));
 
@@ -284,19 +284,28 @@ argumentStruct_t Assembler::argumentFor(const QString arg) {
 				return toReturn;
 			}
 		} else {
-			char* labelStart = ((char*)tempBuffer.data()) + 1;
+		
+			 arg = arg.replace(QString(" "), QString(""));
 
-			char* labelEnd = strchr((char*)tempBuffer.data(), '+');
+			bool containsReg = false;
 
-			if (labelEnd == NULL) {
-				labelEnd = strchr((char*)tempBuffer.data(), ']');
+			int labelEnd = 0;
+			
+			labelEnd = arg.indexOf('+');
+
+			if (labelEnd > -1) {
+				containsReg = true;
 			}
 
-			if (labelEnd == NULL) {
-				labelEnd = strchr((char*)tempBuffer.data(), ')');
+			if (labelEnd == -1) {
+				labelEnd = arg.indexOf(']');
 			}
 
-			if (labelEnd == NULL) {
+			if (labelEnd == -1) {
+				labelEnd = arg.indexOf(')');
+			}
+
+			if (labelEnd == -1) {
 				qDebug() << "ERROR: Unterminated label in argument: " << arg;
 
 				toReturn.badArgument = true;
@@ -305,16 +314,19 @@ argumentStruct_t Assembler::argumentFor(const QString arg) {
 				return toReturn;
 			}
 
-			// Store label
-			char* label = (char*) malloc((labelEnd - labelStart) + 1);
-			strncpy(label, labelStart, (labelEnd - labelStart));
-			label[labelEnd - labelStart] = '\0';
+			// Account for last character
+			labelEnd--;
 
-			toReturn.labelReference = QString(label);
+			toReturn.labelReference = arg.mid(1, labelEnd);
 
 			// Try to parse register
-			char regName;
-			if (sscanf(labelEnd, "+%c", &regName) == 1) {
+			
+			if (containsReg) {
+				// Find register, sort of shit way of doing it.
+				// Finds first character after '+'
+				char regName = arg.mid(labelEnd + 2, 1).toStdString().c_str()[0];
+
+
 				int regNum = registerFor(regName);
 				if (regNum != -1) {
 					toReturn.argument = ARG_REG_NEXTWORD_INDEX_START + regNum;
@@ -872,7 +884,7 @@ int Assembler::processLine(char * currentLine, QString &data, QString &label, bo
 				lineIndex++;
 			}
 
-			while (currentLine[lineIndex] != '\0' && currentLine[lineIndex] != ' ' 
+			while (currentLine[lineIndex] != '\0' 
 				&& currentLine[lineIndex] != '\t' && currentLine[lineIndex] != '\n'){
 
 					tempBuffer[itemIndex++] = currentLine[lineIndex++];
