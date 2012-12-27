@@ -20,7 +20,7 @@ typedef struct argumentStruct {
 } argumentStruct_t;
 
 typedef struct assembledInstruction {
-	const char* label;
+	QString label;
 	word_t* data;
 	word_t dataLength;
 	word_t address;
