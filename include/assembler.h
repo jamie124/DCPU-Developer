@@ -58,7 +58,10 @@ private:
 	argumentStruct_t argumentFor(QString arg);
 
 	char* cleanString(char *rawLine);
-	int processLine(char * currentLine, QString &data, QString &label, bool &functionOnNextLine, QString &command, QString &arg1, QString &arg2, bool containsLabel);
+
+	void removeComment(QString &input);
+
+	int processLine(const QString currentLine, QString &data, QString &label, bool &functionOnNextLine, QString &command, QString &arg1, QString &arg2, bool containsLabel);
 
 	int processCommand(QString &command, QString &data, word_t &address, QString &label, assembledInstruction_t *&head,  assembledInstruction_t *&tail, assembledInstruction_t *&instruction);
 	void processArg1(QString &command, QString &arg, word_t &address, QString &label, assembledInstruction_t *&instruction);

@@ -1,5 +1,7 @@
 #include <QDebug>
 #include <QFile>
+#include <QTextStream>
+#include <QRegExp>
 
 #include <iostream>
 #include <fstream>
@@ -476,12 +478,17 @@ void Assembler::run()
 	std::string compiledFilename = replace(sourceFilename.toStdString(), "dasm16", "bin");
 	std::string debugFilename = "debug_" + replace(sourceFilename.toStdString(), "dasm16", "dbg");
 
-	std::ifstream sourceFile(sourceFilename.toStdString());
+	//std::ifstream sourceFile(sourceFilename.toStdString());
 
-	if (!sourceFile.is_open()) {
+	qDebug() << sourceFilename;
+	QFile sourceFile(sourceFilename);
+
+	if (!sourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		qDebug() << "ERROR: Could not open source file " << sourceFilename;
 		assemblerError(SOURCE_FILE_MISSING, lineNumber);
 	}
+
+	QTextStream sourceInput(&sourceFile);
 
 	// TODO: Add automatic file naming
 	FILE* compiledFile = fopen(compiledFilename.c_str(), "wb");
@@ -518,7 +525,16 @@ void Assembler::run()
 
 	bool skipTillNextLine = false;	
 
-	while (1) {
+	QString currentLine;
+
+	//currentLine = sourceInput.readLine();
+
+	while (!sourceInput.atEnd()) {
+
+		currentLine = sourceFile.readLine();
+
+		//qDebug() << currentLine;
+
 		// Reset variables
 		/*
 		for (int i = 0; i < MAX_CHARS; i++) {
@@ -548,15 +564,21 @@ void Assembler::run()
 
 		lineNumber++;
 
+		/*
 		if (sourceFile.getline(lineBuffer, MAX_CHARS).eof()) {
 			finished = true;
 		}
+		*/
 
+		removeComment(currentLine);
 
-		char* temp = cleanString(lineBuffer);
+		//char* temp = cleanString(lineBuffer);
 
 		// Check if whole line is a blank
-		if (strlen(temp) == 0) {
+
+		//qDebug() << "Line length: " + QString::number(currentLine.length());
+
+		if (currentLine.length() <= 1) {
 			if (label.length() > 0) {
 				processCommand(QString(""), QString(""), address, label, head, tail, instruction);
 			}
@@ -564,14 +586,14 @@ void Assembler::run()
 			// Non blank line, start processing
 
 			// Get label if applicable
-			if (temp[0] == ':') {
-				processLine(temp, data, label, skipTillNextLine, command, arg1, arg2, true);
+			if (currentLine[0] == ':') {
+				processLine(currentLine, data, label, skipTillNextLine, command, arg1, arg2, true);
 
 
 				qDebug() << "label: " << label << " "; 
 
 			} else {
-				processLine(temp, data, label, skipTillNextLine, command, arg1, arg2, false);
+				processLine(currentLine, data, label, skipTillNextLine, command, arg1, arg2, false);
 			}
 
 			if (!skipTillNextLine) {
@@ -589,11 +611,15 @@ void Assembler::run()
 			}
 		}
 
-		delete temp;
+		//delete temp;
 
 		if (finished) {
 			break;
 		}
+
+		//currentLine = sourceFile.readLine();
+
+		//qDebug() << currentLine;
 	}
 
 	std::cout << std::endl;
@@ -772,61 +798,71 @@ char* Assembler::cleanString(char *rawLine)
 	return temp;
 }
 
+// Remove comments from a string
+void Assembler::removeComment(QString &input) {
+	if (input.contains(";")) {
+		qDebug() << "Contains comment";
+
+		int startOfComment = input.indexOf(";");
+
+		input = input.left(startOfComment);
+
+		//qDebug() << QString::number(startOfComment);
+		//qDebug() << input;
+	}
+}
+
 // Split up the line and work out what values are in it.
 // This is sort of shit, will need to update this at some point.
-int Assembler::processLine(char * currentLine, QString &data, QString &label, bool &functionOnNextLine, QString &command, QString &arg1, QString &arg2, bool containsLabel) {
+int Assembler::processLine(const QString currentLine, QString &data, QString &label, bool &functionOnNextLine, QString &command, QString &arg1, QString &arg2, bool containsLabel) {
 	int lineIndex = 0;						// Current position in line
 	int itemIndex = 0;						// Current position in item being stored
 
-	char *tempBuffer = new char[MAX_CHARS];
+	//char *tempBuffer = new char[MAX_CHARS];
+	QString tempBuffer;
+
+	// Remove trailing characters
+	QString remainingLine = currentLine.trimmed();
+
+	QRegExp whitespace(" ");
 
 	if (containsLabel) {
-		// Don't include ':' in label
-		lineIndex++;
+		// Find first space, indicates end of label
+		itemIndex = remainingLine.indexOf(whitespace);
+		lineIndex += itemIndex;
 
-		// Read in until either a space or end of line is found
-		while (currentLine[lineIndex] != ' '  && currentLine[lineIndex] != '\t' 
-			&& currentLine[lineIndex] != '\n' && currentLine[lineIndex] != '\0') {
+		// Read in any text after ':' till first whitespace.
+		tempBuffer = remainingLine.left(lineIndex);
 
-				tempBuffer[itemIndex++] = tolower(currentLine[lineIndex++]); 
-		}
+		remainingLine = remainingLine.right(itemIndex);
 
-		tempBuffer[itemIndex++] = '\0';
 
-		label = QString(tempBuffer);
+		//qDebug() << remainingLine;
 
-		int tempLineIndex = lineIndex;
 
-		if (currentLine[lineIndex] == '\0') {
-			functionOnNextLine = true;
-			return 1;
-		} else {
-			while (currentLine[tempLineIndex] == ' ' || currentLine[tempLineIndex] == '\t'
-				|| currentLine[tempLineIndex] != '\0') {
+		label = tempBuffer.replace(":", "").toLower();
 
-					if (currentLine[tempLineIndex] >= 65 && currentLine[tempLineIndex] < 123){
-						functionOnNextLine = false;
-						break;
-					} else {
-						functionOnNextLine = true;
-					}
-
-					tempLineIndex++;
+		if (itemIndex > -1) {
+			if (remainingLine.length() > label.length()) {
+				functionOnNextLine = false;
+			} else {
+				functionOnNextLine = true;
+				return 1;
 			}
+		} else {
+			remainingLine = "";
 		}
-
-		// Consume whitespace between label and command if needed
-		lineIndex++;
 
 	} 
 
 	// Reset buffer
-	memset(&tempBuffer[0], 0, sizeof(tempBuffer));
+	//memset(&tempBuffer[0], 0, sizeof(tempBuffer));
 
 	itemIndex = 0;
 
 	//lineIndex++;
 
+	/*
 	// Check if label is on the same line as first statement
 	if ((currentLine[lineIndex] >= 32 && currentLine[lineIndex] < 127) && 
 		(currentLine[lineIndex] != ' ' || currentLine[lineIndex] != '\t')) {
@@ -849,20 +885,30 @@ int Assembler::processLine(char * currentLine, QString &data, QString &label, bo
 			tempBuffer[itemIndex++] = currentLine[lineIndex++];
 		}
 	}
-
+	
 
 	tempBuffer[itemIndex++] = '\0';
-
+	
 	command = QString(tempBuffer).toLower();
+	*/
+
+	itemIndex = remainingLine.indexOf(whitespace);
+	lineIndex += itemIndex;
+
+	qDebug() << QString::number(itemIndex);
+	command = remainingLine.left(itemIndex);
+			
+	remainingLine = remainingLine.right(remainingLine.length() - itemIndex).trimmed();
 
 	itemIndex = 0;
 
 	// Reset buffer
-	memset(&tempBuffer[0], 0, sizeof(tempBuffer));
+	//memset(&tempBuffer[0], 0, sizeof(tempBuffer));
 
 	// Check if remaining data belongs to 'dat' command.
 
 	if (command == "dat") {
+		/*
 		while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
 			lineIndex++;
 		}
@@ -877,10 +923,15 @@ int Assembler::processLine(char * currentLine, QString &data, QString &label, bo
 
 		data = QString(tempBuffer);
 
+		*/
+
+		data = remainingLine;
+
 		qDebug() << data;
 
 	} else {
 
+		/*
 		while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
 			lineIndex++;
 		}
@@ -903,54 +954,30 @@ int Assembler::processLine(char * currentLine, QString &data, QString &label, bo
 		}
 
 		tempBuffer[itemIndex++] = '\0';
-
-		arg1 = QString(tempBuffer);
-
-		itemIndex = 0;
-
-		// Reset buffer
-		memset(&tempBuffer[0], 0, sizeof(tempBuffer));
-
+		*/
+		
 		// Find second arg, optional
 		// Find start of second arg
 		bool hasArg2 = false;
 
-		if (currentLine[lineIndex] == ',') {
-			// Check next character for ',' indicating a second arg
-			hasArg2 = true;
+		itemIndex = remainingLine.indexOf(whitespace);
+
+		//qDebug() << QString::number(itemIndex);
+
+		if (itemIndex == -1) {
+			arg1 = remainingLine;
+
+			//qDebug() << arg1 << " " << remainingLine;
 		} else {
-			while (currentLine[lineIndex] == ' ' && currentLine[lineIndex] != '\0' ) {
-				lineIndex++;
-			}
-			if (currentLine[lineIndex] == ','){
-				hasArg2 = true;
-			}
+			arg1 = remainingLine.left(itemIndex);
+			arg2 = remainingLine.right(remainingLine.length() - itemIndex);
 		}
 
-		if (hasArg2){
 
-
-			while (currentLine[lineIndex] < 48 || currentLine[lineIndex] >= 123) {
-				lineIndex++;
-			}
-
-			while (currentLine[lineIndex] != '\0' 
-				&& currentLine[lineIndex] != '\t' && currentLine[lineIndex] != '\n'){
-
-					tempBuffer[itemIndex++] = currentLine[lineIndex++];
-			}
-
-
-			tempBuffer[itemIndex++] = '\0';
-		} else {
-			tempBuffer[0] = '\0';
-		}
-
-		arg2 = QString(tempBuffer);
 
 	}
 
-	delete[] tempBuffer;
+	//delete[] tempBuffer;
 
 	//itemIndex = 0;
 }
