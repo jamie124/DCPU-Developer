@@ -15,3 +15,9 @@ Win32/
 ipch/
 *.bin
 *.suo
+*.sdf
+*.opensdf
+*.ini
+
+# Extra crap
+dcpu-build*/
