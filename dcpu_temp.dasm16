@@ -1,107 +1,32 @@
-;SET A, 0x0000
-;BOR A, 0x7000
-;SET [0x8000], A
-SET J, 0              ;setting counter
-:loop
-SET A, [str1+J]       ;setting strings
-SET B, [str2+J]
-SET C, [str3+J]
-SET X, [str4+J]
-SET Y, [str5+J]
-SET Z, [str6+J]
-IFE A, 0              ;exit if all text writen
-SET PC, out
-BOR A, 0xF000         ;font settings
-BOR B, 0xF000
-BOR C, 0xF000
-BOR X, 0xF000
-BOR Y, 0xF000
-BOR Z, 0xF000
-SET [0x8000+J], A     ;write strings
-SET [0x8020+J], B
-SET [0x8040+J], C
-SET [0x8060+J], X
-SET [0x8080+J], Y
-SET [0x80A0+J], Z
-ADD J, 1              ;update counter
-SET PC, loop
-:out
-SET A, 0              ;reseting
-SET B, 0
-SET C, 0
-SET X, 0
-SET Y, 0
-SET Z, 0
-SET J, 0
-:loop2
-SET A, [str7+J]       ;setting strings
-SET B, [str8+J]
-SET C, [str9+J]
-SET X, [stra+J]
-SET Y, [strb+J]
-SET Z, [strc+J]
-IFE A, 0              ;exit if all text writen
-SET PC, out2
-BOR A, 0xF000         ;font settings
-BOR B, 0xF000
-BOR C, 0xF000
-BOR X, 0xF000
-BOR Y, 0xF000
-BOR Z, 0xF000
-SET [0x80C0+J], A     ;write strings
-SET [0x80E0+J], B
-SET [0x8100+J], C
-SET [0x8120+J], X
-SET [0x8140+J], Y
-SET [0x8160+J], Z
-ADD J, 1              ;update counter
-SET PC, loop2         ;loop
-:out2
-SET A, 0              ;reseting
-SET B, 0
-SET C, 0
-SET X, 0
-SET Y, 0
-SET Z, 0
-SET J, 0x8000
-                      ;fontAPI
-                      ;Example 1: font code version
-;SET A, [str1+0]       ;Address at string here
-;BOR A, 0x0000         ;Font here
-;IFE J, 0x8000         ;Address here
-;SET [J], A            ;Applying Font
-                      ;Example 2: Advanced
-;SET [0x8000], 0x0000  ;Address, char and font goes here
-;SET PC, END           ;Use this if you use that method
-SET [0x8065], 0x0E20
-SET [0x8066], 0x0E20
-SET [0x8067], 0x0E20
-SET [0x8068], 0x0E20
-SET [0x8085], 0x0E20
-SET [0x8088], 0x0E20
-SET [0x80A5], 0x0E20
-SET [0x80A8], 0x0E20
-SET [0x80C5], 0x0E20
-SET [0x80C6], 0x0E20
-SET [0x80C7], 0x0E20
-SET [0x80C8], 0x0E20
-SET [0x80B5], 0x0F20
-SET [0x80B6], 0x0F48
-SET [0x80B7], 0x0F44
-SET [0x80B8], 0x0F20
-SET PC, end
-:end                 
-SET PC, end
-          ;12345678901234567890123456789012; data
-:str1 DAT "                                ",0
-:str2 DAT "                                ",0
-:str3 DAT "                                ",0
-:str4 DAT "     ****       NAT  GEO        ",0
-:str5 DAT "     *  *                       ",0
-:str6 DAT "     *  *       Wild  HD        ",0
-:str7 DAT "     ****                       ",0
-:str8 DAT "                                ",0
-:str9 DAT "                                ",0
-:stra DAT "                                ",0
-:strb DAT "                                ",0
-:strc DAT "                                ",0
+hwn i
+
+:map_hardware sub i,1
+	hwq i
+	ife b, 0x7349
+		ife a, 0xF615
+			set pc, 	set_monitor
+		ifn i, 0
+			set pc, map_hardware
+:set_monitor
+	set [MONITOR], i
+
+:setup_monitor
+	set a, 0
+	set b, 0x8000
+	hwi [MONITOR]
+set i, 0
+:print_message
+	set j, [MESSAGE + i]
+	ife j, 0
+		set pc, end
+	bor j, 0xA000
+	set [0x8000 + i], j
+	add i, 1
+	set pc, print_message
+
+:MONITOR	
+	dat 0x0000
+
+:MESSAGE	
+	dat "Hello, World!", 0 
+:end

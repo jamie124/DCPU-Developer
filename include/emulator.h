@@ -14,6 +14,7 @@ Started 7-Apr-2012
 #include <QString>
 #include <QSharedPointer>
 #include <QVector>
+#include <QMap>
 
 #include <iostream>
 
@@ -90,6 +91,7 @@ typedef struct {
 // Pointer typedefs
 typedef QSharedPointer<registers_t> registers_ptr;
 typedef QVector<word_t> word_vector;
+typedef QMap<int, word_t> word_map;
 typedef int* memory_array;
 
 class Emulator : public QThread
@@ -150,14 +152,16 @@ public:
 
 private:
 	//word_t* memory;
-	word_vector memory;
+	word_map memory;
 	word_vector registers;
-	word_vector literals;
+	word_map literals;
 	//word_t* colourTable;
 
 	word_t programCounter;
 	word_t stackPointer;
 	word_t ex;
+	word_t ia;
+
 	word_t cycle;
 	word_t currentOpcode;
 

@@ -11,6 +11,8 @@
 #include <QCompleter>
 #include <QList>
 #include <QSharedPointer>
+#include <QScopedPointer>
+
 #include <QSettings>
 
 #include "phrases.h"
@@ -95,7 +97,8 @@ private:
     Ui::DCPUDeveloper *ui;
 
     Assembler *assembler;
-    Emulator *emulator;
+    QSharedPointer<Emulator> emulator;
+
 	Phrases *phrases;
 	Highlighter *highlighter;
 

@@ -17,55 +17,55 @@ typedef unsigned char bool_t;
 
 // Basic opcodes
 static const enum {
-	 OP_NONBASIC,
-	 OP_SET,
-	 OP_ADD,
-	 OP_SUB,
+	 OP_NONBASIC	= 0x00,
+	 OP_SET			= 0x01,
+	 OP_ADD			= 0x02,
+	 OP_SUB			= 0x03,
 
-	 OP_MUL,
-	 OP_MLI,
-	 OP_DIV,
-	 OP_DVI,
+	 OP_MUL			= 0x04,
+	 OP_MLI			= 0x05,
+	 OP_DIV			= 0x06,
+	 OP_DVI			= 0x07,
 
-	 OP_MOD,
-	 OP_MDI,
+	 OP_MOD			= 0x08,
+	 OP_MDI			= 0x09,
 
-	 OP_AND,
-	 OP_BOR,
-	 OP_XOR,
-	 OP_SHR,
-	 OP_ASR,
-	 OP_SHL,
+	 OP_AND			= 0x0a,
+	 OP_BOR			= 0x0b,
+	 OP_XOR			= 0x0c,
+	 OP_SHR			= 0x0d,
+	 OP_ASR			= 0x0e,
+	 OP_SHL			= 0x0f,
 
-	 OP_IFB,
-	 OP_IFC,
-	 OP_IFE,
-	 OP_IFN,
-	 OP_IFG,
-	 OP_IFA,
-	 OP_IFL,
-	 OP_IFU,
+	 OP_IFB			= 0x10,
+	 OP_IFC			= 0x11,
+	 OP_IFE			= 0x12,
+	 OP_IFN			= 0x13,
+	 OP_IFG			= 0x14,
+	 OP_IFA			= 0x15,
+	 OP_IFL			= 0x16,
+	 OP_IFU			= 0x17,
 
-	 OP_ADX,
-	 OP_SBX,
+	 OP_ADX			= 0x1a,
+	 OP_SBX			= 0x1b,
 
-	 OP_STI,
-	 OP_STD
+	 OP_STI			= 0x1e,
+	 OP_STD			= 0x1f
 };
 
 // Special opcodes
 static const enum {
-	OP_JSR,
+	OP_JSR			= 0x01,
 
-	OP_INT,
-	OP_IAG,
-	OP_IAS,
-	OP_RFI,
-	OP_IAQ,
+	OP_INT			= 0x08,
+	OP_IAG			= 0x09,
+	OP_IAS			= 0x0a,
+	OP_RFI			= 0x0b,
+	OP_IAQ			= 0x0c,
 
-	OP_HWN,
-	OP_HWQ,
-	OP_HWI
+	OP_HWN			= 0x10,
+	OP_HWQ			= 0x11,
+	OP_HWI			= 0x12,
 };
 
 // Return codes
