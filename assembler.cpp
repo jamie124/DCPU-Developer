@@ -566,7 +566,7 @@ void Assembler::run()
 
 		/*
 		if (sourceFile.getline(lineBuffer, MAX_CHARS).eof()) {
-			finished = true;
+		finished = true;
 		}
 		*/
 
@@ -733,6 +733,9 @@ void Assembler::run()
 			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord << " Swapped: " << swapped;
 			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 		}
+
+		// TODO
+		//delete instruction;
 	}
 
 	qDebug() << "Compile finished.";
@@ -829,157 +832,81 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 	if (containsLabel) {
 		// Find first space, indicates end of label
 		itemIndex = remainingLine.indexOf(whitespace);
-		lineIndex += itemIndex;
+		//lineIndex += itemIndex;
 
+		//qDebug() << QString::number(itemIndex);
 		// Read in any text after ':' till first whitespace.
-		tempBuffer = remainingLine.left(lineIndex);
+		label = remainingLine.left(itemIndex).replace(":", "").toLower();
 
-		remainingLine = remainingLine.right(itemIndex);
+		remainingLine = remainingLine.right(remainingLine.length() -  itemIndex).trimmed();
 
 
 		//qDebug() << remainingLine;
 
 
-		label = tempBuffer.replace(":", "").toLower();
+		//label = tempBuffer.replace(":", "").toLower();
+
+
 
 		if (itemIndex > -1) {
+			/*
 			if (remainingLine.length() > label.length()) {
-				functionOnNextLine = false;
+			functionOnNextLine = false;
 			} else {
-				functionOnNextLine = true;
-				return 1;
+			functionOnNextLine = true;
+			return 1;
 			}
+			*/
+			functionOnNextLine = false;
 		} else {
 			remainingLine = "";
+
+			functionOnNextLine = true;
+
+			return 1;
 		}
 
 	} 
 
-	// Reset buffer
-	//memset(&tempBuffer[0], 0, sizeof(tempBuffer));
-
-	itemIndex = 0;
-
-	//lineIndex++;
-
-	/*
-	// Check if label is on the same line as first statement
-	if ((currentLine[lineIndex] >= 32 && currentLine[lineIndex] < 127) && 
-		(currentLine[lineIndex] != ' ' || currentLine[lineIndex] != '\t')) {
-			// Consume any spaces or tabs between label and command
-			while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
-				lineIndex++;
-			}
-
-			while (currentLine[lineIndex] != ' ') {
-				tempBuffer[itemIndex++] = currentLine[lineIndex++];
-			}
-
-	} else {
-		lineIndex = 0;
-		while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
-			lineIndex++;
-		}
-
-		while (currentLine[lineIndex] != ' ' || currentLine[lineIndex] == '\t') {
-			tempBuffer[itemIndex++] = currentLine[lineIndex++];
-		}
-	}
-	
-
-	tempBuffer[itemIndex++] = '\0';
-	
-	command = QString(tempBuffer).toLower();
-	*/
-
+	// Get command
 	itemIndex = remainingLine.indexOf(whitespace);
-	lineIndex += itemIndex;
+	//lineIndex += itemIndex;
 
 	qDebug() << QString::number(itemIndex);
 	command = remainingLine.left(itemIndex);
-			
+
 	remainingLine = remainingLine.right(remainingLine.length() - itemIndex).trimmed();
 
 	itemIndex = 0;
 
-	// Reset buffer
-	//memset(&tempBuffer[0], 0, sizeof(tempBuffer));
 
 	// Check if remaining data belongs to 'dat' command.
-
 	if (command == "dat") {
-		/*
-		while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
-			lineIndex++;
-		}
-
-		while (currentLine[lineIndex] != '\0' && currentLine[lineIndex] != ';' 
-			&& currentLine[lineIndex] != '0' && currentLine[lineIndex] != '\n'
-			&& currentLine[lineIndex] != ','){
-				tempBuffer[itemIndex++] = currentLine[lineIndex++];
-		}
-
-		tempBuffer[itemIndex++] = '\0';
-
-		data = QString(tempBuffer);
-
-		*/
-
 		data = remainingLine;
 
-		qDebug() << data;
-
 	} else {
-
-		/*
-		while (currentLine[lineIndex] == ' ' || currentLine[lineIndex] == '\t') {
-			lineIndex++;
-		}
-
-		// Find first arg
-		// This will start with either 'a-z', 'A-Z', or '['
-		if ((currentLine[lineIndex] >= 48 && currentLine[lineIndex] < 58) 
-			|| (currentLine[lineIndex] >= 65 && currentLine[lineIndex] < 123) 
-			|| currentLine[lineIndex] == '[') {
-				while (currentLine[lineIndex] != ',' && currentLine[lineIndex] != ' ') {
-					if (currentLine[lineIndex] == '\0') {
-						// ',' was not found
-						qDebug() << "\",\" not found.";
-
-						return -1;
-					}
-
-					tempBuffer[itemIndex++] = currentLine[lineIndex++];
-				}
-		}
-
-		tempBuffer[itemIndex++] = '\0';
-		*/
-		
 		// Find second arg, optional
 		// Find start of second arg
 		bool hasArg2 = false;
 
-		itemIndex = remainingLine.indexOf(whitespace);
+		QRegExp argSeperator(",(\s+)?");
+
+		itemIndex = remainingLine.indexOf(argSeperator);
 
 		//qDebug() << QString::number(itemIndex);
 
 		if (itemIndex == -1) {
 			arg1 = remainingLine;
 
-			//qDebug() << arg1 << " " << remainingLine;
 		} else {
 			arg1 = remainingLine.left(itemIndex);
 			arg2 = remainingLine.right(remainingLine.length() - itemIndex);
+
+			arg2 = arg2.replace(argSeperator, "");
 		}
-
-
-
 	}
 
-	//delete[] tempBuffer;
-
-	//itemIndex = 0;
+	return 0;
 }
 
 // Process the command
@@ -1016,97 +943,82 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 
 		qDebug() << "Data: " + data;
 
-		if (dataBuffer.length() > 0) {
+
+		QChar nextChar = data.at(0);
+
+		if (nextChar == '"') {
+			
+			index = 1;
+
+			//if (nextChar == '"') {
+			qDebug() << "Reading string.";
+
+			bool escaped = false;
 			while(1) {
 
-				if (dataBuffer.length() > index) {
-					QChar nextChar = dataBuffer.at(index++); //dataBuffer.data()[index++];
+				nextChar = data.at(index++).toAscii(); //dataBuffer.data()[index++];
+				char toPut;
 
-					qDebug() << QString(nextChar);
+				if (escaped) {
+					// Escape translation
+					switch(nextChar.toAscii()) {
+					case 'n':
+						toPut = '\n';
+						break;
 
-					if (nextChar == '"') {
-						qDebug() << "Reading string.";
+					case 't':
+						toPut = '\t';
+						break;
 
-						bool_t escaped = 0;
-						while(1) {
-							nextChar = dataBuffer.at(index++).toAscii(); //dataBuffer.data()[index++];
-							char toPut;
+					case '\\':
+						toPut = '\\';
+						break;
 
-							if (escaped) {
-								// Escape translation
-								switch(nextChar.toAscii()) {
-								case 'n':
-									toPut = '\n';
-									break;
+					case '"':
+						toPut = '"';
+						break;
 
-								case 't':
-									toPut = '\t';
-									break;
-
-								case '\\':
-									toPut = '\\';
-									break;
-
-								case '"':
-									toPut = '"';
-									break;
-
-								default:
-									qDebug() << "ERROR: Unrecognized escape sequence " << nextChar;
-									return -1;
-								}
-
-								escaped = 0;
-							} else if (nextChar == '"' || nextChar == '\0') {
-								break;
-							} else if (nextChar == '\\') {
-								escaped = 1;
-								continue;
-							} else {
-								// Normal character
-								toPut = nextChar.toAscii();
-							}
-
-							instruction->data[instruction->dataLength++] = toPut;
-							std::cout << toPut;
-						}
-
-						std::cout << std::endl;
-					} else {
-						int nextNextChar = dataBuffer.at(index++).toAscii(); //dataBuffer.data()[index++];
-
-						if (nextNextChar == -1) {
-							break;
-						}
-
-						if (nextChar == '0' && nextNextChar == 'x') {
-							// Revert back 2 chars.
-							data[index - 2];
-
-							// Hex literal
-							qDebug() << "Reading hex literal";
-
-							if (!sscanf(dataBuffer.toStdString().c_str(), "0x%hx", &instruction->data[instruction->dataLength]) == 1) {
-								qDebug() << "ERROR: Expected hex literal";
-								return -1;
-							}
-
-							instruction->dataLength++;
-						} else if(sscanf(dataBuffer.toStdString().c_str(), "%hu", &instruction->data[instruction->dataLength]) == 1) {
-							// Decimal literal
-							qDebug() << "Reading decimal literal";
-							instruction->dataLength++;
-						} else {
-							// Not a real literal
-							qDebug() << "Out of literals";
-							break;
-						}
-
+					default:
+						qDebug() << "ERROR: Unrecognized escape sequence " << nextChar;
+						return -1;
 					}
+
+					escaped = false;
+				} else if (nextChar == '"') {
+					break;
+				} else if (nextChar == '\\') {
+					escaped = true;
+					continue;
+				} else {
+					// Normal character
+					toPut = nextChar.toAscii();
 				}
 
+				instruction->data[instruction->dataLength++] = toPut;
+
+				//qDebug() << instruction->data[instruction->dataLength];
+
+				//for (int j = 0; j < instruction->dataLength; j++) {
+				//	std::cout << (char)instruction->data[j];
+				//}
+
+				//std::cout << std::endl;
 			}
+		} else {
+			QTextStream inputData(&data);
+
+			unsigned short dataValue;
+
+			inputData >> dataValue;
+
+			//qDebug() << QString::number(dataValue);
+
+			instruction->data[instruction->dataLength++] = dataValue;
+
+			qDebug() << QString::number(instruction->data[0]);
 		}
+
+
 
 		address += instruction->dataLength;
 	}
@@ -1120,34 +1032,16 @@ void Assembler::processArg1(QString &command, QString &arg, word_t &address, QSt
 	int i = 0;
 
 	bool preserveArg = false;
-	//char *tempArg, *preservedArg;
 	int j = 0, temp = 0;
-
-	//int len = arg.length();
-
-	//memcpy(tempArg, arg.toStdString().c_str(), len + 1);
-
-	//tempArg = strdup(arg.toStdString().c_str());
-
-	/*
-	while (arg[i] != '\0') {
-	if (arg[i] == ',') {
-
-	arg[i] = '\0';
-
-	continue;
-	} 
-
-	arg[i] = tolower(arg[i]);
-	i++;
-	}
-	*/
-	arg = arg.toLower().trimmed();
 
 	// Determine opcode
 	instruction->opcode = opcodeFor(command);
 
-	//qDebug() << "Command: " << command << "Opcode: " << instruction->opcode;
+	arg = arg.toLower().trimmed();
+
+	qDebug() << "Command: " << command << "Opcode: " << instruction->opcode;
+
+	qDebug() << "Arg: " << arg;
 
 	instruction->a = argumentFor(arg);
 

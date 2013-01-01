@@ -1,11 +1,10 @@
 hwn i
 
-:map_hardware
-	sub i, 1
+:map_hardware sub i,1
 	hwq i
 	ife b, 0x7349
 		ife a, 0xF615
-			set pc, set_monitor
+			set pc, 	set_monitor
 		ifn i, 0
 			set pc, map_hardware
 :set_monitor

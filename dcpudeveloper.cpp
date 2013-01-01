@@ -191,16 +191,17 @@ void DCPUDeveloper::createAndRunAssembler()
 // Setup and new assembler thread and start it.
 void DCPUDeveloper::createAndRunEmulator(QString binFile)
 {
-	emulator = new Emulator;
+	emulator = QSharedPointer<Emulator>(new Emulator());
+	//emulator = new Emulator;
 
 	//qRegisterMetaType<word_vector>();
 	/*
 	connect(emulator, SIGNAL(fullMemorySync(memory_array)), this, 
 	SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
 	*/
-	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
+	connect(emulator.data(), SIGNAL(registersChanged(registers_ptr)), this,
 		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
-	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+	connect(emulator.data(), SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 
 	emulator->setFilename(binFile);
 
@@ -311,7 +312,7 @@ void DCPUDeveloper::on_run_button_clicked()
 	} else {
 		emulator->stopEmulator();
 
-		delete emulator;
+		//delete emulator;
 
 		appendLogMessage("User stopped emulator");
 
@@ -387,7 +388,7 @@ void DCPUDeveloper::endEmulation(int endCode)
 
 	emulator->stopEmulator();
 
-	delete emulator;
+	//delete emulator;
 }
 
 void DCPUDeveloper::on_toggle_step_button_clicked()

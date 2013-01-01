@@ -22,7 +22,7 @@ typedef struct argumentStruct {
 typedef struct assembledInstruction {
 	QString label;
 	word_t* data;
-	word_t dataLength;
+	int dataLength;
 	word_t address;
 	opcode_t opcode;
 	argumentStruct_t a;
