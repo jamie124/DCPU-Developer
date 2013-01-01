@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Thu Dec 6 22:37:10 2012
+** Created: Tue Jan 1 21:43:54 2013
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -84,28 +84,30 @@ public:
     QHBoxLayout *horizontalLayout;
     QGroupBox *registers_gb;
     QGridLayout *gridLayout_3;
-    QLabel *label;
-    QSpinBox *register_a;
+    QLabel *label_9;
     QLabel *label_5;
     QSpinBox *register_y;
-    QLabel *label_9;
+    QLabel *label;
+    QSpinBox *register_a;
     QSpinBox *register_pc;
     QLabel *label_2;
     QSpinBox *register_b;
     QLabel *label_7;
     QSpinBox *register_z;
-    QLabel *label_10;
     QSpinBox *register_sp;
+    QLabel *label_10;
     QLabel *label_3;
     QSpinBox *register_c;
     QLabel *label_6;
     QSpinBox *register_i;
     QLabel *label_11;
-    QSpinBox *register_o;
     QLabel *label_4;
     QSpinBox *register_x;
     QLabel *label_8;
     QSpinBox *register_j;
+    QSpinBox *register_o;
+    QSpinBox *register_ia;
+    QLabel *label_12;
     QGroupBox *memory_gb;
     QScrollBar *memory_scrollbar;
     QTabWidget *project_tabwidget;
@@ -293,17 +295,10 @@ public:
         gridLayout_3->setSpacing(6);
         gridLayout_3->setContentsMargins(11, 11, 11, 11);
         gridLayout_3->setObjectName(QString::fromUtf8("gridLayout_3"));
-        label = new QLabel(registers_gb);
-        label->setObjectName(QString::fromUtf8("label"));
+        label_9 = new QLabel(registers_gb);
+        label_9->setObjectName(QString::fromUtf8("label_9"));
 
-        gridLayout_3->addWidget(label, 0, 0, 1, 1);
-
-        register_a = new QSpinBox(registers_gb);
-        register_a->setObjectName(QString::fromUtf8("register_a"));
-        register_a->setReadOnly(false);
-        register_a->setMaximum(99999);
-
-        gridLayout_3->addWidget(register_a, 0, 1, 1, 1);
+        gridLayout_3->addWidget(label_9, 0, 4, 1, 1);
 
         label_5 = new QLabel(registers_gb);
         label_5->setObjectName(QString::fromUtf8("label_5"));
@@ -317,10 +312,17 @@ public:
 
         gridLayout_3->addWidget(register_y, 0, 3, 1, 1);
 
-        label_9 = new QLabel(registers_gb);
-        label_9->setObjectName(QString::fromUtf8("label_9"));
+        label = new QLabel(registers_gb);
+        label->setObjectName(QString::fromUtf8("label"));
 
-        gridLayout_3->addWidget(label_9, 0, 4, 1, 1);
+        gridLayout_3->addWidget(label, 0, 0, 1, 1);
+
+        register_a = new QSpinBox(registers_gb);
+        register_a->setObjectName(QString::fromUtf8("register_a"));
+        register_a->setReadOnly(false);
+        register_a->setMaximum(99999);
+
+        gridLayout_3->addWidget(register_a, 0, 1, 1, 1);
 
         register_pc = new QSpinBox(registers_gb);
         register_pc->setObjectName(QString::fromUtf8("register_pc"));
@@ -357,16 +359,16 @@ public:
 
         gridLayout_3->addWidget(register_z, 1, 3, 1, 1);
 
-        label_10 = new QLabel(registers_gb);
-        label_10->setObjectName(QString::fromUtf8("label_10"));
-
-        gridLayout_3->addWidget(label_10, 1, 4, 1, 1);
-
         register_sp = new QSpinBox(registers_gb);
         register_sp->setObjectName(QString::fromUtf8("register_sp"));
         register_sp->setMaximum(999999999);
 
         gridLayout_3->addWidget(register_sp, 1, 5, 1, 1);
+
+        label_10 = new QLabel(registers_gb);
+        label_10->setObjectName(QString::fromUtf8("label_10"));
+
+        gridLayout_3->addWidget(label_10, 1, 4, 1, 1);
 
         label_3 = new QLabel(registers_gb);
         label_3->setObjectName(QString::fromUtf8("label_3"));
@@ -397,12 +399,6 @@ public:
 
         gridLayout_3->addWidget(label_11, 2, 4, 1, 1);
 
-        register_o = new QSpinBox(registers_gb);
-        register_o->setObjectName(QString::fromUtf8("register_o"));
-        register_o->setMaximum(999);
-
-        gridLayout_3->addWidget(register_o, 2, 5, 1, 1);
-
         label_4 = new QLabel(registers_gb);
         label_4->setObjectName(QString::fromUtf8("label_4"));
 
@@ -427,6 +423,22 @@ public:
 
         gridLayout_3->addWidget(register_j, 3, 3, 1, 1);
 
+        register_o = new QSpinBox(registers_gb);
+        register_o->setObjectName(QString::fromUtf8("register_o"));
+        register_o->setMaximum(999);
+
+        gridLayout_3->addWidget(register_o, 2, 5, 1, 1);
+
+        register_ia = new QSpinBox(registers_gb);
+        register_ia->setObjectName(QString::fromUtf8("register_ia"));
+
+        gridLayout_3->addWidget(register_ia, 3, 5, 1, 1);
+
+        label_12 = new QLabel(registers_gb);
+        label_12->setObjectName(QString::fromUtf8("label_12"));
+
+        gridLayout_3->addWidget(label_12, 3, 4, 1, 1);
+
 
         horizontalLayout->addWidget(registers_gb);
 
@@ -438,6 +450,7 @@ public:
         sizePolicy3.setHeightForWidth(memory_gb->sizePolicy().hasHeightForWidth());
         memory_gb->setSizePolicy(sizePolicy3);
         memory_gb->setMinimumSize(QSize(500, 150));
+        registers_gb->raise();
 
         horizontalLayout->addWidget(memory_gb);
 
@@ -599,17 +612,18 @@ public:
         build_debug_tabwidget->setTabText(build_debug_tabwidget->indexOf(messages_tab), QApplication::translate("DCPUDeveloper", "Messages", 0, QApplication::UnicodeUTF8));
         build_debug_tabwidget->setTabText(build_debug_tabwidget->indexOf(errors_tab), QApplication::translate("DCPUDeveloper", "Errors", 0, QApplication::UnicodeUTF8));
         registers_gb->setTitle(QApplication::translate("DCPUDeveloper", "Registers", 0, QApplication::UnicodeUTF8));
-        label->setText(QApplication::translate("DCPUDeveloper", "A:", 0, QApplication::UnicodeUTF8));
-        label_5->setText(QApplication::translate("DCPUDeveloper", "Y:", 0, QApplication::UnicodeUTF8));
         label_9->setText(QApplication::translate("DCPUDeveloper", "PC:", 0, QApplication::UnicodeUTF8));
+        label_5->setText(QApplication::translate("DCPUDeveloper", "Y:", 0, QApplication::UnicodeUTF8));
+        label->setText(QApplication::translate("DCPUDeveloper", "A:", 0, QApplication::UnicodeUTF8));
         label_2->setText(QApplication::translate("DCPUDeveloper", "B:", 0, QApplication::UnicodeUTF8));
         label_7->setText(QApplication::translate("DCPUDeveloper", "Z:", 0, QApplication::UnicodeUTF8));
         label_10->setText(QApplication::translate("DCPUDeveloper", "SP:", 0, QApplication::UnicodeUTF8));
         label_3->setText(QApplication::translate("DCPUDeveloper", "C:", 0, QApplication::UnicodeUTF8));
         label_6->setText(QApplication::translate("DCPUDeveloper", "I:", 0, QApplication::UnicodeUTF8));
-        label_11->setText(QApplication::translate("DCPUDeveloper", "O:", 0, QApplication::UnicodeUTF8));
+        label_11->setText(QApplication::translate("DCPUDeveloper", "EX:", 0, QApplication::UnicodeUTF8));
         label_4->setText(QApplication::translate("DCPUDeveloper", "X:", 0, QApplication::UnicodeUTF8));
         label_8->setText(QApplication::translate("DCPUDeveloper", "J:", 0, QApplication::UnicodeUTF8));
+        label_12->setText(QApplication::translate("DCPUDeveloper", "IA:", 0, QApplication::UnicodeUTF8));
         memory_gb->setTitle(QApplication::translate("DCPUDeveloper", "Memory View", 0, QApplication::UnicodeUTF8));
         build_debug_tabwidget->setTabText(build_debug_tabwidget->indexOf(registers_tab), QApplication::translate("DCPUDeveloper", "Debug Info", 0, QApplication::UnicodeUTF8));
         project_tabwidget->setTabText(project_tabwidget->indexOf(project_tab), QApplication::translate("DCPUDeveloper", "Project", 0, QApplication::UnicodeUTF8));

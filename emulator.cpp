@@ -117,12 +117,16 @@ void Emulator::reset()
 
 	programCounter = 0;
 	stackPointer = 0;
+	interruptAddress = 0;
+
 	ex = 0;
 	currentOpcode = 0;
 
 	cycle = 0;
 
-	qDebug() << QString::number(programCounter);
+	connectedDevices.clear();
+
+	//qDebug() << QString::number(programCounter);
 }
 
 void Emulator::stopEmulator()
@@ -262,6 +266,8 @@ void Emulator::run()
 			case OP_NONBASIC:
 				skipStore = 1;
 
+				// Special Opcodes
+
 				switch(nonbasicOpcode) {
 				case OP_JSR:
 					// 0x01 JSR - pushes the address of next instruction onto stack.
@@ -298,6 +304,7 @@ void Emulator::run()
 
 				case OP_HWN:
 					// 0x10 HWN
+					result = connectedDevices.size();
 					cycle += 2;
 					break;
 
@@ -629,6 +636,7 @@ registers_ptr Emulator::getRegisters()
 	latestRegisters->j = registers[7];
 	latestRegisters->pc = programCounter;
 	latestRegisters->sp = stackPointer;
+	latestRegisters->ia = interruptAddress;
 	latestRegisters->o = ex;
 
 	return latestRegisters;

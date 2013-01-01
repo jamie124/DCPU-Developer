@@ -531,7 +531,7 @@ void Assembler::run()
 
 	while (!sourceInput.atEnd()) {
 
-		currentLine = sourceFile.readLine();
+		currentLine = sourceFile.readLine().trimmed();
 
 		//qDebug() << currentLine;
 
@@ -577,6 +577,8 @@ void Assembler::run()
 		// Check if whole line is a blank
 
 		//qDebug() << "Line length: " + QString::number(currentLine.length());
+
+		qDebug() << currentLine;
 
 		if (currentLine.length() <= 1) {
 			if (label.length() > 0) {
@@ -808,7 +810,7 @@ void Assembler::removeComment(QString &input) {
 
 		int startOfComment = input.indexOf(";");
 
-		input = input.left(startOfComment);
+		input = input.left(startOfComment).trimmed();
 
 		//qDebug() << QString::number(startOfComment);
 		//qDebug() << input;

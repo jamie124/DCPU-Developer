@@ -1,12 +1,21 @@
 hwn i
 
-:map_hardware sub i,1
+:map_hardware
+	sub i, 1
+
 	hwq i
+
 	ife b, 0x7349
 		ife a, 0xF615
-			set pc, 	set_monitor
-		ifn i, 0
-			set pc, map_hardware
+			set pc, set_monitor
+	ifn i, 0
+		set pc, map_hardware
+
+
+; ===================================== ;
+; 2. Setup the monitor to read our msg. ;
+; ===================================== ;
+
 :set_monitor
 	set [MONITOR], i
 
@@ -14,19 +23,42 @@ hwn i
 	set a, 0
 	set b, 0x8000
 	hwi [MONITOR]
+
+
+; ===================================== ;
+; 3. Loop through the message to print. ;
+; ===================================== ;
 set i, 0
+
+; Now we want to print our message.     ;
 :print_message
+; We copy the next character to j.      ;
 	set j, [MESSAGE + i]
+; If we reached the end of our message, ;
+; then we will end the program.         ;
 	ife j, 0
 		set pc, end
+; When we 'bor' our character and 0xA000;
+; the color is set to bright green. Try ;
+; changing the A to 0-F.                ;
 	bor j, 0xA000
+; This is where we write our character. ;
 	set [0x8000 + i], j
+; Move on to the next character.        ;
 	add i, 1
+; Print the next character.             ;
 	set pc, print_message
 
+
+; ===================================== ;
+; 4. Make space for MONITOR and MESSAGE ;
+;   to hold some memory.                ;
+; ===================================== ;
 :MONITOR	
 	dat 0x0000
 
-:MESSAGE	
-	dat "Hello, World!", 0 
+:MESSAGE 	
+	dat "Hello, World!", 0
+
 :end
+	dat 0x00

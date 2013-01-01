@@ -367,6 +367,7 @@ void DCPUDeveloper::updateRegisters(registers_ptr registers)
 
 	ui->register_pc->setValue(registers->pc);
 	ui->register_sp->setValue(registers->sp);
+	ui->register_ia->setValue(registers->ia);
 
 	ui->register_o->setValue(registers->o);
 }

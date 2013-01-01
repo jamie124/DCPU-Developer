@@ -23,47 +23,7 @@ Started 7-Apr-2012
 #include "constants.h"
 #include "utils.h"
 
-// Opcodes
-// TODO: Enum this
-/*
-static const int OP_NONBASIC = 0;
-static const int OP_SET = 1;
-static const int OP_ADD = 2;
-static const int OP_SUB = 3;
-static const int OP_MUL = 4;
-static const int OP_DIV = 5;
-static const int OP_MOD = 6;
-static const int OP_SHL = 7;
-static const int OP_SHR = 8;
-static const int OP_AND = 9;
-static const int OP_BOR = 10;
-static const int OP_XOR = 11;
-static const int OP_IFE = 12;
-static const int OP_IFN = 13;
-static const int OP_IFG = 14;
-static const int OP_IFB = 15;
-*/
-
-//static const int OP_JSR = 1;
-
-/*
-static const word_t ARG_REG_START = 0;
-static const word_t ARG_REG_END = 8;
-static const word_t ARG_REG_INDEX_START = 8;
-static const word_t ARG_REG_INDEX_END = 16;
-static const word_t ARG_REG_NEXTWORD_INDEX_START = 16;
-static const word_t ARG_REG_NEXTWORD_INDEX_END = 24;
-static const word_t ARG_POP = 24;
-static const word_t ARG_PEEK = 25;
-static const word_t ARG_PUSH = 26;
-static const word_t ARG_SP = 27;
-static const word_t ARG_PC = 28;
-static const word_t ARG_O = 29;
-static const word_t ARG_NEXTWORD_INDEX = 30;
-static const word_t ARG_NEXTWORD = 31;
-static const word_t ARG_LITERAL_START = 32;
-static const word_t ARG_LITERAL_END = 64;
-*/
+#include "Device.h"
 
 
 const long MEMORY_LIMIT = 0x10000;
@@ -84,7 +44,7 @@ const int NUM_COLOURS = 16;
 
 typedef struct {
     int a, b, c, x, y, z, i, j, o;
-    long pc, sp;
+    long pc, sp, ia;
 	word_t opcode;
 } registers_t;
 
@@ -160,12 +120,14 @@ private:
 	word_t programCounter;
 	word_t stackPointer;
 	word_t ex;
-	word_t ia;
+	word_t interruptAddress;
 
 	word_t cycle;
 	word_t currentOpcode;
 
-	word_t keyboardPosition;
+	//word_t keyboardPosition;
+
+	QMap<int, Device> connectedDevices;
 };
 
 #endif

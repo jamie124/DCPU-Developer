@@ -178,20 +178,10 @@
              <string>Registers</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_3">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label">
+             <item row="0" column="4">
+              <widget class="QLabel" name="label_9">
                <property name="text">
-                <string>A:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QSpinBox" name="register_a">
-               <property name="readOnly">
-                <bool>false</bool>
-               </property>
-               <property name="maximum">
-                <number>99999</number>
+                <string>PC:</string>
                </property>
               </widget>
              </item>
@@ -212,10 +202,20 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="4">
-              <widget class="QLabel" name="label_9">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label">
                <property name="text">
-                <string>PC:</string>
+                <string>A:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="register_a">
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
+               <property name="maximum">
+                <number>99999</number>
                </property>
               </widget>
              </item>
@@ -266,17 +266,17 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="4">
-              <widget class="QLabel" name="label_10">
-               <property name="text">
-                <string>SP:</string>
-               </property>
-              </widget>
-             </item>
              <item row="1" column="5">
               <widget class="QSpinBox" name="register_sp">
                <property name="maximum">
                 <number>999999999</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>SP:</string>
                </property>
               </widget>
              </item>
@@ -317,14 +317,7 @@
              <item row="2" column="4">
               <widget class="QLabel" name="label_11">
                <property name="text">
-                <string>O:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="5">
-              <widget class="QSpinBox" name="register_o">
-               <property name="maximum">
-                <number>999</number>
+                <string>EX:</string>
                </property>
               </widget>
              </item>
@@ -362,6 +355,23 @@
                </property>
               </widget>
              </item>
+             <item row="2" column="5">
+              <widget class="QSpinBox" name="register_o">
+               <property name="maximum">
+                <number>999</number>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="5">
+              <widget class="QSpinBox" name="register_ia"/>
+             </item>
+             <item row="3" column="4">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>IA:</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>
@@ -382,6 +392,7 @@
             <property name="title">
              <string>Memory View</string>
             </property>
+            <zorder>registers_gb</zorder>
            </widget>
           </item>
          </layout>

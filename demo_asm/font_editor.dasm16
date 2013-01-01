@@ -1,0 +1,1287 @@
+; Palette and Font Editor
+; with menu demo.
+; Inspired by Hemse's Palette Changing program
+; rewritten almost entirely by aoe2bug
+
+; initial working version
+; very un-optimized
+; with lots of duplicate code!
+; font viewer added.
+
+; ---------------------------------------------
+; Obligatory Jump
+; ---------------------------------------------
+	set pc, init
+; ---------------------------------------------
+; Globals
+; ---------------------------------------------
+:screen
+	dat 0xffff
+:keyboard
+	dat 0xffff
+:video
+	dat firstFree
+; we don't actually use these much:
+:character_map
+dat 0x9000
+:character_map_saved
+dat 0x9100
+:cursorx
+	dat 0
+:cursory
+	dat 0
+; default cursor colors all set here
+:color
+	dat 0xf900
+:color_selected
+	dat 0xe900
+; storage for the palette dump
+:palette
+	dat 0, 0, 0, 0
+	dat 0, 0, 0, 0
+	dat 0, 0, 0, 0
+	dat 0, 0, 0, 0
+; space for saving the previous palette
+:palette_last
+	dat 0, 0, 0, 0
+	dat 0, 0, 0, 0
+	dat 0, 0, 0, 0
+	dat 0, 0, 0, 0
+; easily customizable menu
+:menuObject
+	dat 13, "Programs Menu"
+	dat 5
+	dat 14, 	"Palette Editor", 	paletteEditor
+	dat 16, 	"Character Editor", charEditor
+	dat 10, 	"Hex Editor", 		reboot
+	dat 11, 	"Text Editor", 		reboot
+	dat 12, 	"Command Line", 	reboot
+; ---------------------------------------------
+; Main Menu Loop
+; ---------------------------------------------
+:start
+	set push, start
+	set [cursory], 0
+	set [cursorx], 0
+	set y, 0
+
+	jsr clearscreen
+
+	set a, menuObject
+	jsr putMenu
+
+; we'll use a to store the currently selected
+; menu item.
+; and b the max number
+	add a, [a]
+	set b, [a+1]
+	sub b, 1
+	set a, 0 
+:menu_loop
+	jsr menuSelect
+	jsr waitKey
+	jsr menuDeselect
+
+	add a, 0x31
+	ife c, 0x80
+		sub a, 1
+	ife c, 0x81
+		add a, 1
+	ife c, 0x11
+		set pc, enter
+	ifg c, 0x2f
+		ifl c, 0x3a
+		;sub pc, 1
+		set a, c
+	sub a, 0x31
+	ife a, 0xffff
+		set a, b
+	ifg a, b
+		set a, 0
+
+	set pc, menu_loop
+
+
+:enter
+	sub a, 0x31 
+	set c, 0xffff
+	set b, menuObject
+	add b, [b]
+	add b, 1
+:enter_loop
+	add c, 1
+	add b, 1
+	add b, [b]
+	add b, 1
+	ife a, c
+		;sub pc, 1
+		set pc, [b]
+	set pc, enter_loop
+; ---------------------------------------------
+; Character Editor Loop
+; ---------------------------------------------
+:charEditor
+	jsr clearscreen
+	set a, charEditorTitle
+	jsr putPStrCenter
+	jsr putChars
+	set a, 0
+:charEditorLoop
+	jsr charSelect
+	jsr waitKey
+	jsr charDeselect
+
+	ife c, 0x80
+		sub a, 16
+	ife c, 0x81
+		add a, 16
+	ife c, 0x82
+		sub a, 1
+	ife c, 0x83
+		add a, 1
+	ife c, 0x11
+		set pc, charEdit
+
+
+	ifg a, 0xff7f
+		add a, 128
+	ifg a, 0x7f
+		sub a, 128
+
+	set pc, charEditorLoop
+:charEditorTitle
+	dat 16, "Charactor Editor"
+:putChars
+; print out every char, start on line 1
+; skipping the first column
+; and only put 16 chars per line
+	set i, [video]
+	set j, [color]
+	add i, 0x41
+	set b, 128
+:putChars_loop
+	add i, 1
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	sti [i], j
+	add i, 15
+	sub b, 16
+	ifn b, 0
+		set pc, putChars_loop
+	set pc, pop
+:charSelect
+; highlight the current char
+	set push, a
+	set push, b
+	
+	jsr charFind
+	set b, [color_selected]
+	bor [a], b
+
+	set b, pop
+	set a, pop
+	;set pc, charLargeDraw
+
+
+; now draw it in a larger size
+; on lines 2 - 10 
+; draw the font shape described in a, a+1
+; to the screen, two characters per pixel
+; = 8 wide, 8 tall, starting at char # 82
+:charLargeDraw
+	set push, a
+	set push, b
+	set push, c
+	set push, x 
+	set push, y
+
+	set y, 308 	; first column, bottom row.
+
+	shl a, 1 				; double index
+	add a, [character_map]
+; [a] is now half of our font shape to draw
+; [a+1] being the other half
+
+	set b, 16 		; current bit to look at
+:charLargeDraw_loop
+; get the status of this bit:
+	sub b, 1 		; next bit.
+	ifn b, 0xffff 		; are we on the next half yet?
+		set pc, charLargeDraw_skip
+	set b, 15
+	add a, 1
+	:charLargeDraw_skip
+	set c, [a] 		; working copy
+	set x, 0x1
+	shl x, b 	 	; current bitmask
+	and c, x 		; just the bit, please
+	shr c, b 		; now its a simple true/false
+	ife c, 1
+		set c, 0x1f 	; 0x1b or 0x1f, dep. on emu.
+	ifn c, 0x1f 		; filled space vs.
+		set c, 0x20 	; blank space.
+
+; find where we're going to draw it on screen:
+	set push, y
+	add y, [video]
+; alleviate flickr by not setting to black:
+	and [y], 0xff00
+	and [y+1], 0xff00
+	bor [y], c
+	bor [y+1], c
+; add some color:
+; wastefull duplication for vanity:
+	set c, [color_selected]
+	and [y], 0xff
+	bor [y], c
+	and [y+1], 0xff
+	bor [y+1], c
+
+	set y, pop
+	sub y, 32 	; next row up
+	ifl y, 64 	; overflow?
+		add y, 258 ; next column, bottom row.
+	ifn y, 316 ; when we are finished.
+		set pc, charLargeDraw_loop
+	set y, pop
+	set x, pop
+	set c, pop
+	set b, pop
+	set a, pop
+	set pc, pop
+
+
+:charFind
+	set b, a
+	shr b, 4 	; which line are we on
+	mod a, 16
+	shl b, 5
+	add a, b 
+	add a, 0x42 ; an extra two lines + 2 spaces.
+	add a, [video]
+	and [a], 0xff
+	set pc, pop
+:charDeselect
+; unhighlight the current char
+	set push, a
+	set push, b
+	jsr charFind
+	set b, [color]
+	bor [a], b
+	set b, pop
+	set a, pop
+	set pc, pop
+
+	set pc, pop
+:charEdit
+; select this char for editing
+	set a, 0 	; the pixel in question
+	jsr pixelSelect
+	jsr waitKey
+	jsr pixelDeselect
+
+	ife c, 0x80
+		sub a, 4
+	ife c, 0x81
+		add a, 4
+	ife c, 0x82
+		sub a, 1
+	ife c, 0x83
+		add a, 1
+	ife c, 0x11
+		set pc, charEditorLoop
+	ife c, 0x20 	; space key
+		set pc, pixelSwap
+
+	ifg a, 64  		; underflow - negatives
+		add a, 32
+	ifg a, 32 		; overflow
+		sub a, 32
+	set pc, charEdit
+
+:pixelSelect
+:pixelDeselect
+set pc, pop
+:pixelSwap
+set pc, pop
+
+:charLargeFind
+; get the screen position 
+; of the "pixel" given
+; within the "large" preview
+; given b, bit number
+
+set pc, pop
+
+
+; ---------------------------------------------
+; Palette Editor Loop
+; ---------------------------------------------
+:paletteEditor
+	jsr copyPalette
+	jsr clearscreen
+	; display "palette changer"
+	set a, paletteEditorTitle
+	jsr putPStrCenter
+
+	jsr putPalette
+
+	set a, 0 	 		; which item?
+:palette_loop
+	jsr paletteSelect
+	jsr waitKey
+	jsr paletteDeselect
+
+	ife c, 0x11
+		set pc, colorSelect
+	ife c, 0x20 
+		set pc, palette_exit
+
+	add a, 0x30 		; bit of a trick
+	ife c, 0x80
+		sub a, 1
+	ife c, 0x81
+		add a, 1
+	ife c, 0x82
+		sub a, 8
+	ife c, 0x83
+		add a, 8
+	ifg c, 0x2f 		; 0-9 
+		ifl c, 0x3a
+		;sub pc, 1
+		set a, c
+	sub a, 0x30 		; undo trick.
+	add a, 0x57 		; another trick
+	ifg c, 0x60 		; a-f
+		ifl c, 0x67
+		set a, c
+	sub a, 0x57 		; undo trick
+
+; check if we went too far.
+	ifg a, 0xffef 		; -16 +/- 1
+		add a, 16
+	ifg a, 15
+		sub a, 16
+
+	set pc, palette_loop
+; ---------------------------------------------
+; Color Loop inside Palette Editor
+; ---------------------------------------------
+:colorSelect
+	jsr paletteSelect
+	set b, 0
+:colorSelect_loop
+	jsr itemSelect
+	jsr waitKey
+	jsr itemDeselect
+	
+	ife c, 0x80
+		set pc, colorSkipUp
+	ife c, 0x81
+		set pc, colorSkipDn
+	ife c, 0x82
+		sub b, 1
+	ife c, 0x83
+		add b, 1
+	ife c, 0x11
+		set pc, palette_loop
+
+	ifg c, 0x2f
+	ifl c, 0x3a
+		set pc, setNum
+	ifg c, 0x60
+	ifl c, 0x67
+		set pc, setLetter
+
+; check if we went too far.
+	ife b, 0xffff
+		set b, 2
+	ifg b, 2
+		set b, 0
+
+	set pc, colorSelect_loop
+
+:paletteEditorTitle
+	dat 15, "Palette Changer"
+:colorSkipUp
+	jsr paletteDeselect
+	sub a, 1
+	ife a, 0xffff
+		set a, 15
+	jsr paletteSelect
+	set pc, colorSelect_loop
+
+:colorSkipDn
+	jsr paletteDeselect
+	add a, 1
+	ife a, 16
+		set a, 0
+	jsr paletteSelect
+	set pc, colorSelect_loop
+
+:setNum
+; set the current char, specified by A and B
+; to the value in C | [color_selected]
+
+; then set the hex value of that palette color
+; (which is specified by a).
+
+	jsr setChar
+; single digit to value
+	sub c, 0x30 
+	set pc, setCol
+:setCol
+	set push, a
+	set push, b
+	set push, c
+	set c, 0xf
+; which value we are setting
+	sub b, 2 ; invert r,g,b
+	ife b, 0xffff
+		add b, 2
+	ifg b, 3
+		add b, 4
+
+	mul b, 4
+	shl c, b
+	xor c, 0x0fff ; invert mask	
+; where is that value
+	add a, palette
+; clear current value in it
+	and [a], c
+; now set our new value.
+	set c, pop
+	shl c, b
+	bor [a], c
+; some emulators dont actually pay attention
+; to the palette changes, so poke them.
+	jsr paletteMap
+
+	set b, pop
+	set a, pop
+	add b, 1
+	ife b, 3
+		set b, 2
+
+	set pc, colorSelect_loop
+
+:setLetter
+; set the current char, specified by A and B
+; to the value in C | [color_selected]
+
+; then set the hex value of that palette color
+; (which is specified by a).
+	jsr setChar
+	sub c, 0x57 ; lowercase letter to value
+	set pc, setCol
+
+:setChar
+	set push, a
+	set push, z
+; this is ripe for generalization
+; in a subroutine, because it is
+; copied like 3 places, minimum.
+	set z, 6
+	ifl a, 8
+		add pc, 2
+	sub a, 8
+	add z, 15
+	;--- skip to here
+	add a, 2 			; skip two lines
+	shl a, 5 			; multply by 32
+	add z, [video]
+	add z, b
+	add z, a
+	and [z], 0xff00
+	bor [z], c
+	set z, pop
+	set a, pop
+	set pc, pop
+
+:copyPalette
+; copies the current palette into a saved
+; buffer, in case the user requests a reset.
+; 
+	set push, i
+	set push, j
+
+	set i, palette
+	set j, i
+	add j, 16
+:copyPalette_loop
+	sti [j], [i]
+	sti [j], [i]
+	sti [j], [i]
+	sti [j], [i]
+	ifn i, palette_last
+		set pc, copyPalette_loop
+
+	set j, pop
+	set i, pop
+	set pc, pop
+:resetPalette
+; copies the saved palette back to the 
+; "current" one
+; 
+	set push, i
+	set push, j
+
+	set j, palette
+	set i, j
+	add i, 16
+:resetPalette_loop
+	sti [j], [i]
+	sti [j], [i]
+	sti [j], [i]
+	sti [j], [i]
+	ifn i, palette_last
+		set pc, resetPalette_loop
+
+	jsr paletteMap
+
+	set j, pop
+	set i, pop
+	set pc, pop
+
+;
+:palette_exit
+	set a, exit_prompt
+	jsr putPrompt
+	ife a, 0
+		set pc, pop
+	set pc, resetPalette
+:exit_prompt
+dat 5, "Save?"
+dat 2
+dat 3 "Yes"
+dat 5,"Reset"
+
+; ---------------------------------------------
+; Auxillary functions
+; ---------------------------------------------
+:putPrompt
+; draw a prompt object at the
+; bottom of the screen
+; return when an option is
+; selected.
+set push, b
+set push, c
+set push, i
+set push, j
+
+set b, [a]
+set i, a
+add i, 1
+set j, [screen]
+add j, 0x160
+:putPrompt_loop
+sti [j], [i]
+sub b, 1
+ifn b, 0
+	set pc, putPrompt_loop
+set b, [a]
+set a, 0
+:prompt_loop
+jsr promptSelect
+jsr waitKey
+jsr promptDeselect
+
+ife c, 0x11
+	set pc, promptTail
+ife c, 0x83
+	add a, 1
+ife c, 0x82
+	sub a, 1
+
+ife a, b
+	set a, 0
+ife a, 0xffff
+	set a, b
+
+set pc, prompt_loop
+:promptTail
+set a, c
+set j, pop
+set i, pop
+set c, pop
+set b, pop
+set pc, pop
+:promptSelect
+:promptDeselect
+set pc, pop
+
+:itemSelect
+; for a = 0-7, set the 6,7,8th chars on line a + 2
+; to [color]
+; for a = 8-15, set the 21,22,23rd chars on line a - 5
+; to [color]
+	set push, a
+	set push, x
+	set push, y
+	set push, z
+
+	set y, 6
+
+	ifl a, 8
+		set pc, itemSelect_skip
+	set y, 21
+	sub a, 8
+:itemSelect_skip
+	set z, a
+	add z, 2 			; skip two lines
+	shl z, 5 			; multply by 32
+	add z, [video]
+
+	set x, [color]
+	and x, 0xff00 		; just to be safe
+
+	add z, y
+	set y, 0 			; how many chars we've poked.
+:itemSelect_loop
+	ife y, b
+		add pc, 3
+	and [z], 0xff
+	bor [z], x
+	add z, 1
+	add y, 1
+	ifn y, 3
+		set pc, itemSelect_loop
+
+	set z, pop
+	set y, pop
+	set x, pop
+	set a, pop
+	set pc, pop
+
+:itemDeselect
+; for a = 0-7, set the 6,7,8th chars on line a + 2
+; to [color]
+; for a = 8-15, set the 21,22,23rd chars on line a - 5
+; to [color]
+	set push, a
+	set push, x
+	set push, y
+	set push, z
+
+	set y, 6
+
+	ifl a, 8
+		set pc, itemDeselect_skip
+	set y, 21
+	sub a, 8
+:itemDeselect_skip
+	set z, a
+	add z, 2 			; skip two lines
+	shl z, 5 			; multply by 32
+	add z, [video]
+
+	set x, [color_selected]
+	and x, 0xff00 		; just to be safe
+
+	add z, y
+	set y, 0 			; how many chars we've poked.
+:itemDeselect_loop
+	and [z], 0xff
+	bor [z], x
+	add z, 1
+	add y, 1
+	ifn y, 3
+		set pc, itemDeselect_loop
+
+	set z, pop
+	set y, pop
+	set x, pop
+	set a, pop
+	set pc, pop
+
+
+:paletteSelect
+; for a = 0-7, set the first 9 chars on line a + 2
+; to color_selected
+; for a = 8-15, set the 19-24th chars on line a - 5
+; to color_selected
+	set push, a
+	set push, x
+	set push, y
+	set push, z
+
+	set y, 4
+
+	ifl a, 8
+		set pc, paletteSelect_skip
+	set y, 19
+	sub a, 8
+:paletteSelect_skip
+	set z, a
+	add z, 2 			; skip two lines
+	shl z, 5 			; multply by 32
+	add z, [video]
+
+	set x, [color_selected]
+	and x, 0xff00 		; just to be safe
+
+	add z, y
+	set y, 0 			; how many chars we've poked.
+:paletteSelect_loop
+	and [z], 0xff
+	bor [z], x
+	add z, 1
+	add y, 1
+	ifn y, 5
+		set pc, paletteSelect_loop
+
+	set z, pop
+	set y, pop
+	set x, pop
+	set a, pop
+	set pc, pop
+
+:paletteDeselect
+; for a = 0-7, set the first 9 chars on line a + 2
+; to color
+
+; for a = 8-15, set the 19-24th chars on line a - 5
+; to color
+	set push, a
+	set push, x
+	set push, y
+	set push, z
+
+	set y, 4
+
+	ifl a, 8
+		set pc, paletteDeselect_skip
+	set y, 19
+	sub a, 8
+:paletteDeselect_skip
+	set z, a
+	add z, 2 			; skip two lines
+	shl z, 5 			; multply by 32
+	add z, [video]
+
+	set x, [color]
+	and x, 0xff00 		; just to be safe
+
+	add z, y
+	set y, 0 			; how many chars we've poked.
+:paletteDeselect_loop
+	and [z], 0xff
+	bor [z], x
+	add z, 1
+	add y, 1
+	ifn y, 5
+		set pc, paletteDeselect_loop
+
+	set z, pop
+	set y, pop
+	set x, pop
+	set a, pop
+	set pc, pop
+
+
+
+:menuSelect
+; change all chars on line A+1
+; to [color_selected]
+	set push, x
+	set push, y
+	set push, z
+	
+	set z, a
+	shl z, 5
+	add z, 32
+	add z, [video]
+
+	set x, [color_selected]
+	and x, 0xff00
+
+	set y, 0
+:menuSelect_loop
+	and [z], 0xff
+	bor [z], x
+	add z, 1
+	add y, 1
+	ifn y, 31
+		set pc, menuSelect_loop
+
+	set z, pop
+	set y, pop
+	set x, pop
+	set pc, pop
+:menuDeselect
+; change all items on this line
+; to [color]
+	set push, x
+	set push, y
+	set push, z
+	
+	set z, a
+	shl z, 5
+	add z, 32
+	add z, [video]
+
+	set x, [color]
+	and x, 0xff00
+
+	set y, 0
+:menuDeselect_loop
+	and [z], 0xff
+	bor [z], x
+	add z, 1
+	add y, 1
+	ifn y, 31
+		set pc, menuDeselect_loop
+
+	set z, pop
+	set y, pop
+	set x, pop
+	set pc, pop
+
+:clearscreen
+; set every char on the screen to
+; [color] & " "
+	set push, i
+	set push, j
+	set push, b
+	set push, c
+
+	set i, [video]
+	set b, i
+	add b, 0x180
+	set c, [color]
+	add c, 0x20
+:clearscreen_loop
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	sti [i], c
+	ifn i, b
+		set pc, clearscreen_loop
+	set [cursorx], 0
+	set [cursory], 0
+	set c, pop
+	set b, pop
+	set j, pop
+	set i, pop	
+	set pc, pop
+
+:putMenu
+; print out menu object A
+	set push, a
+	set push, b
+	set push, c
+	set push, x
+	set push, y
+	set push, z
+	set push, i
+
+	jsr putPStrCenter 	; print out the title
+	;add a, [a]
+	add a, 1
+
+	set b, [a] 			; number of entries
+	set x, [cursorx]
+	set y, [cursory]
+	set c, [color] 
+	add a, 1 			; pointer in menu Object
+	set i, 1 			; Current Entry #
+:putMenu_loop
+	ife i, 11
+		set pc, putMenu_tail
+	jsr putInt
+	
+	add i, 1
+	jsr putPstr
+	add a, [a] 			; skip to the next string
+	add a, 2 			; skip the option's pointer
+	sub b, 1 
+	ifn b, 0 		
+		set pc, putMenu_loop
+:putMenu_tail
+	set [cursorx], 0
+	set [cursory], y
+	set i, pop
+	set z, pop
+	set y, pop
+	set x, pop
+	set c, pop
+	set b, pop
+	set a, pop
+	set pc, pop
+
+:putPstr
+; print out a length-prepended string
+; pointer in a
+	set push, a
+	set push, b
+	set b, [a]
+	set z, y
+	shl z, 5
+	add z, x
+	add z, [video]
+:putPstr_loop
+	add a, 1
+
+	set [z], [a]
+	bor [z], c
+	add z, 1
+	sub b, 1
+	ifn b, 0
+		set pc, putPstr_loop
+	add y, 1
+	set x, 0
+	set b, pop
+	set a, pop
+	set pc, pop
+
+:putInt
+; writes an integer from i to the screen
+; assume that it is 0-9
+; also write  ". "
+
+	set z, y
+	shl z, 5
+	add z, x
+	add z, [video]
+
+	set [z], i
+	bor [z], c
+	add [z], 0x30
+	add z, 1
+	set [z], c
+	bor [z], 0x2e
+	add z, 1
+	set [z], c
+	bor [z], 0x20
+	add x, 3
+
+	set pc, pop
+
+
+:putPalette
+; writes out the palette for 
+; the paletteEditor subroutine
+	set push, a
+	set push, b
+	set push, c
+
+	set push, i
+	set push, j
+
+	set push, x
+	set push, y
+	set push, z
+
+; palette pointer and counter
+	set i, palette
+	set j, 0
+; video ram
+	set y, [cursory]
+;	set x, [cursorx]
+	set x, 0 		; start of line
+	set z, y
+	add z, 1
+	shl z, 5
+	add z, [video]
+	set push, z
+:putPalette_loop
+	jsr putCol
+	add z, 32
+	add i, 1
+	add j, 1
+	ifn j, 8
+		set pc, putPalette_loop
+	set x, 15
+	set z, pop
+:putPalette_loop2
+	jsr putCol
+	add z, 32
+	add i, 1
+	add j, 1
+	ifn j, 16
+		set pc, putPalette_loop2
+
+;	jsr setCursor
+	sub z, [video]
+	shr z, 5
+;	set x, ex
+;	shr x, 11
+	set [cursorx], 0
+	add z, 1
+	set [cursory], z
+
+	set z, pop
+	set y, pop
+	set x, pop
+
+	set j, pop
+	set i, pop
+
+	set c, pop
+	set b, pop
+	set a, pop
+	set pc, pop
+
+:putCol
+; writes the three hex-digit
+; value for I, color in the palette
+	set push, z
+	add z, x
+
+;	jsr getCursor
+	set a, [i]
+
+	set c, [color]
+
+	add z, 4
+	set [z], c
+	bor [z], 0x30 	; 0
+	add z, 1
+	set [z], c
+	bor [z], 0x78 	; lowercase x
+	add z, 1
+
+	set [z], a
+	and [z], 0xf00
+	shr [z], 8
+	ifg [z], 0x9
+		add [z], 0x57 	; it's a letter
+	ifg 0xa, [z]
+		add [z], 0x30 	; it's a number
+	bor [z], c
+
+	add z, 1
+	set [z], a
+	and [z], 0xf0
+	shr [z], 4
+	ifg [z], 0x9
+		add [z], 0x57 	; it's a letter
+	ifg 0xa, [z]
+		add [z], 0x30 	; it's a number
+	bor [z], c
+
+	add z, 1
+	set [z], a
+	and [z], 0xf
+	ifg [z], 0x9
+		add [z], 0x57 	; it's a letter
+	ifg 0xa, [z]
+		add [z], 0x30 	; it's a number
+	bor [z], c
+
+	add z, 2
+	jsr putSquare
+	add z, 1
+	jsr putSquare
+
+	set z, pop
+	set pc, pop
+:putSquare
+	set [z], j
+	shl [z], 12
+	bor [z], 0x1f ; properly should be 0x1b, some emus need 0x1f
+	set pc, pop
+
+
+:putPStrCenter
+; outputs a string
+; centered on the current line
+; disregarding x
+	;set push, a
+	set push, b
+	set push, c
+	set push, z	
+	set b, [a]
+;	jsr getCursor
+	set z, y
+	shl z, 5
+	add z, [video]
+
+	set c, 32
+	sub c, b
+	div c, 2
+	add z, c
+
+	set c, [color]
+:putPStrCenter_loop
+	add a, 1
+	set [z], [a]
+	bor [z], c
+	add z, 1
+	sub b, 1
+	ifn b, 0
+		set pc, putPStrCenter_loop
+	add y, 1
+	set x, 0
+;	jsr setCursor
+;	jsr nextLine
+	sub z, [video]
+	shr z, 5
+	shr ex, 11 
+	add z, 1
+	set [cursorx], ex
+	set [cursory], z
+
+	set z, pop
+	set c, pop
+	set b, pop
+	;set a, pop
+	set pc, pop
+
+
+; i had to remove these because i messed up somewhere
+; i'll re add them later
+;:getCursor
+;; sets x,y,z for cursor information
+;	set y, [cursory]
+;	set x, [cursorx]
+;	;set pc, pop ; run through to getCursorZ
+;:getCursorZ
+;	set z, y
+;	shl z, 5
+;	add z, x
+;	add z, [video]
+;	set pc, pop
+;:setCursor
+;	sub z, [video]
+;	;set push, z
+;	shr z, 5
+;	set [cursorx], ex
+;	set [cursory], z
+;	set pc, pop 
+;:nextLine
+;	set push, y
+;	set y, [cursory]
+;	add y, 1
+;	set [cursory], y
+;	set [cursorx], 0
+;	set y, pop
+;	set pc, pop
+
+
+:waitKey
+	set push, a
+    set push, b
+	set a, 1
+:waitKey_loop
+	hwi [keyboard]
+	ife c, 0  
+		set pc, waitKey_loop
+; remove key duplication in some emulators:
+    set b, c
+:waitKey_loop2
+    hwi [keyboard]
+    ife c, b
+    	set pc, waitKey_loop2
+    set c, b
+    set b, pop
+	set a, pop
+	set pc, pop
+
+:paletteMap
+	set push, a
+	set a, 2
+	set b, palette
+	hwi [screen]
+	set a, pop
+	set pc, pop
+:paletteDefault
+	set push, a
+	set push, b
+
+; reset palette
+	set a, 2
+	set b, 0
+	hwi [screen]
+; dump palette
+	set A, 5
+	set B, palette
+	hwi [screen]
+; map palette
+	jsr paletteMap
+
+	set b, pop
+	set a, pop
+	set pc, pop
+; ---------------------------------------------
+; Init Code
+; ---------------------------------------------
+
+:init
+	hwn i
+:init_loop
+	sub i, 1
+	hwq i
+
+	ife a, 0x7406
+		set [keyboard], i
+	ife a, 0xf615
+		set [screen], i
+
+	ifn i, 0
+		set pc, init_loop
+
+; map screen
+	set A, 0
+	set B, [video]
+	hwi [screen]
+
+; dump & map palette
+	jsr paletteDefault
+; dump char map
+	set a, 4
+	set b, [character_map]
+	hwi [screen]
+; map char map
+	set a, 1
+	hwi [screen]
+; dump backup charmap
+	set a, 4
+	set b, [character_map_saved]
+	hwi [screen]
+
+; go back to actual program
+	set pc, start
+
+:reboot
+; just for debug purposes:
+	set a, 0
+	set b, 0
+	set c, 0
+
+	set x, 0
+	set y, 0
+	set z, 0
+
+	set i, 0
+	set j, 0
+	ias 0
+	set sp, 0
+	set pc, 0
+:firstFree
+	dat 0

@@ -154,6 +154,7 @@
     <ClCompile Include="Debug\moc_memoryviewer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="devices\device.cpp" />
     <ClCompile Include="editor.cpp" />
     <ClCompile Include="emulator.cpp" />
     <ClCompile Include="glhelper.cpp" />
@@ -184,6 +185,7 @@
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_dcpudeveloper.h" />
     <ClInclude Include="include\constants.h" />
+    <ClInclude Include="include\Device.h" />
     <ClInclude Include="include\glhelper.h" />
     <ClInclude Include="include\parser.h" />
     <ClInclude Include="include\phrases.h" />
