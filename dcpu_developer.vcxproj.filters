@@ -119,6 +119,24 @@
     <ClCompile Include="devices\device.cpp">
       <Filter>Source Files\Devices</Filter>
     </ClCompile>
+    <ClCompile Include="lem.cpp">
+      <Filter>Source Files\Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_device.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_device.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_lem.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_lem.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="devices\lemviewer.cpp">
+      <Filter>Source Files\Devices</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="dcpudeveloper.ui">
@@ -142,6 +160,15 @@
     <CustomBuild Include="include\memoryviewer.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="include\lem.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\device.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="lem_monitor.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_dcpudeveloper.h">
@@ -162,7 +189,10 @@
     <ClInclude Include="include\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Device.h">
+    <ClInclude Include="GeneratedFiles\ui_lem_monitor.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\lemviewer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

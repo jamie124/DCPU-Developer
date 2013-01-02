@@ -80,7 +80,7 @@ void GLHelper::paint(QPainter *painter, QMap<int, int> &memoryMap, QPaintEvent *
 // Work out how many rows in total will be needed
 long GLHelper::getTotalRows() 
 {
-	return MEMORY_LIMIT / blocksPerRow;
+	return RAM_SIZE / blocksPerRow;
 }
 
 // Get number of rows that will fit in memory window

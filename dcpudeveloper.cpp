@@ -342,7 +342,7 @@ void DCPUDeveloper::setFullMemoryBlock(memory_array memory)
 {
 	QMap<int, int> temp;
 
-	for(int i = 0; i < MEMORY_LIMIT; i++) {
+	for(int i = 0; i < RAM_SIZE; i++) {
 		temp[i] = memory[i];
 	}
 

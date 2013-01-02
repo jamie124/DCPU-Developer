@@ -17,19 +17,21 @@ Started 7-Apr-2012
 
 #include "include/phrases.h"
 #include "include/emulator.h"
+#include "include/lem.h"
+
 
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
-	DEBUG = true;
+	DEBUG = false;
 	OPCODE_DEBUGGING = false;
 
 	stepMode = false;
 
-	//memory = word_vector(MEMORY_LIMIT);
+	//memory = word_vector(RAM_SIZE);
 	registers = word_vector(NUM_REGISTERS);
 	//literals = word_vector(ARG_LITERAL_END - ARG_LITERAL_START);
 
-	reset();
+	//reset();
 }
 
 Emulator::~Emulator(void)
@@ -89,19 +91,19 @@ void Emulator::reset()
 {
 	literals.clear();
 
-	
+
 	for (int i = 0; i < ARG_LITERAL_END - ARG_LITERAL_START; i++) {
 		literals[i] = i;
 	}
-	
+
 
 
 	memory.clear();
 
 	/*
-	for (int i = 0; i < MEMORY_LIMIT; i++) {
-		memory[i] = 0;
-		//memory[i] = 0;
+	for (int i = 0; i < RAM_SIZE; i++) {
+	memory[i] = 0;
+	//memory[i] = 0;
 	}
 	*/
 
@@ -126,7 +128,16 @@ void Emulator::reset()
 
 	connectedDevices.clear();
 
-	//qDebug() << QString::number(programCounter);
+	//QSharedPointer<Lem> lemDevice(new Lem());
+
+	Lem *lemDevice = new Lem(RAM_SIZE);
+	lemDevice->show();
+
+	connectedDevices.append(lemDevice);
+
+	//connectedDevices.append(qobject_cast<Device*>(lemDevice.data()));
+
+	//qDebug() << QString::number(connectedDevices.size());
 }
 
 void Emulator::stopEmulator()
@@ -136,6 +147,18 @@ void Emulator::stopEmulator()
 	literals.clear();
 
 	emulatorRunning = false;
+
+	/*
+	Device *currentDevice;
+
+	for (int i = 0; i < connectedDevices.size(); i++) {
+		currentDevice = connectedDevices.at(i);
+
+		if (currentDevice->deviceName == "lem1802") {
+			//currentDevice.
+		}
+	}
+	*/
 
 	//this->wait();
 }
@@ -153,6 +176,7 @@ int divMod(int x, int *quo)
 
 void Emulator::run()
 {
+
 	if (this->stepMode) {
 		skippingCurrentPass = true; 
 	} else {
@@ -190,9 +214,9 @@ void Emulator::run()
 	program.close();
 
 	// Send the initial memory block to main thread
-	//memory_array memoryDump = new int[MEMORY_LIMIT];
+	//memory_array memoryDump = new int[RAM_SIZE];
 	/*
-	for (int j = 0; j < MEMORY_LIMIT; j++) {
+	for (int j = 0; j < RAM_SIZE; j++) {
 	memoryDump[j] = memory.at(j);
 	}
 	*/
@@ -304,19 +328,48 @@ void Emulator::run()
 
 				case OP_HWN:
 					// 0x10 HWN
-					result = connectedDevices.size();
+					registers[6] = connectedDevices.size();
+
 					cycle += 2;
 					break;
 
 				case OP_HWQ:
+					{
 					// 0x11 HWQ
+						qDebug() << QString::number(*aLoc);
+
+						Device *device = connectedDevices.at(*aLoc);
+
+					if (device != NULL) {
+
+						registers[1] = device->id >> 16;
+						registers[0] = device->id & 0xffff;
+						registers[2] = device->version;
+						registers[4] = device->manufacturer >> 16;
+						registers[3] = device->manufacturer & 0xffff;
+					} else {
+						registers[1] = 0;
+						registers[0] = 0;
+						registers[2] = 0;
+						registers[4] = 0;
+						registers[3] = 0;
+					}
+
+
 					cycle += 4;
 					break;
 
+					}
 				case OP_HWI:
+					{
 					// 0x12
+					Device *device = connectedDevices.at(*aLoc);
+					
+					device->handleInterrupt(registers[0], registers[1]);
+
 					cycle += 4;
 					break;
+					}
 				default:
 					emit emulationEnded(DCPU_RESERVED_OPCODE);
 

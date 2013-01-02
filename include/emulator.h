@@ -23,10 +23,12 @@ Started 7-Apr-2012
 #include "constants.h"
 #include "utils.h"
 
-#include "Device.h"
+// Devices
+#include "device.h"
+//#include "lem.h"
 
 
-const long MEMORY_LIMIT = 0x10000;
+const long RAM_SIZE = 0x10000;
 const int NUM_REGISTERS = 8;
 
 const int TERM_WIDTH = 32;
@@ -126,8 +128,7 @@ private:
 	word_t currentOpcode;
 
 	//word_t keyboardPosition;
-
-	QMap<int, Device> connectedDevices;
+	QVector<Device*> connectedDevices;
 };
 
 #endif

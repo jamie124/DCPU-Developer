@@ -1,11 +1,12 @@
 #include "Device.h"
 
 
-Device::Device(void)
+Device::Device(QWidget *parent) :  QMainWindow(parent)
 {
+//	deviceName = "";
 }
 
 
-Device::~Device(void)
+Device::~Device()
 {
 }
