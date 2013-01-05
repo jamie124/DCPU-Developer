@@ -22,7 +22,7 @@ Started 7-Apr-2012
 
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
-	DEBUG = true;
+	DEBUG = false;
 	OPCODE_DEBUGGING = false;
 
 	stepMode = false;
@@ -32,6 +32,19 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 	//literals = word_vector(ARG_LITERAL_END - ARG_LITERAL_START);
 
 	//reset();
+
+	connectedDevices.clear();
+
+	//QSharedPointer<Lem> lemDevice(new Lem());
+
+	Lem *lemDevice = new Lem(this);
+	lemDevice->show();
+
+	connectedDevices.append(lemDevice);
+
+	//connectedDevices.append(qobject_cast<Device*>(lemDevice.data()));
+
+	//qDebug() << QString::number(connectedDevices.size());
 }
 
 Emulator::~Emulator(void)
@@ -126,18 +139,7 @@ void Emulator::reset()
 
 	cycle = 0;
 
-	connectedDevices.clear();
 
-	//QSharedPointer<Lem> lemDevice(new Lem());
-
-	Lem *lemDevice = new Lem(this);
-	lemDevice->show();
-
-	connectedDevices.append(lemDevice);
-
-	//connectedDevices.append(qobject_cast<Device*>(lemDevice.data()));
-
-	//qDebug() << QString::number(connectedDevices.size());
 }
 
 void Emulator::stopEmulator()
@@ -340,7 +342,7 @@ void Emulator::run()
 				case OP_HWQ:
 					{
 					// 0x11 HWQ
-						qDebug() << QString::number(*aLoc);
+						//qDebug() << QString::number(*aLoc);
 
 						Device *device = connectedDevices.at(*aLoc);
 
@@ -668,7 +670,9 @@ void Emulator::run()
 			*/
 
 			// TODO: Add a way to toggle this
+			if (DEBUG) {
 			emit registersChanged(getRegisters());
+			}
 
 			if (stepMode) {
 				// Skip next pass
@@ -677,7 +681,9 @@ void Emulator::run()
 		} 
 	}
 
+	qDebug() << "Emulation Ended Sucessfully";
 	emit emulationEnded(DCPU_SUCCESSFUL);
+	
 }
 
 // Update and return the latest registers

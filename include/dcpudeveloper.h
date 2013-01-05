@@ -135,8 +135,14 @@ private:
 
 	void loadDisassemblyData();
 
+	// Assembler
 	void createAndRunAssembler();
-	void createAndRunEmulator(QString binFile);
+
+	// Emulation
+	void startEmulator();
+	void runProgram(QString binFile);
+
+	//void createAndRunEmulator(QString binFile);
 
 	void saveSettings();
 	void loadSettings();

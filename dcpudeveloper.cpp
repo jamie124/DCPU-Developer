@@ -68,6 +68,10 @@ QMainWindow(parent),
 	loadSettings();
 
 	connect(ui->disassembly_list, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(disassembledRowChanged(QListWidgetItem *, QListWidgetItem *)));
+
+	// Run emulator in background.
+	startEmulator();
+
 }
 
 DCPUDeveloper::~DCPUDeveloper()
@@ -234,11 +238,9 @@ void DCPUDeveloper::createAndRunAssembler()
 	assembler->startAssembler();
 }
 
-// Setup and new assembler thread and start it.
-void DCPUDeveloper::createAndRunEmulator(QString binFile)
-{
+void DCPUDeveloper::startEmulator() {
 	emulator = QSharedPointer<Emulator>(new Emulator());
-	//emulator = new Emulator;
+
 
 	qRegisterMetaType<word_t>("word_t");
 
@@ -251,13 +253,16 @@ void DCPUDeveloper::createAndRunEmulator(QString binFile)
 	connect(emulator.data(), SIGNAL(instructionChanged(word_t)), this, SLOT(emulatorInstructionChanged(word_t)), Qt::QueuedConnection);
 
 	connect(emulator.data(), SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+}
 
+void DCPUDeveloper::runProgram(QString binFile) {
 	emulator->setFilename(binFile);
 
 	emulator->setStepMode(inStepMode);
 
 	emulator->startEmulator();
 }
+
 
 void DCPUDeveloper::saveSettings()
 {
@@ -394,20 +399,20 @@ void DCPUDeveloper::on_run_button_clicked()
 
 	if (!emulatorRunning ){
 
-		createAndRunEmulator(COMPILED_TEMP_FILENAME);
+		runProgram(COMPILED_TEMP_FILENAME);
 
 		emulatorRunning = true;
 
 		ui->run_button->setText("Stop");
 
 	} else {
-		emulator->stopEmulator();
+		//emulator->stopEmulator();
 
 		//delete emulator;
 
-		appendLogMessage("User stopped emulator");
+		appendLogMessage("User stopped program");
 
-		emulatorRunning = false;
+		//emulatorRunning = false;
 	}
 }
 
