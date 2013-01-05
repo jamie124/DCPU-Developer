@@ -530,19 +530,7 @@ void Assembler::run()
 		//qDebug() << currentLine;
 
 		// Reset variables
-		/*
-		for (int i = 0; i < MAX_CHARS; i++) {
-		data[i] = '\0';
 
-		if (!skipTillNextLine) {
-		label[i] = '\0';
-		}
-
-		command[i] = '\0';
-		arg1[i] = '\0';
-		arg2[i] = '\0';
-		}
-		*/
 		if (!skipTillNextLine) {
 			label = "";
 		}
@@ -558,27 +546,18 @@ void Assembler::run()
 
 		lineNumber++;
 
-		/*
-		if (sourceFile.getline(lineBuffer, MAX_CHARS).eof()) {
-		finished = true;
-		}
-		*/
-
 		removeComment(currentLine);
 
-		//char* temp = cleanString(lineBuffer);
-
-		// Check if whole line is a blank
-
-		//qDebug() << "Line length: " + QString::number(currentLine.length());
-
-		//qDebug() << currentLine;
-
 		if (currentLine.length() <= 1) {
+		
 			if (label.length() > 0) {
 				processCommand(QString(""), QString(""), address, label, head, tail, instruction);
 			}
+			
 		} else {
+
+
+
 			// Non blank line, start processing
 
 			// Get label if applicable
@@ -607,15 +586,10 @@ void Assembler::run()
 			}
 		}
 
-		//delete temp;
-
 		if (finished) {
 			break;
 		}
 
-		//currentLine = sourceFile.readLine();
-
-		//qDebug() << currentLine;
 	}
 
 	std::cout << std::endl;
@@ -692,25 +666,14 @@ void Assembler::run()
 
 		instruction_t packed = 0;
 
-		//qDebug() << instruction->opcode;
-
-		//packed = Utils::setOpcode(packed, instruction->opcode);
-
 		//qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
 
-		// packed = Utils::setArgument(packed, 0, instruction->a.argument);
-		// packed = Utils::setArgument(packed, 1, instruction->b.argument);
 
 		packed = Utils::pack(instruction->opcode, instruction->a.argument, instruction->b.argument);
-		/*
-		packed = Utils::pack(packed, instruction->opcode, 0);
-		packed = Utils::pack(packed, instruction->a.argument, 0);
-		packed = Utils::pack(packed, instruction->b.argument, 1);
-		*/
+
 
 		//qDebug() << instruction->opcode << instruction->a.argument << instruction->b.argument;
 
-		//printf("%x\n", packed);
 
 		instruction_t swapped = (packed>>8) | (packed<<8);
 
@@ -753,7 +716,6 @@ void Assembler::run()
 
 	// Close files
 
-	//delete[] command;
 
 	fclose(compiledFile);
 
@@ -813,14 +775,10 @@ char* Assembler::cleanString(char *rawLine)
 // Remove comments from a string
 void Assembler::removeComment(QString &input) {
 	if (input.contains(";")) {
-		//qDebug() << "Contains comment";
-
 		int startOfComment = input.indexOf(";");
 
 		input = input.left(startOfComment).trimmed();
 
-		//qDebug() << QString::number(startOfComment);
-		//qDebug() << input;
 	}
 }
 
