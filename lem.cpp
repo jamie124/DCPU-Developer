@@ -10,6 +10,8 @@ Written by James Whitwell, 2012.
 
 #include <QDebug>
 
+#include <QTimer>
+
 #include <iostream>
 #include <Windows.h>
 
@@ -17,7 +19,7 @@ Written by James Whitwell, 2012.
 
 #include "ui_lem_monitor.h"
 
-Lem::Lem(long ramSizeValue, QWidget *parent) : ui(new Ui::LemMonitor)
+Lem::Lem(Emulator *emu, QWidget *parent) : ui(new Ui::LemMonitor)
 {
 	ui->setupUi(this);
 
@@ -31,7 +33,9 @@ Lem::Lem(long ramSizeValue, QWidget *parent) : ui(new Ui::LemMonitor)
 
 	screenRamAddress = 0;
 
-	ramSize = ramSizeValue;
+	emulator = emu;
+
+	ramSize = emulator->getMemory().size();//ramSizeValue;
 
 	lemViewer = new LemViewer(this);
 
@@ -42,6 +46,11 @@ Lem::Lem(long ramSizeValue, QWidget *parent) : ui(new Ui::LemMonitor)
 	ui->lem_gb->setLayout(lemLayout);
 
 
+	QTimer *timer = new QTimer(this);
+
+	connect(timer, SIGNAL(timeout()), lemViewer, SLOT(animate()));
+
+	timer->start(30);
 }
 
 
@@ -69,7 +78,7 @@ void Lem::handleInterrupt(int a, int b) {
 		drawScreen();
 
 		break;
-		
+
 	case 1:
 		// MEM_MAP_FONT
 		break;
@@ -94,16 +103,19 @@ void Lem::handleInterrupt(int a, int b) {
 }
 
 void Lem::drawScreen() {
-	qDebug() << "Drawing screen";
+	word_map memory = emulator->getMemory();
 
-	clearScreen();
-	for (int i = 0; i < ROWS; i++) {
-		for (int j = 0; j < COLUMNS; j++) {
-			setScreen(i, j, 'a');
+	//qDebug() << QString::number(screenRamAddress);
+	for (int r = 0; r < ROWS; r++) {
+		for (int c = 0; c < COLUMNS; c++) {
+			setScreen(r, c, memory[screenRamAddress + (r * COLUMNS) + c]);
+			//lemViewer->drawChar(c, r, memory[screenRamAddress + (r * COLUMNS) + r]);
 		}
 	}
 
-	qDebug() << "";
+	std::cout << std::endl;
+
+	//lemViewer->drawChar(0, 0, 4);
 }
 
 void Lem::setScreen(word_t row, word_t column, word_t character)

@@ -441,15 +441,7 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 	return toReturn;
 }
 
-std::string replace(std::string& str, const std::string& from, const std::string& to) {
-	std::string temp = str;
 
-	size_t start_pos = str.find(from);
-	if(start_pos == std::string::npos)
-		return false;
-	return temp.replace(start_pos, from.length(), to);
-
-}
 
 void Assembler::startAssembler()
 {
@@ -475,8 +467,8 @@ void Assembler::run()
 {
 	lineNumber = 0;
 
-	std::string compiledFilename = replace(sourceFilename.toStdString(), "dasm16", "bin");
-	std::string debugFilename = "debug_" + replace(sourceFilename.toStdString(), "dasm16", "dbg");
+	std::string compiledFilename = Utils::replace(sourceFilename.toStdString(), "dasm16", "bin");
+	std::string debugFilename = "debug_" + Utils::replace(sourceFilename.toStdString(), "dasm16", "dbg");
 
 	//std::ifstream sourceFile(sourceFilename.toStdString());
 
@@ -578,7 +570,7 @@ void Assembler::run()
 
 		//qDebug() << "Line length: " + QString::number(currentLine.length());
 
-		qDebug() << currentLine;
+		//qDebug() << currentLine;
 
 		if (currentLine.length() <= 1) {
 			if (label.length() > 0) {
@@ -680,9 +672,14 @@ void Assembler::run()
 
 	// Write out code
 	for (assembledInstruction_t* instruction = head; instruction != NULL; instruction = instruction->next) {
+
+		debugOut << QString::number(instruction->a.lineNumber);
+
 		if (instruction->data != NULL) {
 			// Reverse endianess
 			for (int i = 0; i < instruction->dataLength; i++) {
+				debugOut << ":" << QString::number(instruction->data[i], 16).rightJustified(4, '0');
+
 				instruction->data[i] = Utils::swapByteOrder(instruction->data[i]);
 			}
 
@@ -719,12 +716,15 @@ void Assembler::run()
 		//qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
 
 		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
-		debugOut << "Test";
+
+		debugOut << ":" << QString::number(packed, 16).rightJustified(4, '0');
 
 		if (instruction->opcode != OP_NONBASIC && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
 
 			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord << " Swapped: " << swapped;
+
+			debugOut << ":" << QString::number(instruction->a.nextWord, 16).rightJustified(4, '0');
 
 			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 		}
@@ -733,8 +733,13 @@ void Assembler::run()
 			swapped = (instruction->b.nextWord>>8) | (instruction->b.nextWord<<8);
 
 			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord << " Swapped: " << swapped;
+
+			debugOut << ":" << QString::number(instruction->b.nextWord, 16).rightJustified(4, '0');
+
 			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 		}
+
+		debugOut << "\n";
 
 		// TODO
 		//delete instruction;
@@ -806,7 +811,7 @@ char* Assembler::cleanString(char *rawLine)
 // Remove comments from a string
 void Assembler::removeComment(QString &input) {
 	if (input.contains(";")) {
-		qDebug() << "Contains comment";
+		//qDebug() << "Contains comment";
 
 		int startOfComment = input.indexOf(";");
 
@@ -874,7 +879,7 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 	itemIndex = remainingLine.indexOf(whitespace);
 	//lineIndex += itemIndex;
 
-	qDebug() << QString::number(itemIndex);
+	//qDebug() << QString::number(itemIndex);
 	command = remainingLine.left(itemIndex);
 
 	remainingLine = remainingLine.right(remainingLine.length() - itemIndex).trimmed();

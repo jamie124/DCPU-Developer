@@ -10,6 +10,8 @@ Started 7-Apr-2012
 
 #include "constants.h"
 
+#include <string>
+
 class Utils
 {
 
@@ -24,6 +26,8 @@ public:
 	static instruction_t setArgument(instruction_t instruction, bool_t which, argument_t argument);
 
 	static instruction_t swapByteOrder(instruction_t instruction);
+
+	static std::string replace(std::string& str, const std::string& from, const std::string& to);
 };
 
 #endif

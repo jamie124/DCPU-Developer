@@ -130,7 +130,7 @@ void Emulator::reset()
 
 	//QSharedPointer<Lem> lemDevice(new Lem());
 
-	Lem *lemDevice = new Lem(RAM_SIZE);
+	Lem *lemDevice = new Lem(this);
 	lemDevice->show();
 
 	connectedDevices.append(lemDevice);
@@ -954,4 +954,8 @@ void Emulator::clearScreen()
 		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
 		);
 	SetConsoleCursorPosition(console, topLeft);
+}
+
+word_map Emulator::getMemory() {
+	return memory;
 }

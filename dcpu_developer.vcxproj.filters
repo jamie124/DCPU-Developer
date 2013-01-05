@@ -137,6 +137,21 @@
     <ClCompile Include="devices\lemviewer.cpp">
       <Filter>Source Files\Devices</Filter>
     </ClCompile>
+    <ClCompile Include="Debug\moc_lemviewer.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_lemviewer.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="hexspinbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_hexspinbox.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_hexspinbox.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="dcpudeveloper.ui">
@@ -169,6 +184,12 @@
     <CustomBuild Include="lem_monitor.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="include\lemviewer.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\hexspinbox.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_dcpudeveloper.h">
@@ -191,9 +212,6 @@
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_lem_monitor.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\lemviewer.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'lem_monitor.ui'
 **
-** Created: Wed Jan 2 21:10:42 2013
+** Created: Sat Jan 5 14:55:41 2013
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -29,10 +29,10 @@ public:
     {
         if (LemMonitor->objectName().isEmpty())
             LemMonitor->setObjectName(QString::fromUtf8("LemMonitor"));
-        LemMonitor->resize(400, 300);
+        LemMonitor->resize(548, 413);
         lem_gb = new QGroupBox(LemMonitor);
         lem_gb->setObjectName(QString::fromUtf8("lem_gb"));
-        lem_gb->setGeometry(QRect(0, -10, 401, 311));
+        lem_gb->setGeometry(QRect(0, 0, 551, 421));
 
         retranslateUi(LemMonitor);
 
@@ -42,7 +42,7 @@ public:
     void retranslateUi(QWidget *LemMonitor)
     {
         LemMonitor->setWindowTitle(QApplication::translate("LemMonitor", "LEM 1802", 0, QApplication::UnicodeUTF8));
-        lem_gb->setTitle(QApplication::translate("LemMonitor", "GroupBox", 0, QApplication::UnicodeUTF8));
+        lem_gb->setTitle(QString());
     } // retranslateUi
 
 };

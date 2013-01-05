@@ -13,6 +13,8 @@
 #include <QSharedPointer>
 #include <QScopedPointer>
 
+#include <QListWidget>
+
 #include <QSettings>
 
 #include "phrases.h"
@@ -22,6 +24,7 @@
 #include "editor.h"
 #include "glhelper.h"
 #include "memoryviewer.h"
+#include "utils.h"
 
 static QString VERSION_NUMBER = "0.2";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";
@@ -58,6 +61,11 @@ private slots:
 
 	// Memory Viewer timer
 	void updateScrollbarValue(int value);
+
+	//void disassemblyRowSelected(const QString &text);
+
+	void disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow);
+
 
 	void editorChanged();
 
@@ -122,6 +130,8 @@ private:
 	void setupConnections();
 
 	QAbstractItemModel* modelFromFile(const QString &filename);
+
+	void loadDisassemblyData();
 
 	void createAndRunAssembler();
 	void createAndRunEmulator(QString binFile);

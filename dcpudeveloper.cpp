@@ -67,13 +67,7 @@ QMainWindow(parent),
 	// Load Config
 	loadSettings();
 
-	QStandardItemModel *testData = new QStandardItemModel(this);
-
-	QStandardItem *test = new QStandardItem();
-
-	testData->appendRow(new QStandardItem(QString("0000:\t0000 0000")));
-
-	ui->disassembly_list->setModel(testData);
+	connect(ui->disassembly_list, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(disassembledRowChanged(QListWidgetItem *, QListWidgetItem *)));
 }
 
 DCPUDeveloper::~DCPUDeveloper()
@@ -104,7 +98,6 @@ void DCPUDeveloper::setupConnections()
 
 	timer->start(30);
 }
-
 
 void DCPUDeveloper::addToCodeComplete(QString newEntry, bool removing)
 {
@@ -171,6 +164,51 @@ QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
 #endif
 	return new QStringListModel(words, completer);
 
+}
+
+void DCPUDeveloper::loadDisassemblyData() {
+	QStandardItemModel *testData = new QStandardItemModel(this);
+
+	QStandardItem *test = new QStandardItem();
+
+	std::string debugFilename = "debug_" + Utils::replace(TEMP_FILENAME.toStdString(), "dasm16", "dbg");
+
+	QFile debugFile(debugFilename.c_str());
+
+	if (!debugFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		qDebug() << "ERROR: Could not open debug file file ";
+	}
+
+	QTextStream debugInput(&debugFile);
+	QString currentLine;
+	int lineNumber = 0;
+
+	QListWidgetItem *debugItem;
+
+	int rowIndex = 0;
+	while (!debugInput.atEnd()) {
+
+		currentLine = debugInput.readLine().trimmed();
+
+		lineNumber = currentLine.left(currentLine.indexOf(':')).toInt();
+
+		currentLine = currentLine.right(currentLine.length() - currentLine.indexOf(':') - 1);
+
+		currentLine = currentLine.replace(":", "\t");
+
+		debugItem = new QListWidgetItem;
+
+		qDebug() << currentLine + " " + QString::number(lineNumber);
+		debugItem->setData(0, currentLine);
+		debugItem->setData(1, lineNumber);
+
+		//debugItem->setText(currentLine);
+
+		ui->disassembly_list->insertItem(rowIndex++, debugItem);
+	}
+
+
+	ui->disassembly_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
 // Setup and new assembler thread and start it.
@@ -329,6 +367,10 @@ void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 		assembler->stopAssembler();
 
 		delete assembler;
+
+		// Update disassembly
+		loadDisassemblyData();
+
 	} else {
 		ui->run_button->setEnabled(false);
 	}
@@ -376,6 +418,26 @@ void DCPUDeveloper::updateRegisters(registers_ptr registers)
 void DCPUDeveloper::updateScrollbarValue(int value)
 {
 	ui->memory_scrollbar->setMaximum(value);
+}
+
+void DCPUDeveloper::disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow) {
+	qDebug() << currentRow->data(1).toString();
+
+
+	QTextCursor editorCursor = editor->textCursor();
+	editorCursor.setPosition(currentRow->data(1).toInt());
+
+	editor->setTextCursor(editorCursor);
+
+	QTextEdit::ExtraSelection highlight;
+	highlight.cursor = editor->textCursor();
+
+	highlight.format.setBackground( Qt::green );
+	highlight.format.setProperty(QTextFormat::FullWidthSelection, true);
+
+	QList<QTextEdit::ExtraSelection> extras;
+	extras << highlight;
+	editor->setExtraSelections( extras );
 }
 
 void DCPUDeveloper::endEmulation(int endCode)

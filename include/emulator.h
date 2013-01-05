@@ -112,6 +112,7 @@ public:
 	void setCursorPos(int x, int y);
 	void clearScreen();
 
+	word_map getMemory();
 private:
 	//word_t* memory;
 	word_map memory;

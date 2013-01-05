@@ -52,3 +52,14 @@ instruction_t Utils::swapByteOrder(instruction_t instruction)
 {
 	return (instruction<<8) | (instruction>>8);
 }
+
+
+std::string Utils::replace(std::string& str, const std::string& from, const std::string& to) {
+	std::string temp = str;
+
+	size_t start_pos = str.find(from);
+	if(start_pos == std::string::npos)
+		return false;
+	return temp.replace(start_pos, from.length(), to);
+
+}

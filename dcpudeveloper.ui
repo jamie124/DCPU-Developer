@@ -193,7 +193,7 @@
               </widget>
              </item>
              <item row="0" column="3">
-              <widget class="QSpinBox" name="register_y">
+              <widget class="HexSpinBox" name="register_y">
                <property name="readOnly">
                 <bool>false</bool>
                </property>
@@ -210,7 +210,7 @@
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QSpinBox" name="register_a">
+              <widget class="HexSpinBox" name="register_a">
                <property name="readOnly">
                 <bool>false</bool>
                </property>
@@ -220,7 +220,7 @@
               </widget>
              </item>
              <item row="0" column="5">
-              <widget class="QSpinBox" name="register_pc">
+              <widget class="HexSpinBox" name="register_pc">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -240,7 +240,7 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QSpinBox" name="register_b">
+              <widget class="HexSpinBox" name="register_b">
                <property name="readOnly">
                 <bool>false</bool>
                </property>
@@ -257,7 +257,7 @@
               </widget>
              </item>
              <item row="1" column="3">
-              <widget class="QSpinBox" name="register_z">
+              <widget class="HexSpinBox" name="register_z">
                <property name="readOnly">
                 <bool>false</bool>
                </property>
@@ -267,7 +267,7 @@
               </widget>
              </item>
              <item row="1" column="5">
-              <widget class="QSpinBox" name="register_sp">
+              <widget class="HexSpinBox" name="register_sp">
                <property name="maximum">
                 <number>999999999</number>
                </property>
@@ -288,7 +288,7 @@
               </widget>
              </item>
              <item row="2" column="1">
-              <widget class="QSpinBox" name="register_c">
+              <widget class="HexSpinBox" name="register_c">
                <property name="readOnly">
                 <bool>false</bool>
                </property>
@@ -305,7 +305,7 @@
               </widget>
              </item>
              <item row="2" column="3">
-              <widget class="QSpinBox" name="register_i">
+              <widget class="HexSpinBox" name="register_i">
                <property name="readOnly">
                 <bool>false</bool>
                </property>
@@ -329,7 +329,7 @@
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QSpinBox" name="register_x">
+              <widget class="HexSpinBox" name="register_x">
                <property name="readOnly">
                 <bool>false</bool>
                </property>
@@ -346,7 +346,7 @@
               </widget>
              </item>
              <item row="3" column="3">
-              <widget class="QSpinBox" name="register_j">
+              <widget class="HexSpinBox" name="register_j">
                <property name="readOnly">
                 <bool>false</bool>
                </property>
@@ -356,14 +356,14 @@
               </widget>
              </item>
              <item row="2" column="5">
-              <widget class="QSpinBox" name="register_o">
+              <widget class="HexSpinBox" name="register_o">
                <property name="maximum">
                 <number>999</number>
                </property>
               </widget>
              </item>
              <item row="3" column="5">
-              <widget class="QSpinBox" name="register_ia"/>
+              <widget class="HexSpinBox" name="register_ia"/>
              </item>
              <item row="3" column="4">
               <widget class="QLabel" name="label_12">
@@ -392,7 +392,6 @@
             <property name="title">
              <string>Memory View</string>
             </property>
-            <zorder>registers_gb</zorder>
            </widget>
           </item>
          </layout>
@@ -452,13 +451,13 @@
        <attribute name="title">
         <string>Disassembly</string>
        </attribute>
-       <widget class="QListView" name="disassembly_list">
+       <widget class="QListWidget" name="disassembly_list">
         <property name="geometry">
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>291</width>
-          <height>401</height>
+          <width>301</width>
+          <height>411</height>
          </rect>
         </property>
        </widget>
@@ -696,6 +695,13 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>HexSpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>hexspinbox.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

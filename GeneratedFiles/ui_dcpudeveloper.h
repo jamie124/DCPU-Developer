@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Wed Jan 2 21:01:43 2013
+** Created: Sat Jan 5 14:55:41 2013
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -20,18 +20,18 @@
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
 #include <QtGui/QLabel>
-#include <QtGui/QListView>
+#include <QtGui/QListWidget>
 #include <QtGui/QMainWindow>
 #include <QtGui/QMenu>
 #include <QtGui/QMenuBar>
 #include <QtGui/QPushButton>
 #include <QtGui/QScrollBar>
-#include <QtGui/QSpinBox>
 #include <QtGui/QStatusBar>
 #include <QtGui/QTabWidget>
 #include <QtGui/QTextEdit>
 #include <QtGui/QTreeView>
 #include <QtGui/QWidget>
+#include "hexspinbox.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -86,27 +86,27 @@ public:
     QGridLayout *gridLayout_3;
     QLabel *label_9;
     QLabel *label_5;
-    QSpinBox *register_y;
+    HexSpinBox *register_y;
     QLabel *label;
-    QSpinBox *register_a;
-    QSpinBox *register_pc;
+    HexSpinBox *register_a;
+    HexSpinBox *register_pc;
     QLabel *label_2;
-    QSpinBox *register_b;
+    HexSpinBox *register_b;
     QLabel *label_7;
-    QSpinBox *register_z;
-    QSpinBox *register_sp;
+    HexSpinBox *register_z;
+    HexSpinBox *register_sp;
     QLabel *label_10;
     QLabel *label_3;
-    QSpinBox *register_c;
+    HexSpinBox *register_c;
     QLabel *label_6;
-    QSpinBox *register_i;
+    HexSpinBox *register_i;
     QLabel *label_11;
     QLabel *label_4;
-    QSpinBox *register_x;
+    HexSpinBox *register_x;
     QLabel *label_8;
-    QSpinBox *register_j;
-    QSpinBox *register_o;
-    QSpinBox *register_ia;
+    HexSpinBox *register_j;
+    HexSpinBox *register_o;
+    HexSpinBox *register_ia;
     QLabel *label_12;
     QGroupBox *memory_gb;
     QScrollBar *memory_scrollbar;
@@ -115,7 +115,7 @@ public:
     QGridLayout *gridLayout_9;
     QTreeView *project_tree;
     QWidget *disassembly_tab;
-    QListView *disassembly_list;
+    QListWidget *disassembly_list;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuHelp;
@@ -305,7 +305,7 @@ public:
 
         gridLayout_3->addWidget(label_5, 0, 2, 1, 1);
 
-        register_y = new QSpinBox(registers_gb);
+        register_y = new HexSpinBox(registers_gb);
         register_y->setObjectName(QString::fromUtf8("register_y"));
         register_y->setReadOnly(false);
         register_y->setMaximum(99999);
@@ -317,14 +317,14 @@ public:
 
         gridLayout_3->addWidget(label, 0, 0, 1, 1);
 
-        register_a = new QSpinBox(registers_gb);
+        register_a = new HexSpinBox(registers_gb);
         register_a->setObjectName(QString::fromUtf8("register_a"));
         register_a->setReadOnly(false);
         register_a->setMaximum(99999);
 
         gridLayout_3->addWidget(register_a, 0, 1, 1, 1);
 
-        register_pc = new QSpinBox(registers_gb);
+        register_pc = new HexSpinBox(registers_gb);
         register_pc->setObjectName(QString::fromUtf8("register_pc"));
         QSizePolicy sizePolicy2(QSizePolicy::Preferred, QSizePolicy::Fixed);
         sizePolicy2.setHorizontalStretch(0);
@@ -340,7 +340,7 @@ public:
 
         gridLayout_3->addWidget(label_2, 1, 0, 1, 1);
 
-        register_b = new QSpinBox(registers_gb);
+        register_b = new HexSpinBox(registers_gb);
         register_b->setObjectName(QString::fromUtf8("register_b"));
         register_b->setReadOnly(false);
         register_b->setMaximum(99999);
@@ -352,14 +352,14 @@ public:
 
         gridLayout_3->addWidget(label_7, 1, 2, 1, 1);
 
-        register_z = new QSpinBox(registers_gb);
+        register_z = new HexSpinBox(registers_gb);
         register_z->setObjectName(QString::fromUtf8("register_z"));
         register_z->setReadOnly(false);
         register_z->setMaximum(99999);
 
         gridLayout_3->addWidget(register_z, 1, 3, 1, 1);
 
-        register_sp = new QSpinBox(registers_gb);
+        register_sp = new HexSpinBox(registers_gb);
         register_sp->setObjectName(QString::fromUtf8("register_sp"));
         register_sp->setMaximum(999999999);
 
@@ -375,7 +375,7 @@ public:
 
         gridLayout_3->addWidget(label_3, 2, 0, 1, 1);
 
-        register_c = new QSpinBox(registers_gb);
+        register_c = new HexSpinBox(registers_gb);
         register_c->setObjectName(QString::fromUtf8("register_c"));
         register_c->setReadOnly(false);
         register_c->setMaximum(99999);
@@ -387,7 +387,7 @@ public:
 
         gridLayout_3->addWidget(label_6, 2, 2, 1, 1);
 
-        register_i = new QSpinBox(registers_gb);
+        register_i = new HexSpinBox(registers_gb);
         register_i->setObjectName(QString::fromUtf8("register_i"));
         register_i->setReadOnly(false);
         register_i->setMaximum(99999);
@@ -404,7 +404,7 @@ public:
 
         gridLayout_3->addWidget(label_4, 3, 0, 1, 1);
 
-        register_x = new QSpinBox(registers_gb);
+        register_x = new HexSpinBox(registers_gb);
         register_x->setObjectName(QString::fromUtf8("register_x"));
         register_x->setReadOnly(false);
         register_x->setMaximum(99999);
@@ -416,20 +416,20 @@ public:
 
         gridLayout_3->addWidget(label_8, 3, 2, 1, 1);
 
-        register_j = new QSpinBox(registers_gb);
+        register_j = new HexSpinBox(registers_gb);
         register_j->setObjectName(QString::fromUtf8("register_j"));
         register_j->setReadOnly(false);
         register_j->setMaximum(99999);
 
         gridLayout_3->addWidget(register_j, 3, 3, 1, 1);
 
-        register_o = new QSpinBox(registers_gb);
+        register_o = new HexSpinBox(registers_gb);
         register_o->setObjectName(QString::fromUtf8("register_o"));
         register_o->setMaximum(999);
 
         gridLayout_3->addWidget(register_o, 2, 5, 1, 1);
 
-        register_ia = new QSpinBox(registers_gb);
+        register_ia = new HexSpinBox(registers_gb);
         register_ia->setObjectName(QString::fromUtf8("register_ia"));
 
         gridLayout_3->addWidget(register_ia, 3, 5, 1, 1);
@@ -450,7 +450,6 @@ public:
         sizePolicy3.setHeightForWidth(memory_gb->sizePolicy().hasHeightForWidth());
         memory_gb->setSizePolicy(sizePolicy3);
         memory_gb->setMinimumSize(QSize(500, 150));
-        registers_gb->raise();
 
         horizontalLayout->addWidget(memory_gb);
 
@@ -489,9 +488,9 @@ public:
         project_tabwidget->addTab(project_tab, QString());
         disassembly_tab = new QWidget();
         disassembly_tab->setObjectName(QString::fromUtf8("disassembly_tab"));
-        disassembly_list = new QListView(disassembly_tab);
+        disassembly_list = new QListWidget(disassembly_tab);
         disassembly_list->setObjectName(QString::fromUtf8("disassembly_list"));
-        disassembly_list->setGeometry(QRect(0, 0, 291, 401));
+        disassembly_list->setGeometry(QRect(0, 0, 301, 411));
         project_tabwidget->addTab(disassembly_tab, QString());
 
         gridLayout->addWidget(project_tabwidget, 0, 0, 1, 1);
