@@ -48,6 +48,15 @@
     <Filter Include="Source Files\Devices">
       <UniqueIdentifier>{7b594a1b-ae97-45bc-946f-084d33816856}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{a191105c-95a6-478e-adbe-585285f925be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Devices">
+      <UniqueIdentifier>{0f1bd231-ecce-4442-ad69-01ac79ace988}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI">
+      <UniqueIdentifier>{70e8bb5c-6131-4189-bba1-855d063cac38}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="assembler.cpp">
@@ -56,22 +65,13 @@
     <ClCompile Include="dcpudeveloper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="emulator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="glhelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="highlighter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="memoryviewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="phrases.cpp">
@@ -134,23 +134,32 @@
     <ClCompile Include="Release\moc_lem.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="devices\lemviewer.cpp">
-      <Filter>Source Files\Devices</Filter>
-    </ClCompile>
     <ClCompile Include="Debug\moc_lemviewer.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_lemviewer.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="hexspinbox.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Debug\moc_hexspinbox.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_hexspinbox.cpp">
       <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="memoryviewer.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="hexspinbox.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="devices\lemviewer.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="highlighter.cpp">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="editor.cpp">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -163,32 +172,32 @@
     <CustomBuild Include="include\dcpudeveloper.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\editor.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="include\emulator.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="include\highlighter.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="include\memoryviewer.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="include\lem.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="include\device.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="lem_monitor.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\lemviewer.h">
-      <Filter>Header Files</Filter>
+    <CustomBuild Include="include\device.h">
+      <Filter>Header Files\Devices</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\lem.h">
+      <Filter>Header Files\Devices</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\editor.h">
+      <Filter>Header Files\UI</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\memoryviewer.h">
+      <Filter>Header Files\UI</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\highlighter.h">
+      <Filter>Header Files\UI</Filter>
     </CustomBuild>
     <CustomBuild Include="include\hexspinbox.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\UI</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\lemviewer.h">
+      <Filter>Header Files\UI</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

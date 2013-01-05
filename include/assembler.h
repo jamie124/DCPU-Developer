@@ -54,7 +54,7 @@ private:
 	opcode_t opcodeFor(const QString command);
 	nonbasicOpcode_t nonbasicOpcodeFor(QString command);
 
-	int registerFor(char regName);
+	int registerFor(QChar regName);
 	argumentStruct_t argumentFor(QString arg);
 
 	char* cleanString(char *rawLine);

@@ -63,6 +63,8 @@ class Emulator : public QThread
 signals:
 	void fullMemorySync(memory_array);
     void registersChanged(registers_ptr);
+	void instructionChanged(word_t);
+
 	void emulationEnded(int);
 
 private:

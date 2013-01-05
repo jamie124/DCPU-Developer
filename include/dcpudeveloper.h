@@ -54,6 +54,8 @@ private slots:
 	// Emulator UI update requests
 	void setFullMemoryBlock(memory_array memory);
     void updateRegisters(registers_ptr registers);
+	void emulatorInstructionChanged(word_t instruction);
+
 	void endEmulation(int endCode);
 
 	// Highlighter requests
@@ -138,6 +140,8 @@ private:
 
 	void saveSettings();
 	void loadSettings();
+
+	void setSelectedDisassembedInstruction(word_t instruction);
 };
 
 #endif // DCPUDEVELOPER_H

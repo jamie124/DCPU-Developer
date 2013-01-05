@@ -12,21 +12,23 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 	QStringList keywordPatterns;
 	keywordPatterns 
 		// Basic Set, Add, Sub
-		<< "set" << "add" << "sub"
+		<< "set " << "add " << "sub "
 		// Multi / Divide / Mod
-		<< "mul" << "mli" << "div"  << "dvi" 
-		<< "mod" << "mdi"
+		<< "mul " << "mli " << "div "  << "dvi " 
+		<< "mod " << "mdi "
 		// Binary Operations
-		<< "and" << "bor" << "xor"
-		<< "shr" << "asr" << "shl" 
+		<< "and " << "bor " << "xor "
+		<< "shr " << "asr " << "shl " 
 		// If's
-		<< "ifb" << "ifc" << "ife" << "ifn" << "ifg" 
-		<< "ifa" << "ifl" << "ifu"
+		<< "ifb " << "ifc " << "ife " << "ifn " << "ifg " 
+		<< "ifa " << "ifl " << "ifu "
 		// Overflow
-		<< "adx" << "sbx"
+		<< "adx " << "sbx "
 		// Set with Inc / Dec
-		<< "sti" << "std"
-		<< "dat";
+		<< "sti " << "std "
+		<< "dat "
+		// Specials
+		<< "jsr " << "int " << "iag " << "ias " << "rfi " << "iaq " << "hwn " << "hwq " << "hwi ";
 
 	foreach (const QString &pattern, keywordPatterns) {
 		QString test = "(" + pattern + ")|(" + pattern.toUpper() + ")";

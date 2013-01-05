@@ -1,4 +1,4 @@
-hwn i             
+hwn i          
 
 :map_hardware
 	sub i, 1
@@ -32,7 +32,6 @@ set i, 0
 
 ; Now we want to print our message.     ;
 :print_message
-; We copy the next character to j.      ;
 	set j, [MESSAGE + i]
 ; If we reached the end of our message, ;
 ; then we will end the program.         ;

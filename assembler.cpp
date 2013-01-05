@@ -187,9 +187,9 @@ nonbasicOpcode_t Assembler::nonbasicOpcodeFor(QString command)
 }
 
 // Check register number 
-int Assembler::registerFor(char regName)
+int Assembler::registerFor(QChar regName)
 {
-	switch(regName) {
+	switch(regName.toAscii()) {
 	case 'a':
 		return REG_A;
 		break;
@@ -370,10 +370,12 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 			if (containsReg) {
 				// Find register, sort of shit way of doing it.
 				// Finds first character after '+'
-				char regName = arg.mid(labelEnd + 2, 1).toStdString().c_str()[0];
+				//char regName = arg.mid(labelEnd + 2, 1).toStdString().c_str()[0];
+				QString regName = arg.mid(labelEnd + 2, 1);
 
+				qDebug() << regName;
 
-				int regNum = registerFor(regName);
+				int regNum = registerFor(regName.at(0));
 				if (regNum != -1) {
 					toReturn.argument = ARG_REG_NEXTWORD_INDEX_START + regNum;
 					return toReturn;
@@ -1106,6 +1108,7 @@ void Assembler::processArg2(QString &command, QString &arg, word_t &address, QSt
 
 		arg = arg.toLower().trimmed();
 
+		qDebug() << "Arg 2: " + arg;
 		instruction->b = argumentFor(arg);
 
 		instruction->b.lineNumber = lineNumber;

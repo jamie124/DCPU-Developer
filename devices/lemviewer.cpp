@@ -31,7 +31,7 @@ LemViewer::~LemViewer()
 void LemViewer::drawChar(int x, int y, word_t value) {
 	int charValue = value & 0x7f;
 
-	qDebug() << QString::number(value);
+	//qDebug() << QString::number(value);
 	for (int w = 0; w < CHAR_WIDTH; w++) {
 		for (int h = 0; h < CHAR_HEIGHT; h++) {
 			videoBuffer[(x * PIXEL_WIDTH) + w][(y * PIXEL_HEIGHT) + h] = 255;

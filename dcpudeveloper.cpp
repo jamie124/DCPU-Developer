@@ -31,7 +31,7 @@ QMainWindow(parent),
 	completer->setWrapAround(true);
 
 	editor->setCompleter(completer);
-	editor->setFontPointSize(13);
+	//editor->setFontPointSize(13);
 
 	QGridLayout *editorLayout = new QGridLayout;
 
@@ -182,10 +182,14 @@ void DCPUDeveloper::loadDisassemblyData() {
 	QTextStream debugInput(&debugFile);
 	QString currentLine;
 	int lineNumber = 0;
+	int instruction = 0;
 
 	QListWidgetItem *debugItem;
 
 	int rowIndex = 0;
+
+	ui->disassembly_list->clear();
+
 	while (!debugInput.atEnd()) {
 
 		currentLine = debugInput.readLine().trimmed();
@@ -194,15 +198,19 @@ void DCPUDeveloper::loadDisassemblyData() {
 
 		currentLine = currentLine.right(currentLine.length() - currentLine.indexOf(':') - 1);
 
+		//qDebug() << currentLine + " ";
+
 		currentLine = currentLine.replace(":", "\t");
 
 		debugItem = new QListWidgetItem;
 
-		qDebug() << currentLine + " " + QString::number(lineNumber);
+		//debugItem->setText(currentLine);
 		debugItem->setData(0, currentLine);
 		debugItem->setData(1, lineNumber);
+		//qDebug() << QString::number(instruction);
+		//debugItem->setData(2, instruction);
+		//qDebug() << debugItem->data(2).toString();
 
-		//debugItem->setText(currentLine);
 
 		ui->disassembly_list->insertItem(rowIndex++, debugItem);
 	}
@@ -232,13 +240,16 @@ void DCPUDeveloper::createAndRunEmulator(QString binFile)
 	emulator = QSharedPointer<Emulator>(new Emulator());
 	//emulator = new Emulator;
 
-	//qRegisterMetaType<word_vector>();
+	qRegisterMetaType<word_t>("word_t");
+
 	/*
 	connect(emulator, SIGNAL(fullMemorySync(memory_array)), this, 
 	SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
 	*/
 	connect(emulator.data(), SIGNAL(registersChanged(registers_ptr)), this,
 		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
+	connect(emulator.data(), SIGNAL(instructionChanged(word_t)), this, SLOT(emulatorInstructionChanged(word_t)), Qt::QueuedConnection);
+
 	connect(emulator.data(), SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 
 	emulator->setFilename(binFile);
@@ -273,11 +284,53 @@ void DCPUDeveloper::loadSettings()
 		}
 
 		QTextStream in(&file);
-		editor->setText(in.readAll());
+		editor->setPlainText(in.readAll());
 
 		file.close();
 
 		ui->editors_tabwidget->setTabText(ui->editors_tabwidget->currentIndex(), currentFilename);
+	}
+}
+
+void DCPUDeveloper::setSelectedDisassembedInstruction(word_t instruction) {
+	// TODO: Add a map to prevent lookups
+
+	QListWidgetItem *item;
+	bool ok;
+	uint test = 0;
+
+	QString currentLine;
+
+	int index = 0;
+	for (int i = 0; i < ui->disassembly_list->count(); i++) {
+		item = ui->disassembly_list->item(i);
+
+		currentLine = item->data(0).toString();
+
+	//	qDebug() << currentLine;
+
+		if (currentLine.contains('\t')) {
+			test = ("0x" + currentLine.left(currentLine.indexOf('\t'))).toUInt(&ok, 16);
+		} else {
+			test = ("0x" + currentLine).toUInt(&ok, 16);
+		}
+
+		//qDebug() << QString::number(instruction);
+
+
+		//qDebug() << QString::number(test) + ":" + QString::number(instruction);
+		//qDebug() << item->data(0);
+
+
+		if (test == instruction) {
+			break;
+		}
+
+		index++;
+	}
+
+	if (index <= ui->disassembly_list->count()) {
+		ui->disassembly_list->setCurrentRow(index);
 	}
 }
 
@@ -294,7 +347,7 @@ void DCPUDeveloper::on_actionOpen_triggered()
 		}
 
 		QTextStream in(&file);
-		editor->setText(in.readAll());
+		editor->setPlainText(in.readAll());
 		file.close();
 	}
 }
@@ -414,6 +467,12 @@ void DCPUDeveloper::updateRegisters(registers_ptr registers)
 	ui->register_o->setValue(registers->o);
 }
 
+void DCPUDeveloper::emulatorInstructionChanged(word_t instruction) {
+	//qDebug() << QString::number(instruction, 16);
+
+	setSelectedDisassembedInstruction(instruction);
+}
+
 // Set the max memory scrollbar value
 void DCPUDeveloper::updateScrollbarValue(int value)
 {
@@ -421,23 +480,9 @@ void DCPUDeveloper::updateScrollbarValue(int value)
 }
 
 void DCPUDeveloper::disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow) {
-	qDebug() << currentRow->data(1).toString();
 
+	editor->setLine(currentRow->data(1).toInt());
 
-	QTextCursor editorCursor = editor->textCursor();
-	editorCursor.setPosition(currentRow->data(1).toInt());
-
-	editor->setTextCursor(editorCursor);
-
-	QTextEdit::ExtraSelection highlight;
-	highlight.cursor = editor->textCursor();
-
-	highlight.format.setBackground( Qt::green );
-	highlight.format.setProperty(QTextFormat::FullWidthSelection, true);
-
-	QList<QTextEdit::ExtraSelection> extras;
-	extras << highlight;
-	editor->setExtraSelections( extras );
 }
 
 void DCPUDeveloper::endEmulation(int endCode)

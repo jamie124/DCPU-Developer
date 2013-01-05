@@ -22,7 +22,7 @@ Started 7-Apr-2012
 
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
-	DEBUG = false;
+	DEBUG = true;
 	OPCODE_DEBUGGING = false;
 
 	stepMode = false;
@@ -233,11 +233,15 @@ void Emulator::run()
 
 			word_t executingPC = programCounter;
 
-			qDebug() << QString::number(programCounter);
+			//qDebug() << QString::number(programCounter);
 
 			instruction_t instruction = memory[programCounter++];
 
-			qDebug() << QString::number(instruction);
+			if (stepMode) {
+				emit instructionChanged(instruction);
+			}
+
+			//qDebug() << QString::number(instruction);
 
 			// Decode
 			opcode_t opcode = getOpcode(instruction);
@@ -645,6 +649,7 @@ void Emulator::run()
 				programCounter += getInstructionLength(memory[programCounter]);
 			}
 
+			/*
 			if (videoDirty) {
 
 				clearScreen();
@@ -660,6 +665,7 @@ void Emulator::run()
 				videoDirty = false;
 
 			}
+			*/
 
 			// TODO: Add a way to toggle this
 			emit registersChanged(getRegisters());

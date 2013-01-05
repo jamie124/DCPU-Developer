@@ -108,12 +108,12 @@ void Lem::drawScreen() {
 	//qDebug() << QString::number(screenRamAddress);
 	for (int r = 0; r < ROWS; r++) {
 		for (int c = 0; c < COLUMNS; c++) {
-			setScreen(r, c, memory[screenRamAddress + (r * COLUMNS) + c]);
+			//setScreen(r, c, memory[screenRamAddress + (r * COLUMNS) + c]);
 			//lemViewer->drawChar(c, r, memory[screenRamAddress + (r * COLUMNS) + r]);
 		}
 	}
 
-	std::cout << std::endl;
+	//std::cout << std::endl;
 
 	//lemViewer->drawChar(0, 0, 4);
 }
