@@ -224,7 +224,7 @@ int Assembler::registerFor(QChar regName)
 argumentStruct_t Assembler::argumentFor(QString arg) {
 
 
-	QScopedPointer<const char> tempBuffer(_strdup(arg.toStdString().c_str()));
+	//QScopedPointer<const char> tempBuffer(_strdup(arg.toStdString().c_str()));
 
 	argumentStruct_t toReturn;
 
@@ -241,18 +241,43 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 	}
 
 	// If it begins with 0-9 it's a number
-	if (tempBuffer.data()[0] >= '0' && tempBuffer.data()[0] <= '9') {
-		int argValue;
+	QChar charCheck = arg.at(0);
+
+	if (charCheck.toAscii() >= '0' && charCheck.toAscii() <= '9') {
+		word_t argValue;
+	
+		/*
 		char* format;
 
-		if (arg.length() > 2 && tempBuffer.data()[0] == '0' && tempBuffer.data()[1] == 'x') {
-			// Value is hex
-			format = "%x";
+	
+		if (arg.length() > 2 && charCheck.toAscii() == '0' && arg.at(1).toAscii() == 'x') {
+			QTextStream inputData(&arg);
+
+			unsigned short dataValue;
+
+			inputData >> dataValue;
+
+			qDebug() << QString::number(dataValue);
+
+
 		} else {
 			// Decimal
 			format = "%d";
-		}
 
+			qDebug() << "Decimal";
+		}
+		*/
+	
+		QTextStream inputData(&arg);
+
+		//unsigned short dataValue;
+
+		inputData >> argValue;
+
+		qDebug() << QString::number(argValue);
+
+
+		/*
 		if (sscanf(tempBuffer.data(), format, &argValue) != 1) {
 			qDebug() << "ERROR: Invalid literal value: " << arg;
 
@@ -261,6 +286,7 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 			return toReturn;
 		}
+		*/
 
 		if (argValue == ARG_LITERAL_START) {
 			toReturn.argument = 0xffff;
@@ -283,10 +309,10 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 		return toReturn;
 	}
 
-	if (tempBuffer.data()[0] == '[' || tempBuffer.data()[0] == '(') {
-		if (arg.length() == 3 && (tempBuffer.data()[2] == ']' || tempBuffer.data()[2] == ')')) {
+	if (charCheck.toAscii() == '[' || charCheck.toAscii() == '(') {
+		if (arg.length() == 3 && (arg.at(2).toAscii() == ']' || arg.at(2).toAscii() == ')')) {
 			// If it's 1 char in bracket it's a register
-			int regNum = registerFor(tempBuffer.data()[1]);
+			int regNum = registerFor(arg.at(1).toAscii());
 
 			if (regNum != -1) {
 				toReturn.argument = ARG_REG_INDEX_START + regNum;
@@ -303,10 +329,38 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 		// Hex value?
 		int hexValue;
-		if (sscanf(tempBuffer.data() + 1, "0x%x", &hexValue) == 1) {
+
+		QTextStream inputData(&arg);
+
+
+		if (arg.contains("0x")) {
+		//if (arg.at(1).toAscii() >= '0' && arg.at(1).toAscii() <= '9') {
 			// +register?
-			char regName;
-			if (sscanf(tempBuffer.data() + 1, "0x%x+%c", &hexValue, &regName) == 2) {
+			int hexValue;
+			QChar regName;
+			QString reg;
+
+			arg = arg.replace("[", "").replace("]", "").replace("+", "").trimmed();
+			arg = arg.replace("(", "").replace(")", "").trimmed();
+
+			if (arg.at(0).toAscii() >= '0' && arg.at(0).toAscii() <= '9') {
+				// Hex value before register
+				inputData >> hex >> hexValue;
+				inputData >> reg;
+			} else {
+				// Register before hex value
+				inputData >> reg;
+				inputData >> hex >> hexValue;
+			}
+
+			qDebug() << arg;
+
+			qDebug() << "Hex: " + QString::number(hexValue) + ", Reg: " + reg;
+
+			regName = reg.at(0);
+
+		//	if (sscanf(tempBuffer.data() + 1, "0x%x+%c", &hexValue, &regName) == 2) {
+			if (regName > -1) {
 				// TODO enforce closing
 				int regNum = registerFor(regName);
 
@@ -425,7 +479,7 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 	// Is register?
 	if (arg.length() == 1) {
-		int regNum = registerFor(tempBuffer.data()[0]);
+		int regNum = registerFor(arg.at(0));
 		if (regNum != -1) {
 			toReturn.argument = ARG_REG_START + regNum;
 			return toReturn;
@@ -550,13 +604,12 @@ void Assembler::run()
 
 		if (currentLine.length() <= 1) {
 		
+			/*
 			if (label.length() > 0) {
 				processCommand(QString(""), QString(""), address, label, head, tail, instruction);
 			}
-			
+			*/
 		} else {
-
-
 
 			// Non blank line, start processing
 
@@ -712,15 +765,16 @@ void Assembler::run()
 
 	qDebug() << "Compile finished.";
 
-	assemblerError(ASSEMBLER_SUCESSFUL, 0);
+	//debugOut.flush();
+	debugFile.flush();
+	debugFile.close();
 
 	// Close files
 
 
 	fclose(compiledFile);
 
-	//debugOut.flush();
-	debugFile.close();
+	assemblerError(ASSEMBLER_SUCESSFUL, 0);
 }
 
 void Assembler::assemblerError(int errorCode, int lineNumber)

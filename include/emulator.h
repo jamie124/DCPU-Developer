@@ -96,7 +96,7 @@ protected:
 
 public:
    explicit Emulator(QObject* parent = 0);
-    ~Emulator(void);
+    ~Emulator();
 
     void setFilename(QString filename);
 

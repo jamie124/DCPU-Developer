@@ -107,7 +107,9 @@ private:
     Ui::DCPUDeveloper *ui;
 
     Assembler *assembler;
-    QSharedPointer<Emulator> emulator;
+    
+	Emulator *emulator;
+	//QSharedPointer<Emulator> emulator;
 
 	Phrases *phrases;
 	Highlighter *highlighter;

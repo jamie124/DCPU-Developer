@@ -1,4 +1,4 @@
-hwn i          
+hwn i
 
 :map_hardware
 	sub i, 1
@@ -7,14 +7,12 @@ hwn i
 
 	ife b, 0x7349
 		ife a, 0xF615
+; If the ID is the one we expected, go  ;
+; to our set_monitor line, and continue.;
 			set pc, set_monitor
+
 	ifn i, 0
 		set pc, map_hardware
-
-
-; ===================================== ;
-; 2. Setup the monitor to read our msg. ;
-; ===================================== ;
 
 :set_monitor
 	set [MONITOR], i
@@ -28,8 +26,10 @@ hwn i
 ; ===================================== ;
 ; 3. Loop through the message to print. ;
 ; ===================================== ;
-set i, 0
 
+; Let's reset i to 0. i will be that    ;
+; character in the message we will show.;
+	set i, 0
 ; Now we want to print our message.     ;
 :print_message
 	set j, [MESSAGE + i]
@@ -53,11 +53,14 @@ set i, 0
 ; 4. Make space for MONITOR and MESSAGE ;
 ;   to hold some memory.                ;
 ; ===================================== ;
+
 :MONITOR	
 	dat 0x0000
 
-:MESSAGE 	
+; Finally, lets set our message.        ;
+:MESSAGE	
 	dat "Hello, World!", 0
+; We end with a 0 to mark the end.      ;
 
 :end
-	dat 0x00
+	dat 0x0

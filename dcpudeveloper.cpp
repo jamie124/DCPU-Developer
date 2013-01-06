@@ -84,6 +84,9 @@ DCPUDeveloper::~DCPUDeveloper()
 	delete phrases;
 
 	delete memoryViewer;
+
+	delete emulator;
+
 }
 
 void DCPUDeveloper::setupConnections() 
@@ -239,8 +242,8 @@ void DCPUDeveloper::createAndRunAssembler()
 }
 
 void DCPUDeveloper::startEmulator() {
-	emulator = QSharedPointer<Emulator>(new Emulator());
-
+	//emulator = QSharedPointer<Emulator>(new Emulator());
+	emulator = new Emulator();
 
 	qRegisterMetaType<word_t>("word_t");
 
@@ -248,11 +251,11 @@ void DCPUDeveloper::startEmulator() {
 	connect(emulator, SIGNAL(fullMemorySync(memory_array)), this, 
 	SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
 	*/
-	connect(emulator.data(), SIGNAL(registersChanged(registers_ptr)), this,
+	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
 		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
-	connect(emulator.data(), SIGNAL(instructionChanged(word_t)), this, SLOT(emulatorInstructionChanged(word_t)), Qt::QueuedConnection);
+	connect(emulator, SIGNAL(instructionChanged(word_t)), this, SLOT(emulatorInstructionChanged(word_t)), Qt::QueuedConnection);
 
-	connect(emulator.data(), SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 }
 
 void DCPUDeveloper::runProgram(QString binFile) {
@@ -424,10 +427,11 @@ void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 
 		assembler->stopAssembler();
 
-		delete assembler;
-
 		// Update disassembly
 		loadDisassemblyData();
+
+		delete assembler;
+
 
 	} else {
 		ui->run_button->setEnabled(false);

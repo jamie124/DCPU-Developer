@@ -47,7 +47,7 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 	//qDebug() << QString::number(connectedDevices.size());
 }
 
-Emulator::~Emulator(void)
+Emulator::~Emulator()
 {
 	memory.clear();
 	//memory.squeeze();
@@ -670,9 +670,9 @@ void Emulator::run()
 			*/
 
 			// TODO: Add a way to toggle this
-			if (DEBUG) {
+			//if (DEBUG) {
 			emit registersChanged(getRegisters());
-			}
+			//}
 
 			if (stepMode) {
 				// Skip next pass
