@@ -22,7 +22,7 @@ Started 7-Apr-2012
 
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
-	DEBUG = false;
+	DEBUG = true;
 	OPCODE_DEBUGGING = false;
 
 	stepMode = false;
@@ -115,7 +115,7 @@ void Emulator::reset()
 
 	/*
 	for (int i = 0; i < RAM_SIZE; i++) {
-	memory[i] = 0;
+		memory.insert(i, 0);
 	//memory[i] = 0;
 	}
 	*/

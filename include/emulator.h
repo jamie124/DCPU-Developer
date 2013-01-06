@@ -14,7 +14,9 @@ Started 7-Apr-2012
 #include <QString>
 #include <QSharedPointer>
 #include <QVector>
+
 #include <QMap>
+#include <QHash>
 
 #include <iostream>
 
@@ -53,7 +55,7 @@ typedef struct {
 // Pointer typedefs
 typedef QSharedPointer<registers_t> registers_ptr;
 typedef QVector<word_t> word_vector;
-typedef QMap<int, word_t> word_map;
+typedef QHash<int, word_t> word_map;
 typedef int* memory_array;
 
 class Emulator : public QThread

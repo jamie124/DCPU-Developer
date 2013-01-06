@@ -223,9 +223,6 @@ int Assembler::registerFor(QChar regName)
 // Get argument value for string
 argumentStruct_t Assembler::argumentFor(QString arg) {
 
-
-	//QScopedPointer<const char> tempBuffer(_strdup(arg.toStdString().c_str()));
-
 	argumentStruct_t toReturn;
 
 	toReturn.badArgument = false;
@@ -245,48 +242,14 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 	if (charCheck.toAscii() >= '0' && charCheck.toAscii() <= '9') {
 		word_t argValue;
-	
-		/*
-		char* format;
 
-	
-		if (arg.length() > 2 && charCheck.toAscii() == '0' && arg.at(1).toAscii() == 'x') {
-			QTextStream inputData(&arg);
-
-			unsigned short dataValue;
-
-			inputData >> dataValue;
-
-			qDebug() << QString::number(dataValue);
-
-
-		} else {
-			// Decimal
-			format = "%d";
-
-			qDebug() << "Decimal";
-		}
-		*/
-	
 		QTextStream inputData(&arg);
 
-		//unsigned short dataValue;
 
 		inputData >> argValue;
 
 		qDebug() << QString::number(argValue);
 
-
-		/*
-		if (sscanf(tempBuffer.data(), format, &argValue) != 1) {
-			qDebug() << "ERROR: Invalid literal value: " << arg;
-
-			toReturn.badArgument = true;
-			toReturn.errorCode = ASSEMBLER_INVALID_LITERAL;
-
-			return toReturn;
-		}
-		*/
 
 		if (argValue == ARG_LITERAL_START) {
 			toReturn.argument = 0xffff;
@@ -334,7 +297,7 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 
 		if (arg.contains("0x")) {
-		//if (arg.at(1).toAscii() >= '0' && arg.at(1).toAscii() <= '9') {
+			//if (arg.at(1).toAscii() >= '0' && arg.at(1).toAscii() <= '9') {
 			// +register?
 			int hexValue;
 			QChar regName;
@@ -357,25 +320,27 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 			qDebug() << "Hex: " + QString::number(hexValue) + ", Reg: " + reg;
 
-			regName = reg.at(0);
+			if (reg.length() == 1) {
+				regName = reg.at(0);
 
-		//	if (sscanf(tempBuffer.data() + 1, "0x%x+%c", &hexValue, &regName) == 2) {
-			if (regName > -1) {
-				// TODO enforce closing
-				int regNum = registerFor(regName);
+				//	if (sscanf(tempBuffer.data() + 1, "0x%x+%c", &hexValue, &regName) == 2) {
+		
+					// TODO enforce closing
+					int regNum = registerFor(regName);
 
-				if (regNum != -1) {
-					toReturn.argument = ARG_REG_NEXTWORD_INDEX_START + regNum;
-					toReturn.nextWord = hexValue;
-					return toReturn;
-				} else {
-					qDebug() << "ERROR: Invalid register name " << regName << " in: " << arg;
+					if (regNum != -1) {
+						toReturn.argument = ARG_REG_NEXTWORD_INDEX_START + regNum;
+						toReturn.nextWord = hexValue;
+						return toReturn;
+					} else {
+						qDebug() << "ERROR: Invalid register name " << regName << " in: " << arg;
 
-					toReturn.badArgument = true;
-					toReturn.errorCode = ASSEMBLER_INVALID_REG_NAME;
+						toReturn.badArgument = true;
+						toReturn.errorCode = ASSEMBLER_INVALID_REG_NAME;
 
-					return toReturn;
-				}
+						return toReturn;
+					}
+			
 			} else {
 				// Just hex in brackets
 				// TODO: enforce closing
@@ -603,10 +568,10 @@ void Assembler::run()
 		removeComment(currentLine);
 
 		if (currentLine.length() <= 1) {
-		
+
 			/*
 			if (label.length() > 0) {
-				processCommand(QString(""), QString(""), address, label, head, tail, instruction);
+			processCommand(QString(""), QString(""), address, label, head, tail, instruction);
 			}
 			*/
 		} else {
@@ -968,7 +933,7 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 		QChar nextChar = data.at(0);
 
 		if (nextChar == '"') {
-			
+
 			index = 1;
 
 			//if (nextChar == '"') {
