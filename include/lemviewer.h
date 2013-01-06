@@ -5,6 +5,8 @@
 
 #include "constants.h"
 
+#include "emulator.h"
+
 const int CHAR_WIDTH = 4;
 const int CHAR_HEIGHT = 8;
 const int COLUMNS = 32;
@@ -51,10 +53,13 @@ class LemViewer :
 {
 	Q_OBJECT
 public:
-	LemViewer(QWidget *parent = 0);
+	LemViewer(Emulator *emu, QWidget *parent = 0);
 	~LemViewer();
 
-	void drawChar(int x, int y, word_t value);
+	//void drawChar(int x, int y, word_t value);
+	void drawLoop();
+
+	void setScreenAddress(long ramAddress);
 
 public slots:
 		void animate();
@@ -64,6 +69,10 @@ protected:
 
 private:
 	int elapsed;
+
+	Emulator *emulator;
+
+	long screenAddress;
 
 	word_t videoBuffer[WIDTH][HEIGHT];
 };

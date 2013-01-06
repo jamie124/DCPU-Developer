@@ -37,7 +37,7 @@ Lem::Lem(Emulator *emu, QWidget *parent) : ui(new Ui::LemMonitor)
 
 	ramSize = emulator->getMemory().size();//ramSizeValue;
 
-	lemViewer = new LemViewer(this);
+	lemViewer = new LemViewer(emulator, this);
 
 	QGridLayout *lemLayout = new QGridLayout;
 
@@ -75,6 +75,8 @@ void Lem::handleInterrupt(int a, int b) {
 			screenRamAddress = ramSize;
 		}
 
+		lemViewer->setScreenAddress(screenRamAddress);
+
 		drawScreen();
 
 		break;
@@ -108,7 +110,6 @@ void Lem::drawScreen() {
 	//qDebug() << QString::number(screenRamAddress);
 	for (int r = 0; r < ROWS; r++) {
 		for (int c = 0; c < COLUMNS; c++) {
-			//setScreen(r, c, memory[screenRamAddress + (r * COLUMNS) + c]);
 			//lemViewer->drawChar(c, r, memory[screenRamAddress + (r * COLUMNS) + r]);
 		}
 	}

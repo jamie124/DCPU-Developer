@@ -6,12 +6,15 @@
 
 #include <iostream>
 
-LemViewer::LemViewer(QWidget *parent) : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
+LemViewer::LemViewer(Emulator *emu, QWidget *parent) : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 {
+	emulator = emu;
+	screenAddress = 0;
+
 	setFixedSize(REAL_WIDTH, REAL_HEIGHT);
 	setAutoFillBackground(false);
 
-	
+
 	for (int y = 0; y < HEIGHT; y++) {
 		for (int x = 0; x < WIDTH; x++) {
 			videoBuffer[x][y] = 0;
@@ -20,7 +23,6 @@ LemViewer::LemViewer(QWidget *parent) : QGLWidget(QGLFormat(QGL::SampleBuffers),
 
 	elapsed = 0;
 
-	//qDebug() << "Test";
 }
 
 
@@ -28,17 +30,34 @@ LemViewer::~LemViewer()
 {
 }
 
+/*
 void LemViewer::drawChar(int x, int y, word_t value) {
-	int charValue = value & 0x7f;
+int charValue = value & 0x7f;
 
-	//qDebug() << QString::number(value);
-	for (int w = 0; w < CHAR_WIDTH; w++) {
-		for (int h = 0; h < CHAR_HEIGHT; h++) {
-			videoBuffer[(x * PIXEL_WIDTH) + w][(y * PIXEL_HEIGHT) + h] = 255;
+//qDebug() << QString::number(value);
+for (int w = 0; w < CHAR_WIDTH; w++) {
+for (int h = 0; h < CHAR_HEIGHT; h++) {
+videoBuffer[(x * PIXEL_WIDTH) + w][(y * PIXEL_HEIGHT) + h] = 255;
+}
+}	
+}
+*/
+
+void LemViewer::drawLoop() {
+	word_map memory = emulator->getMemory();
+
+	if (memory.size() > 0) {
+		for (int r = 0; r < ROWS; r++) {
+			for (int c = 0; c < COLUMNS; c++) {
+				//qDebug() << QString::number(memory[screenAddress + (r * COLUMNS) + c]);
+				//lemViewer->drawChar(c, r, memory[screenRamAddress + (r * COLUMNS) + r]);
+			}
 		}
 	}
+}
 
-	
+void LemViewer::setScreenAddress(long ramAddress) {
+	screenAddress = ramAddress;
 }
 
 void LemViewer::animate()
@@ -61,26 +80,29 @@ void LemViewer::paintEvent(QPaintEvent *event)
 
 	word_t pixel;
 
+	// Calculate what characters are visible
+	drawLoop();
+
 	for (int y = 0; y < REAL_HEIGHT; y++) {
 		for (int x = 0; x < REAL_WIDTH; x++) {
 
 			// Data about current pixel
-		//	if (x % 2 == 0) {
+			//	if (x % 2 == 0) {
 
-				//qDebug() << QString::number((int)x / PIXEL_WIDTH) + "x" + QString::number((int)y / PIXEL_HEIGHT);
+			//qDebug() << QString::number((int)x / PIXEL_WIDTH) + "x" + QString::number((int)y / PIXEL_HEIGHT);
 
 			/*
 			if ((int)x / PIXEL_WIDTH) {
-				std::cout << "b";
+			std::cout << "b";
 			}
 
 			if ((int)y / PIXEL_HEIGHT) {
-				std::cout << std::endl;
+			std::cout << std::endl;
 			}
 			*/
 
-				pixel = videoBuffer[(int)x / PIXEL_WIDTH][(int)y / PIXEL_HEIGHT];
-		
+			pixel = videoBuffer[(int)x / PIXEL_WIDTH][(int)y / PIXEL_HEIGHT];
+
 			//	qDebug() << pixel;
 
 			//}

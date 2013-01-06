@@ -134,6 +134,7 @@ int Editor::lineNumberAreaWidth()
 }
 
 void Editor::setLine(int lineNumber) {
+
 	if (lineNumber > 0) {
 		//qDebug() << QString::number(lineNumber);
 

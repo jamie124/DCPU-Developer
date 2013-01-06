@@ -33,7 +33,7 @@ void GLHelper::setWindowSize(int width, int height)
 	qDebug() << "Width: " << width << "Blocks per row: " << blocksPerRow;
 }
 
-void GLHelper::paint(QPainter *painter, QMap<int, int> &memoryMap, QPaintEvent *event, int elapsed)
+void GLHelper::paint(QPainter *painter, word_map &memoryMap, QPaintEvent *event, int elapsed)
 {
 	painter->fillRect(event->rect(), background);
 	painter->translate(0, 0);
@@ -54,9 +54,11 @@ void GLHelper::paint(QPainter *painter, QMap<int, int> &memoryMap, QPaintEvent *
 
 	// Draw labels and memory locations
 	for (int y = 1; y <= rows; y++) {
-		offset += i;
+		//offset += i;
 
-		painter->drawText(0, y * BLOCK_HEIGHT, QString::number(offset).rightJustified(5, '0').toUpper());
+		//qDebug() << QString::number(i);
+
+		painter->drawText(0, y * BLOCK_HEIGHT, QString::number(i, 16).rightJustified(4, '0').toUpper());
 
 		for (int x = 1; x <= blocksPerRow; x++) {
 

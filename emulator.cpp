@@ -144,11 +144,13 @@ void Emulator::reset()
 
 void Emulator::stopEmulator()
 {
+	/*
 	memory.clear();
 	registers.clear();
 	literals.clear();
 
 	emulatorRunning = false;
+	*/
 
 	/*
 	Device *currentDevice;
@@ -223,7 +225,7 @@ void Emulator::run()
 	}
 	*/
 
-	//emit fullMemorySync(memoryDump);
+	emit fullMemorySync(memory);
 
 	bool videoDirty = false;
 

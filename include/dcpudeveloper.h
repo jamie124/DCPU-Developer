@@ -52,7 +52,7 @@ private slots:
 	void assemblerUpdate(assembler_update_t* error);
 
 	// Emulator UI update requests
-	void setFullMemoryBlock(memory_array memory);
+	void setFullMemoryBlock(word_map memory);
     void updateRegisters(registers_ptr registers);
 	void emulatorInstructionChanged(word_t instruction);
 
@@ -67,7 +67,6 @@ private slots:
 	//void disassemblyRowSelected(const QString &text);
 
 	void disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow);
-
 
 	void editorChanged();
 
@@ -135,8 +134,6 @@ private:
 
 	QAbstractItemModel* modelFromFile(const QString &filename);
 
-	void loadDisassemblyData();
-
 	// Assembler
 	void createAndRunAssembler();
 
@@ -145,6 +142,8 @@ private:
 	void runProgram(QString binFile);
 
 	//void createAndRunEmulator(QString binFile);
+
+	void loadDisassemblyData();
 
 	void saveSettings();
 	void loadSettings();

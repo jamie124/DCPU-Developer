@@ -61,7 +61,7 @@ class Emulator : public QThread
     Q_OBJECT
 
 signals:
-	void fullMemorySync(memory_array);
+	void fullMemorySync(word_map);
     void registersChanged(registers_ptr);
 	void instructionChanged(word_t);
 

@@ -197,6 +197,7 @@ void DCPUDeveloper::loadDisassemblyData() {
 
 	ui->disassembly_list->clear();
 
+
 	while (!debugInput.atEnd()) {
 
 		currentLine = debugInput.readLine().trimmed();
@@ -229,6 +230,8 @@ void DCPUDeveloper::loadDisassemblyData() {
 // Setup and new assembler thread and start it.
 void DCPUDeveloper::createAndRunAssembler()
 {
+	on_actionSave_triggered();
+
 	ui->compile_button->setEnabled(false);
 
 	assembler = new Assembler;
@@ -246,11 +249,11 @@ void DCPUDeveloper::startEmulator() {
 	emulator = new Emulator();
 
 	qRegisterMetaType<word_t>("word_t");
-
-	/*
-	connect(emulator, SIGNAL(fullMemorySync(memory_array)), this, 
-	SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
-	*/
+	qRegisterMetaType<word_map>("word_map");
+	
+	connect(emulator, SIGNAL(fullMemorySync(word_map)), this, 
+	SLOT(setFullMemoryBlock(word_map)), Qt::QueuedConnection);
+	
 	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
 		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
 	connect(emulator, SIGNAL(instructionChanged(word_t)), this, SLOT(emulatorInstructionChanged(word_t)), Qt::QueuedConnection);
@@ -303,11 +306,11 @@ void DCPUDeveloper::loadSettings()
 void DCPUDeveloper::setSelectedDisassembedInstruction(word_t instruction) {
 	// TODO: Add a map to prevent lookups
 
-	QListWidgetItem *item;
 	bool ok;
 	uint test = 0;
 
 	QString currentLine;
+	QListWidgetItem *item;
 
 	int index = 0;
 	for (int i = 0; i < ui->disassembly_list->count(); i++) {
@@ -428,6 +431,10 @@ void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 		assembler->stopAssembler();
 
 		// Update disassembly
+		// Shitty fix, too stupid to fix it properly right now. 
+		// I think the issue was being caused when occasionally the method attempts to set the data before it's allowed too. 
+		//QTimer::singleShot(500, this, SLOT(loadDisassemblyData()));
+
 		loadDisassemblyData();
 
 		delete assembler;
@@ -442,8 +449,9 @@ void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 	delete error;
 }
 
-void DCPUDeveloper::setFullMemoryBlock(memory_array memory)
+void DCPUDeveloper::setFullMemoryBlock(word_map memory)
 {
+	/*
 	QMap<int, int> temp;
 
 	for(int i = 0; i < RAM_SIZE; i++) {
@@ -451,8 +459,9 @@ void DCPUDeveloper::setFullMemoryBlock(memory_array memory)
 	}
 
 	delete memory;
+	*/
 
-	memoryViewer->setMemoryMap(temp);
+	memoryViewer->setMemoryMap(memory);
 
 }
 
@@ -489,9 +498,9 @@ void DCPUDeveloper::updateScrollbarValue(int value)
 }
 
 void DCPUDeveloper::disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow) {
-
-	editor->setLine(currentRow->data(1).toInt());
-
+	if (currentRow != NULL) {
+		editor->setLine(currentRow->data(1).toInt());
+	}
 }
 
 void DCPUDeveloper::endEmulation(int endCode)
