@@ -128,7 +128,7 @@ opcode_t Assembler::opcodeFor(const QString command)
 	}
 
 	// Assume non-basic
-	return OP_NONBASIC;
+	return OP_NULL;
 }
 
 // Get non-basic opcode from string
@@ -682,7 +682,7 @@ void Assembler::run()
 			continue;
 		}
 
-		instruction_t packed = 0;
+		word_t packed = 0;
 
 		//qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
 
@@ -693,16 +693,16 @@ void Assembler::run()
 		//qDebug() << instruction->opcode << instruction->a.argument << instruction->b.argument;
 
 
-		instruction_t swapped = (packed>>8) | (packed<<8);
+		word_t swapped = (packed>>8) | (packed<<8);
 
 		// Save instruction
 		//qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
 
-		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
+		fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 
 		debugOut << ":" << QString::number(packed, 16).rightJustified(4, '0');
 
-		if (instruction->opcode != OP_NONBASIC && Utils::usesNextWord(instruction->a.argument)) {
+		if (instruction->opcode != OP_NULL && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
 
 			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord << " Swapped: " << swapped;

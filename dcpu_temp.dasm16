@@ -1,3 +1,7 @@
 set j, 3
 set i, 2
+
 set [i + 0xc], j
+
+set b, [i + 0xc]
+set a, 5

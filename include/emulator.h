@@ -20,18 +20,16 @@ Started 7-Apr-2012
 
 #include <iostream>
 
-#include <Windows.h>
-
 #include "constants.h"
 #include "utils.h"
 
 // Devices
 #include "device.h"
-//#include "lem.h"
 
+const long LITERAL_SIZE = 0x10000;
 
 const long RAM_SIZE = 0x10000;
-const int NUM_REGISTERS = 8;
+const int NUM_REGISTERS = 11;
 
 const int TERM_WIDTH = 32;
 const int TERM_HEIGHT = 16;
@@ -39,8 +37,8 @@ const long CONSOLE_START = 0x8000;
 const long CONSOLE_END = (CONSOLE_START + TERM_WIDTH + TERM_HEIGHT);
 
 // Keyboard input
-const long KEYBOARD_ADDRESS = 0x9000;
-const int KEYBOARD_BUFFER_LENGTH = 1;
+//const long KEYBOARD_ADDRESS = 0x9000;
+//const int KEYBOARD_BUFFER_LENGTH = 1;
 
 const int FRAMESKIP = 10;
 
@@ -54,9 +52,32 @@ typedef struct {
 
 // Pointer typedefs
 typedef QSharedPointer<registers_t> registers_ptr;
-typedef QVector<word_t> word_vector;
+typedef QList<word_t> word_vector;
 typedef QHash<int, word_t> word_map;
 typedef int* memory_array;
+
+// Type of an argument.
+typedef enum {
+	REGISTER,
+	LITERAL,
+	MEMORY
+	
+} arg_type;
+
+typedef struct {
+	word_t rawInstruction;
+
+	word_t opcode;
+	bool hasB;
+
+	int argA;
+	arg_type argTypeA;
+
+	int argB;
+	arg_type argTypeB;
+
+} instruction_t;
+
 
 class Emulator : public QThread
 {
@@ -80,14 +101,27 @@ private:
 
     QString compiledFilename;
 
+	// Process instructions
+	int getAddress(word_t value, arg_type &argType, bool a = false);
+
+	word_t getWord(word_t value);
+	word_t nextWord();
+	instruction_t nextInstruction();
+
+	// Get a value from memory or register
+	word_t getValue(int key, arg_type argType);
+
+	// Set a value to memory or register
+	void setValue(word_t key, int value, arg_type argType);
+
 	word_t* evaluateArgument(argument_t argument, bool inA);
 
-	opcode_t getOpcode(instruction_t instruction);
-	argument_t getArgument(instruction_t instruction, bool_t which);
+	opcode_t getOpcode(word_t instruction);
+	argument_t getArgument(word_t instruction, bool_t which);
 
 	bool_t isConst(argument_t argument);
-	word_t getInstructionLength(instruction_t instruction);
-	word_t getNextWordOffset(instruction_t instruction, bool_t which);
+	word_t getInstructionLength(word_t instruction);
+	word_t getNextWordOffset(word_t instruction, bool_t which);
 
 	registers_ptr getRegisters();
 
@@ -112,9 +146,6 @@ public:
 
 	void step();
 
-	void setScreen(word_t row, word_t column, word_t character);
-	void setCursorPos(int x, int y);
-	void clearScreen();
 
 	word_map getMemory();
 private:
@@ -124,7 +155,7 @@ private:
 	word_map literals;
 	//word_t* colourTable;
 
-	word_t programCounter;
+	//word_t programCounter;
 	word_t stackPointer;
 	word_t ex;
 	word_t interruptAddress;

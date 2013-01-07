@@ -149,6 +149,8 @@ private:
 	void loadSettings();
 
 	void setSelectedDisassembedInstruction(word_t instruction);
+
+	void resetRegisters();
 };
 
 #endif // DCPUDEVELOPER_H

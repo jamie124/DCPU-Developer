@@ -23,13 +23,11 @@ Started 7-Apr-2012
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
 	DEBUG = true;
-	OPCODE_DEBUGGING = false;
+	OPCODE_DEBUGGING = true;
 
 	stepMode = false;
 
-	//memory = word_vector(RAM_SIZE);
-	registers = word_vector(NUM_REGISTERS);
-	//literals = word_vector(ARG_LITERAL_END - ARG_LITERAL_START);
+	//registers = word_vector(NUM_REGISTERS);
 
 	//reset();
 
@@ -52,7 +50,6 @@ Emulator::~Emulator()
 	memory.clear();
 	//memory.squeeze();
 	registers.clear();
-	registers.squeeze();
 	literals.clear();
 
 	emulatorRunning = false;
@@ -115,7 +112,7 @@ void Emulator::reset()
 
 	/*
 	for (int i = 0; i < RAM_SIZE; i++) {
-		memory.insert(i, 0);
+	memory.insert(i, 0);
 	//memory[i] = 0;
 	}
 	*/
@@ -130,41 +127,19 @@ void Emulator::reset()
 	}
 
 
-	programCounter = 0;
 	stackPointer = 0;
 	interruptAddress = 0;
-
 	ex = 0;
+
 	currentOpcode = 0;
 
 	cycle = 0;
-
 
 }
 
 void Emulator::stopEmulator()
 {
-	/*
-	memory.clear();
-	registers.clear();
-	literals.clear();
 
-	emulatorRunning = false;
-	*/
-
-	/*
-	Device *currentDevice;
-
-	for (int i = 0; i < connectedDevices.size(); i++) {
-		currentDevice = connectedDevices.at(i);
-
-		if (currentDevice->deviceName == "lem1802") {
-			//currentDevice.
-		}
-	}
-	*/
-
-	//this->wait();
 }
 
 // Borrowed from https://github.com/fogleman/DCPU-16/blob/master/emulator/emulator.c
@@ -176,6 +151,192 @@ int divMod(int x, int *quo)
 	}
 	*quo = quotient;
 	return x % MAX_SIZE;
+}
+
+/////////////////////////////////////
+// Partially rewritten with logic from 0x10c.de
+/////////////////////////////////////
+int Emulator::getAddress(word_t value, arg_type &argType, bool a) {
+	word_t reg, address;
+
+	argType = MEMORY;
+
+	//qDebug() << QString::number(value);
+	if (value <= ARG_REG_NEXTWORD_INDEX_END || value == ARG_PICK) {
+		reg = value % 8;
+
+		if (value == ARG_PICK) {
+			reg = SP;
+		} 
+
+		if (value >= ARG_REG_START && value <= ARG_REG_END) {
+			
+			argType = REGISTER;
+
+			address = value;
+
+		} else if (value >= ARG_REG_INDEX_START && value <= ARG_REG_INDEX_END) {
+			address = registers.at(value);
+		} else {
+			if (reg < registers.size()) {
+				address = (nextWord() + registers.at(reg)) & 0xffff;
+			} else {
+				address = 0;
+			}
+		}
+
+		return address;
+	}
+
+	// Encoded literals
+	if(value >= 0x20 && value <= 0x3f) {
+		argType = LITERAL;
+
+		int output = value - 0x21;
+
+		output &= 65535;
+
+		return output | LITERAL_SIZE;
+	}
+
+	// Other kinds of values
+	switch(value) {
+		// stack pointer
+	case ARG_PUSH_POP:
+		if(a) {
+			word_t pre = registers.at(SP);
+			registers[SP] = (pre + 1) & sizeof(word_t);
+			return pre;
+		} else {
+			word_t output = ((registers.at(SP) - 1) & sizeof(word_t));
+			registers[SP] = output;
+			return output;
+		}
+	case ARG_PEEK:
+		return registers.at(SP);
+
+		// other registers
+	case ARG_SP:
+		return 'sp';
+	case ARG_PC:
+		return 'pc';
+	case ARG_EX:
+		return 'ex';
+
+		// extended instruction values
+	case 0x1e: // as address
+		return nextWord();
+	case 0x1f: // as literal
+		return nextWord() | RAM_SIZE;
+
+	default:
+		return -1;
+	}
+}
+
+word_t Emulator::getWord(word_t value) {
+	// TODO: Add pop
+
+	return memory.value(value, 0);
+}
+
+word_t Emulator::nextWord() {
+	word_t word = getWord(registers[PC]);
+
+	registers[PC] = (registers[PC] + 1) & 0xffff;
+
+	cycle++;
+
+	return word;
+}
+
+instruction_t Emulator::nextInstruction() {
+	word_t word = nextWord();
+
+	instruction_t instruction;
+
+	// Used to debug
+	instruction.rawInstruction = word;
+
+	if ((word & 0x1f) == 0) {
+		//qDebug() << "Processing just A: " + QString:: number(word);
+		instruction.opcode = word & 0x3ff;
+		instruction.argA = getAddress((word & 0xfc00) >> 10, instruction.argTypeA, true);
+
+		instruction.hasB = false;
+	} else {
+		//qDebug() << "Processing A and B: " + QString:: number(word);
+		instruction.opcode = word & 0x1f;
+		instruction.argA = getAddress((word & 0xfc00) >> 10, instruction.argTypeA, true);
+		instruction.argB = getAddress((word & 0x3e0) >> 5, instruction.argTypeB, false);
+
+		instruction.hasB = true;
+	}
+
+	return instruction;
+}
+
+word_t Emulator::getValue(int key, arg_type argType) {
+	switch (argType) {
+	case REGISTER:
+		if (DEBUG) {
+			qDebug() << "Checking Register for value at: " << QString::number(key);
+		}
+		return registers.at(key);
+	case MEMORY:
+		if (DEBUG) {
+			qDebug() << "Checking Memory for value at: " << QString::number(key);
+		}
+		return memory.value(key);
+	case LITERAL:
+		if (key & LITERAL_SIZE) {
+			return key ^ LITERAL_SIZE;
+		}
+		break;
+	default:
+		if (DEBUG) {
+			qDebug() << "Key: " << QString::number(key) << " doesn't match anything";
+		}
+
+		return 0;
+	}
+}
+
+void Emulator::setValue(word_t key, int value, arg_type argType) {
+	switch (argType) {
+	case REGISTER:
+		if (DEBUG) {
+			qDebug() << "Setting Register: " << QString::number(key) << " with value: " << QString::number(value);
+		}
+		
+		if (key < registers.size()) {
+			registers.replace(key, value);
+		} else {
+			// Program tried to write to a register that doesn't exist.
+			emit emulationEnded(DCPU_BAD_REGISTER_ACCESS);
+		}
+		break;
+	case MEMORY:
+		if (DEBUG) {
+			qDebug() << "Setting Memory: " << QString::number(key) << " with value: " << QString::number(value);
+		}
+		
+		if (key < RAM_SIZE) {
+			memory.insert(key, value);
+		} else {
+			// Program tried to write to an area of memory that doesn't exist.
+			emit emulationEnded(DCPU_BAD_MEMORY_ACCESS);
+		}
+		break;
+	case LITERAL:
+		break;
+	default:
+		if (DEBUG) {
+			qDebug() << "Key: " << QString::number(key) << " doesn't match anything";
+		}
+		break;
+
+	}
 }
 
 void Emulator::run()
@@ -229,21 +390,70 @@ void Emulator::run()
 
 	bool videoDirty = false;
 
+	instruction_t instruction;
+	int aValue, bValue, result;
+
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
 
 		if (skippingCurrentPass == false) {
 
+			aValue = bValue = result = 0;
 
-			word_t executingPC = programCounter;
+			instruction = nextInstruction();
 
-			//qDebug() << QString::number(programCounter);
+			//qDebug() << QString::number(instruction.argA);
+			aValue = getValue(instruction.argA, instruction.argTypeA);
 
-			instruction_t instruction = memory[programCounter++];
+			if (instruction.hasB) {
+				bValue = getValue(instruction.argB, instruction.argTypeB);
+			}
+
+			qDebug() << "A: " + QString::number(aValue) + ", B: " + QString::number(bValue);
+			
+			switch (instruction.opcode) {
+			case OP_NULL:
+				
+				emulatorRunning = false;
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "Null opcode.";
+				}
+				
+				break;
+			case OP_SET:
+				// Set Stores the value of A in B.
+				setValue(instruction.argB, aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "SET: " << QString::number(instruction.argB) << ", Value: " << QString::number(aValue) << ", Arg Type: " << QString::number(instruction.argTypeB);
+				}
+
+				break;
+
+			}
+
+			std::cout << std::endl;
+
+			emit registersChanged(getRegisters());
 
 			if (stepMode) {
-				emit instructionChanged(instruction);
+				// Shit?
+				emit fullMemorySync(memory);
 			}
+
+			if (stepMode) {
+				emit instructionChanged(instruction.rawInstruction);
+			}
+
+			/*
+			word_t executingPC = registers.at(PC);
+
+			//qDebug() << QString::number(registers.at(PC));
+
+			word_t instruction = memory[registers.at(PC)++];
+
+
 
 			//qDebug() << QString::number(instruction);
 
@@ -276,17 +486,6 @@ void Emulator::run()
 			}
 
 
-
-			/*
-			argument_t temp =  ((instruction >> 4) >> 6 * 0) & 0x3E;
-			argument_t temp2 =  ((instruction >> 4) >> 6 * 1);// & 0x3E;
-			qDebug() << "Opcode:" << opcode << "Instruction: " << instruction << "Arg A:" << temp << "Arg B: " << temp2;
-
-			temp =  ((instruction >> 4) >> 6 * 0) & 0x3F;
-			temp2 =  ((instruction >> 4) >> 6 * 1) & 0x3F;
-			qDebug() << "Opcode:" << opcode << "Instruction: " << instruction << "Arg A:" << temp << "Arg B: " << temp2;
-			*/
-
 			word_t result = 0;
 
 			// Execute
@@ -304,8 +503,8 @@ void Emulator::run()
 				case OP_JSR:
 					// 0x01 JSR - pushes the address of next instruction onto stack.
 					// Sets PC to A
-					memory[--stackPointer] = programCounter;
-					programCounter = *aLoc;
+					memory[--stackPointer] = registers.at(PC);
+					registers.at(PC) = *aLoc;
 					cycle += 2;
 					break;
 
@@ -343,40 +542,40 @@ void Emulator::run()
 
 				case OP_HWQ:
 					{
-					// 0x11 HWQ
+						// 0x11 HWQ
 						//qDebug() << QString::number(*aLoc);
 
 						Device *device = connectedDevices.at(*aLoc);
 
-					if (device != NULL) {
+						if (device != NULL) {
 
-						registers[1] = device->id >> 16;
-						registers[0] = device->id & 0xffff;
-						registers[2] = device->version;
-						registers[4] = device->manufacturer >> 16;
-						registers[3] = device->manufacturer & 0xffff;
-					} else {
-						registers[1] = 0;
-						registers[0] = 0;
-						registers[2] = 0;
-						registers[4] = 0;
-						registers[3] = 0;
-					}
+							registers[B] = device->id >> 16;
+							registers[A] = device->id & 0xffff;
+							registers[C] = device->version;
+							registers[Y] = device->manufacturer >> 16;
+							registers[X] = device->manufacturer & 0xffff;
+						} else {
+							registers[B] = 0;
+							registers[A] = 0;
+							registers[C] = 0;
+							registers[Y] = 0;
+							registers[X] = 0;
+						}
 
 
-					cycle += 4;
-					break;
+						cycle += 4;
+						break;
 
 					}
 				case OP_HWI:
 					{
-					// 0x12
-					Device *device = connectedDevices.at(*aLoc);
-					
-					device->handleInterrupt(registers[0], registers[1]);
+						// 0x12
+						Device *device = connectedDevices.at(*aLoc);
 
-					cycle += 4;
-					break;
+						device->handleInterrupt(registers[A], registers[B]);
+
+						cycle += 4;
+						break;
 					}
 				default:
 					emit emulationEnded(DCPU_RESERVED_OPCODE);
@@ -631,7 +830,7 @@ void Emulator::run()
 			// Store result back in A, if it's not being skipped
 			if (!skipStore) {
 				// Halt?
-				if (aLoc == &programCounter && result == executingPC
+				if (aLoc == &registers.at(PC) && result == executingPC
 					&& ((opcode == OP_SET && getArgument(instruction, 1) == ARG_NEXTWORD)
 					|| (opcode == OP_SUB && getArgument(instruction, 1) == ARG_LITERAL_START + 1))) {
 						qDebug() << "SYSTEM HALTED!";
@@ -650,42 +849,28 @@ void Emulator::run()
 
 			// Skip next instruction if needed
 			if (skipNext) {
-				programCounter += getInstructionLength(memory[programCounter]);
+				registers.at(PC) += getInstructionLength(memory[registers.at(PC)]);
 			}
 
-			/*
-			if (videoDirty) {
-
-				clearScreen();
-				for (int i = 0; i < TERM_HEIGHT; i++) {
-					for (int j = 0; j < TERM_WIDTH; j +=1) {
-
-						word_t toPrint = memory[CONSOLE_START + i * TERM_WIDTH + j];
-
-						setScreen(i, j, toPrint);
-					}
-
-				}
-				videoDirty = false;
-
-			}
-			*/
+		
 
 			// TODO: Add a way to toggle this
 			//if (DEBUG) {
 			emit registersChanged(getRegisters());
 			//}
 
+			*/
 			if (stepMode) {
 				// Skip next pass
 				skippingCurrentPass = true;
 			}
+
 		} 
 	}
 
 	qDebug() << "Emulation Ended Sucessfully";
 	emit emulationEnded(DCPU_SUCCESSFUL);
-	
+
 }
 
 // Update and return the latest registers
@@ -693,25 +878,27 @@ registers_ptr Emulator::getRegisters()
 {
 	registers_ptr latestRegisters(new registers_t());
 
-	latestRegisters->a = registers[0];
-	latestRegisters->b = registers[1];
-	latestRegisters->c = registers[2];
-	latestRegisters->x = registers[3];
-	latestRegisters->y = registers[4];
-	latestRegisters->z = registers[5];
-	latestRegisters->i = registers[6];
-	latestRegisters->j = registers[7];
-	latestRegisters->pc = programCounter;
-	latestRegisters->sp = stackPointer;
+	latestRegisters->a = registers[A];
+	latestRegisters->b = registers[B];
+	latestRegisters->c = registers[C];
+	latestRegisters->x = registers[X];
+	latestRegisters->y = registers[Y];
+	latestRegisters->z = registers[Z];
+	latestRegisters->i = registers[I];
+	latestRegisters->j = registers[J];
+	latestRegisters->sp = registers[SP];
+	latestRegisters->pc = registers[PC];
+	latestRegisters->o = registers[EX];
+
 	latestRegisters->ia = interruptAddress;
-	latestRegisters->o = ex;
+
 
 	return latestRegisters;
 }
 
 word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 {
-
+	/*
 	if (argument >= ARG_REG_START && argument < ARG_REG_END) {
 		// Register value
 		word_t regNumber = argument - ARG_REG_START;
@@ -739,12 +926,12 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 		word_t regNumber = argument - ARG_REG_NEXTWORD_INDEX_START;
 
 		if (DEBUG) {
-			std::cout << "[" << memory[programCounter] << " + register " << regNumber + "]" << std::endl;
+			std::cout << "[" << memory[registers.at(PC)] << " + register " << regNumber + "]" << std::endl;
 		}
 
 		cycle++;
 
-		return &memory[registers[regNumber] + memory[programCounter++]];
+		return &memory[registers[regNumber] + memory[registers.at(PC)++]];
 	}
 
 	if (argument >= ARG_LITERAL_START && argument < ARG_LITERAL_END) {
@@ -802,16 +989,6 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 
 		break;
 
-		/*
-		case ARG_PUSH:
-		// Decreases stack address, returns value at stack address
-		if (DEBUG) {
-		std::cout << "PUSH" << std::endl;
-		}
-
-		return &memory[--stackPointer];
-		break;
-		*/
 
 	case ARG_SP:
 		// Current stack pointer value
@@ -828,7 +1005,7 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 			std::cout << "program counter" << std::endl;
 		}
 
-		return &programCounter;
+		return &registers.at(PC);
 		break;
 
 	case ARG_EX:
@@ -843,34 +1020,36 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 	case ARG_NEXTWORD_INDEX:
 		// Next word of ram
 		if (DEBUG) {
-			std::cout << "[" << memory[programCounter] << "]" << std::endl;
+			std::cout << "[" << memory[registers.at(PC)] << "]" << std::endl;
 		}
 
 		cycle++;
-		return &memory[memory[programCounter++]];
+		return &memory[memory[registers.at(PC)++]];
 		break;
 
 	case ARG_NEXTWORD:
 		// Next word of ram - literal
 		if (DEBUG) {
-			qDebug() << QString::number(memory[programCounter]);
+			qDebug() << QString::number(memory[registers.at(PC)]);
 		}
 
 		cycle++;
-		return &memory[programCounter++];
+		return &memory[registers.at(PC)++];
 		break;
 
 	};
+	*/
 
+	return 0;
 }
 
 // Get an opcode from instruction
-opcode_t Emulator::getOpcode(instruction_t instruction)
+opcode_t Emulator::getOpcode(word_t instruction)
 {
 	return instruction & 0x1F;
 }
 
-argument_t Emulator::getArgument(instruction_t instruction, bool_t which)
+argument_t Emulator::getArgument(word_t instruction, bool_t which)
 {
 	// First 6 bits for true, second 6 for false
 	//return ((instruction >> 4) >> 6 * which) & 0x3F;
@@ -896,9 +1075,9 @@ bool_t Emulator::isConst(argument_t argument)
 }
 
 // How many words does instruction take
-word_t Emulator::getInstructionLength(instruction_t instruction)
+word_t Emulator::getInstructionLength(word_t instruction)
 {
-	if (getOpcode(instruction) == OP_NONBASIC) {
+	if (getOpcode(instruction) == OP_NULL) {
 		// 1 argument
 		return 1 + Utils::usesNextWord(getArgument(instruction, 1));
 	} else {
@@ -907,9 +1086,9 @@ word_t Emulator::getInstructionLength(instruction_t instruction)
 }
 
 // Get offset from instruction for next word
-word_t Emulator::getNextWordOffset(instruction_t instruction, bool_t which)
+word_t Emulator::getNextWordOffset(word_t instruction, bool_t which)
 {
-	if (getOpcode(instruction) == OP_NONBASIC) {
+	if (getOpcode(instruction) == OP_NULL) {
 		// 1 argument, 1 extra word
 		return (which == 0) && Utils::usesNextWord(getArgument(instruction, 1));
 	} else {
@@ -924,50 +1103,6 @@ word_t Emulator::getNextWordOffset(instruction_t instruction, bool_t which)
 bool Emulator::inStepMode() 
 {
 	return stepMode;
-}
-
-void Emulator::setScreen(word_t row, word_t column, word_t character)
-{
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	setCursorPos(column, row);
-
-	char letter = (character & 0x7F);
-
-	if (letter == '\0') {
-		letter = ' ';
-	}
-
-	//SetConsoleTextAttribute(console, 6);
-
-	std::cout << letter;
-}
-
-void Emulator::setCursorPos(int x, int y)
-{
-	COORD pos  = {x, y};
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	//SetConsoleTextAttribute(console, 7);
-	SetConsoleCursorPosition(console, pos);
-}
-
-void Emulator::clearScreen()
-{
-	COORD topLeft  = { 0, 0 };
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_SCREEN_BUFFER_INFO screen;
-	DWORD written;
-
-	GetConsoleScreenBufferInfo(console, &screen);
-	FillConsoleOutputCharacterA(
-		console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-		);
-	FillConsoleOutputAttribute(
-		console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
-		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-		);
-	SetConsoleCursorPosition(console, topLeft);
 }
 
 word_map Emulator::getMemory() {

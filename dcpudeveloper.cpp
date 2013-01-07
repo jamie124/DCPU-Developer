@@ -345,6 +345,25 @@ void DCPUDeveloper::setSelectedDisassembedInstruction(word_t instruction) {
 	}
 }
 
+void DCPUDeveloper::resetRegisters() {
+	ui->register_a->setValue(0);
+	ui->register_b->setValue(0);
+	ui->register_c->setValue(0);
+
+	ui->register_x->setValue(0);
+	ui->register_y->setValue(0);
+	ui->register_z->setValue(0);
+
+	ui->register_i->setValue(0);
+	ui->register_j->setValue(0);
+
+	ui->register_pc->setValue(0);
+	ui->register_sp->setValue(0);
+	ui->register_ia->setValue(0);
+
+	ui->register_o->setValue(0);
+}
+
 void DCPUDeveloper::on_actionOpen_triggered()
 {
 	QString filename = QFileDialog::getOpenFileName(this, tr("Open File"), "",
@@ -404,6 +423,8 @@ void DCPUDeveloper::on_run_button_clicked()
 	resetMessages();
 
 	if (!emulatorRunning ){
+
+		resetRegisters();
 
 		runProgram(COMPILED_TEMP_FILENAME);
 

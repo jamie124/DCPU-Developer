@@ -9,15 +9,30 @@ Started 7-Apr-2012
 #define _CONSTANTS_H
 
 typedef unsigned short word_t;
-typedef word_t instruction_t;
 typedef unsigned char argument_t;
 typedef unsigned char opcode_t;
 typedef argument_t nonbasicOpcode_t;
 typedef unsigned char bool_t;
 
+// Registers 
+static enum {
+	A	= 0,
+	B	= 1,
+	C	= 2,
+	X	= 3,
+	Y	= 4,
+	Z	= 5,
+	I	= 6,
+	J	= 7,
+	SP	= 8,
+	PC	= 9,
+	EX	= 10
+	
+} registers;
+
 // Basic opcodes
 static const enum {
-	 OP_NONBASIC	= 0x00,
+	 OP_NULL		= 0x00,
 	 OP_SET			= 0x01,
 	 OP_ADD			= 0x02,
 	 OP_SUB			= 0x03,
@@ -73,7 +88,7 @@ static const enum {
 	// General
 	SOURCE_FILE_MISSING, BIN_FILE_MISSING,
 	// Emulation
-	DCPU_SUCCESSFUL, DCPU_RESERVED_OPCODE,
+	DCPU_SUCCESSFUL, DCPU_RESERVED_OPCODE, DCPU_BAD_REGISTER_ACCESS, DCPU_BAD_MEMORY_ACCESS,
 	// Assembler
 	ASSEMBLER_SUCESSFUL, ASSEMBLER_FAILED, 
 };
@@ -105,22 +120,22 @@ static const word_t REG_PC = 0x1c;
 static const word_t REG_EX = 0x1d;
 static const word_t REG_IA = 0xff;
 
-static const word_t ARG_REG_START = 0;
-static const word_t ARG_REG_END = 8;
-static const word_t ARG_REG_INDEX_START = 8;
-static const word_t ARG_REG_INDEX_END = 16;
-static const word_t ARG_REG_NEXTWORD_INDEX_START = 16;
-static const word_t ARG_REG_NEXTWORD_INDEX_END = 24;
-static const word_t ARG_PUSH_POP = 24;
-static const word_t ARG_PEEK = 25;
-static const word_t ARG_PICK = 26;
-static const word_t ARG_SP = 27;
-static const word_t ARG_PC = 28;
-static const word_t ARG_EX = 29;
-static const word_t ARG_NEXTWORD_INDEX = 30;
-static const word_t ARG_NEXTWORD = 31;
-static const word_t ARG_LITERAL_START = 32;
-static const word_t ARG_LITERAL_END = 64;
+static const word_t ARG_REG_START = 0x0;
+static const word_t ARG_REG_END = 0x07;
+static const word_t ARG_REG_INDEX_START = 0x08;
+static const word_t ARG_REG_INDEX_END = 0x0f;
+static const word_t ARG_REG_NEXTWORD_INDEX_START = 0x10;
+static const word_t ARG_REG_NEXTWORD_INDEX_END = 0x17;
+static const word_t ARG_PUSH_POP = 0x18;
+static const word_t ARG_PEEK = 0x19;
+static const word_t ARG_PICK = 0x1a;
+static const word_t ARG_SP = 0x1b;
+static const word_t ARG_PC = 0x1c;
+static const word_t ARG_EX = 0x1d;
+static const word_t ARG_NEXTWORD_INDEX = 0x1e;
+static const word_t ARG_NEXTWORD = 0x1f;
+static const word_t ARG_LITERAL_START = 0x20;
+static const word_t ARG_LITERAL_END = 0x3f;
 
 static const unsigned long MAX_SIZE = 0x10000;
 static const word_t MAX_VALUE = 0xffff;

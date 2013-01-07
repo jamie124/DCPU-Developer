@@ -19,13 +19,13 @@ public:
 	Utils(void);
 	~Utils(void);
 
-	static instruction_t pack(opcode_t opcode, argument_t argA, argument_t argB);
+	static word_t pack(opcode_t opcode, argument_t argA, argument_t argB);
 
 	static bool_t usesNextWord(argument_t argument);
-	static instruction_t setOpcode(instruction_t instruction, opcode_t opcode);
-	static instruction_t setArgument(instruction_t instruction, bool_t which, argument_t argument);
+	static word_t setOpcode(word_t instruction, opcode_t opcode);
+	static word_t setArgument(word_t instruction, bool_t which, argument_t argument);
 
-	static instruction_t swapByteOrder(instruction_t instruction);
+	static word_t swapByteOrder(word_t instruction);
 
 	static std::string replace(std::string& str, const std::string& from, const std::string& to);
 };
