@@ -224,7 +224,8 @@ int Emulator::getAddress(word_t value, arg_type &argType, bool a) {
 	case 0x1e: // as address
 		return nextWord();
 	case 0x1f: // as literal
-		return nextWord() | RAM_SIZE;
+		argType = LITERAL;
+		return nextWord() | LITERAL_SIZE;
 
 	default:
 		return -1;
@@ -237,7 +238,7 @@ word_t Emulator::getWord(word_t value) {
 	return memory.value(value, 0);
 }
 
-word_t Emulator::nextWord() {
+word_t Emulator::nextWord(bool isLiteral) {
 	word_t word = getWord(registers[PC]);
 
 	registers[PC] = (registers[PC] + 1) & 0xffff;
@@ -246,6 +247,24 @@ word_t Emulator::nextWord() {
 
 	return word;
 }
+
+/*
+word_t Emulator::nextWord(bool isLiteral) {
+	word_t word = 0;
+	
+	if (isLiteral) {
+		word = getValue(registers[PC], MEMORY);
+
+	}
+
+	registers[PC] = (registers[PC] + 1) & 0xffff;
+
+	cycle++;
+
+	return word;
+}
+
+*/
 
 instruction_t Emulator::nextInstruction() {
 	word_t word = nextWord();

@@ -15,3 +15,4 @@ mul a, 3
 div a, 2
 ; a = 6
 
+mod a, 5

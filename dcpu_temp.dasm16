@@ -9,9 +9,56 @@ add a, 2
 sub a, 1
 ; a = 4
 
-mul a, 3
-; a = C
+mul a, 600
+; a = 960
 
 div a, 2
-; a = 6
+; a = 480
+
+mod a, 478
+; a = F4
+
+; Bitwise tests
+
+; AND
+set b, 6
+; b = 6
+
+and b, 13
+; b = 4
+
+; BOR
+set c, 5
+; c = 5
+
+bor c, 3
+; c = 7
+
+; XOR
+set x, 5
+; x = 5
+
+xor x, 3
+; x = 6
+
+; Shift Right
+set y, 23
+; y = 23
+
+shr y, 1
+; y = B (11), ex = 8000
+
+; Arithmetic shift
+set z, 25
+; z = 23
+
+shr z, 1
+; z = C, ex = 8000
+
+; Shift Left
+set i, 23
+; i = 23
+
+shl i, 1
+; i = 2E
 
