@@ -1,4 +1,4 @@
-/**
+﻿/**
 DCPU Emulator.
 Written by James Whitwell, 2012.
 
@@ -19,6 +19,7 @@ Started 7-Apr-2012
 #include "include/emulator.h"
 #include "include/lem.h"
 
+#include <math.h>
 
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
@@ -27,13 +28,9 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 
 	stepMode = false;
 
-	//registers = word_vector(NUM_REGISTERS);
-
-	//reset();
 
 	connectedDevices.clear();
 
-	//QSharedPointer<Lem> lemDevice(new Lem());
 
 	Lem *lemDevice = new Lem(this);
 	lemDevice->show();
@@ -194,7 +191,7 @@ int Emulator::getAddress(word_t value, arg_type &argType, bool a) {
 
 		int output = value - 0x21;
 
-		output &= 65535;
+		output &= MAX_VALUE;
 
 		return output | LITERAL_SIZE;
 	}
@@ -276,6 +273,20 @@ instruction_t Emulator::nextInstruction() {
 	return instruction;
 }
 
+word_t Emulator::getSigned(word_t value) {
+	word_t sign = (value << 1) & 65536;		// Move sign bit to bit 16
+
+	return value - sign;
+}
+
+word_t Emulator::roundTowardsZero(int value) {
+	if (value > 0) {
+		return (word_t)floor((double)value);
+	} else {
+		return (word_t)ceil((double)value);
+	}
+}
+
 word_t Emulator::getValue(int key, arg_type argType) {
 	switch (argType) {
 	case REGISTER:
@@ -311,6 +322,7 @@ void Emulator::setValue(word_t key, int value, arg_type argType) {
 		
 		if (key < registers.size()) {
 			registers.replace(key, value);
+
 		} else {
 			// Program tried to write to a register that doesn't exist.
 			emit emulationEnded(DCPU_BAD_REGISTER_ACCESS);
@@ -429,8 +441,218 @@ void Emulator::run()
 					qDebug() << "SET: " << QString::number(instruction.argB) << ", Value: " << QString::number(aValue) << ", Arg Type: " << QString::number(instruction.argTypeB);
 				}
 
+				cycle += 1;
+
+				break;
+			case OP_ADD:
+				// Add Stores the value of B+A in B.
+				result = bValue + aValue;
+
+				setValue(EX, (result > MAX_VALUE) ? 0x0001 : 0x0000, REGISTER);
+				setValue(instruction.argB, result, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "ADD: " << QString::number(aValue) << " to " << QString::number(bValue);
+				}
+
+				cycle += 2;
+
+				break;
+			case OP_SUB:
+				// Subtract Stores the value of B−A in B.
+				result = bValue - aValue;
+
+				setValue(EX, (result < 0) ? MAX_VALUE : 0x0000, REGISTER);
+				setValue(instruction.argB, result, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "SUB: " << QString::number(aValue) << " from " << QString::number(bValue);
+				}
+
+				cycle += 2;
+
 				break;
 
+			case OP_MUL:
+				// Multiply Stores the value of B*A in B.
+				result = bValue * aValue;
+
+				setValue(EX, result >> 16, REGISTER);
+				setValue(instruction.argB, result, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "MUL: " << QString::number(aValue) << " to " << QString::number(bValue);
+				}
+
+				cycle += 2;
+
+				break;
+
+			case OP_MLI:
+				// Multiply Inverse Stores the value of B*A in B.
+				// A and B treated as signed
+				result = getSigned(bValue) * getSigned(aValue);
+
+				setValue(EX, result >> 16, REGISTER);
+				setValue(instruction.argB, result, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "MLI: " << QString::number(aValue) << " to " << QString::number(bValue);
+				}
+
+				cycle += 2;
+
+				break;
+
+			case OP_DIV:
+				// Divide Stores the value of B/A in B. Sets B to 0 if A is 0 (not an error).
+				
+				if (aValue == 0) {
+					setValue(instruction.argB, 0x0000, instruction.argTypeB);
+					setValue(EX, 0x0000, REGISTER);
+				} else {
+					setValue(instruction.argB, (word_t)floor((double)bValue / (double)aValue), instruction.argTypeB);
+					setValue(EX, (bValue * 0x10000) / aValue, REGISTER);
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "DIV: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 3;
+
+				break;
+
+			case OP_DVI:
+				// Divide Inverse Stores the value of B/A in B, where A and B are treated as signed. 
+				// Sets B to 0 if A is 0 (not an error). Rounds the result towards 0.
+				
+				if (aValue == 0) {
+					setValue(instruction.argB, 0x0000, instruction.argTypeB);
+					setValue(EX, 0x0000, REGISTER);
+				} else {
+					int quotient = getSigned(bValue) / getSigned(aValue);
+
+					setValue(instruction.argB, roundTowardsZero(quotient), instruction.argTypeB);
+					setValue(EX, (getSigned(bValue) << 16) / getSigned(aValue), REGISTER);
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "DVI: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 3;
+
+				break;
+
+			case OP_MOD:
+				// Modulo Stores the remainder of B/A in B. Sets B to 0 if A is 0 (not an error).
+
+				setValue(instruction.argB, (aValue == 0) ? 0x0000 : (bValue % aValue), instruction.argTypeB);
+
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "MOD: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 3;
+
+				break;
+
+			case OP_MDI:
+				// Modulo Inverse Stores the remainder of B/A in B. Sets B to 0 if A is 0 (not an error).
+
+				setValue(instruction.argB, (aValue == 0) ? 0x0000 : (getSigned(bValue) % getSigned(aValue)), instruction.argTypeB);
+
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "MDI: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 3;
+
+				break;
+
+			case OP_AND:
+				// AND Stores bitwise AND of B and A in B
+
+				setValue(instruction.argB, bValue & aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "AND: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 1;
+
+				break;
+
+			case OP_BOR:
+				// Bitwise OR Stores bitwise OR of B and A in B.
+
+				setValue(instruction.argB, bValue | aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "OR: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 1;
+
+				break;
+
+			case OP_XOR:
+				// Exclusive-OR Stores bitwise EXCLUSIVE OR of B and A in B.
+
+				setValue(instruction.argB, bValue ^ aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "XOR: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 1;
+
+				break;
+
+			case OP_SHR:
+				// Shift Right Shifts B to the right by A bits.
+
+				setValue(EX, (bValue << 16) >> aValue, REGISTER);
+				setValue(instruction.argB, bValue >> aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "SHR: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 1;
+
+				break;
+
+			case OP_ASR:
+				// Arithmetic Shift Right Shifts B to the right by A bits. B is treated as signed.
+
+				setValue(EX, (getSigned(bValue) << 16) >> aValue, REGISTER);
+				setValue(instruction.argB, getSigned(bValue) >> aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "ASR: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 1;
+
+				break;
+							
+			case OP_SHL:
+				// Shift Left Shifts B to the left by A bits.
+
+				setValue(EX, (bValue << aValue) >> 16, REGISTER);
+				setValue(instruction.argB, bValue << aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "SHL: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
+				cycle += 1;
+
+				break;
 			}
 
 			std::cout << std::endl;
@@ -438,7 +660,7 @@ void Emulator::run()
 			emit registersChanged(getRegisters());
 
 			if (stepMode) {
-				// Shit?
+				// May not be a good way of doing it.
 				emit fullMemorySync(memory);
 			}
 
@@ -867,6 +1089,9 @@ void Emulator::run()
 
 		} 
 	}
+
+	// Show the final memory state.
+	emit fullMemorySync(memory);
 
 	qDebug() << "Emulation Ended Sucessfully";
 	emit emulationEnded(DCPU_SUCCESSFUL);

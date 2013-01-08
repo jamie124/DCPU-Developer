@@ -482,6 +482,7 @@ void DCPUDeveloper::setFullMemoryBlock(word_map memory)
 	delete memory;
 	*/
 
+
 	memoryViewer->setMemoryMap(memory);
 
 }

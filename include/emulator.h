@@ -27,6 +27,7 @@ Started 7-Apr-2012
 #include "device.h"
 
 const long LITERAL_SIZE = 0x10000;
+//const long MAX_VALUE = 65535;
 
 const long RAM_SIZE = 0x10000;
 const int NUM_REGISTERS = 11;
@@ -108,6 +109,10 @@ private:
 	word_t nextWord();
 	instruction_t nextInstruction();
 
+	word_t getSigned(word_t value);
+
+	word_t roundTowardsZero(int value);
+
 	// Get a value from memory or register
 	word_t getValue(int key, arg_type argType);
 
@@ -165,6 +170,7 @@ private:
 
 	//word_t keyboardPosition;
 	QVector<Device*> connectedDevices;
+
 };
 
 #endif

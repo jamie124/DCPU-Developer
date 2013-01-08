@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Mon Jan 7 21:44:10 2013
+** Created: Tue Jan 8 00:13:08 2013
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -425,12 +425,13 @@ public:
 
         register_o = new HexSpinBox(registers_gb);
         register_o->setObjectName(QString::fromUtf8("register_o"));
-        register_o->setMaximum(999);
+        register_o->setMaximum(99999);
 
         gridLayout_3->addWidget(register_o, 2, 5, 1, 1);
 
         register_ia = new HexSpinBox(registers_gb);
         register_ia->setObjectName(QString::fromUtf8("register_ia"));
+        register_ia->setMaximum(99999);
 
         gridLayout_3->addWidget(register_ia, 3, 5, 1, 1);
 
