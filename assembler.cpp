@@ -127,6 +127,55 @@ opcode_t Assembler::opcodeFor(const QString command)
 		return OP_STD;
 	}
 
+	// SPECIAL OPCODES 
+
+	// Push address of next instruction to stack
+	if (command == "jsr") {
+		return OP_JSR;
+	}
+
+	// Trigger software interupt with message a
+	if (command == "int") {
+		return OP_INT;
+	}
+
+	// Sets a to IA
+	if (command == "iag") {
+		return OP_IAG;
+	}
+
+	// Sets IA to a
+	if (command == "ias") {
+		return OP_IAS;
+	}
+
+	// Disables interrupt queueing, pop A from stack then pop PC
+	if (command == "rfi") {
+		return OP_RFI;
+	}
+
+	// If a is non-zero, interrupts will be added to queue instead of triggered.
+	// If a is zero interrupts will be triggered.
+	if (command == "iaq") {
+		return OP_IAQ;
+	}
+
+	// Sets a to number of connected hardware devices
+	if (command == "hwn") {
+		return OP_HWN;
+	}
+
+	// Sets A, B, C, X, Y registers to information about hardware a A+(B<<16) is a 32 bit word 
+	// identifying the hardware id. C is the hardware version
+	if (command == "hwq") {
+		return OP_HWQ;
+	}
+
+	// Sends an interrupt to hardware a
+	if (command == "hwi") {
+		return OP_HWI;
+	}
+
 	// Assume non-basic
 	return OP_NULL;
 }
@@ -1063,7 +1112,7 @@ void Assembler::processArg2(QString &command, QString &arg, word_t &address, QSt
 		// No second arg
 		instruction->b = instruction->a;
 
-		instruction->a.argument = (argument_t) nonbasicOpcodeFor(command);
+		instruction->a.argument = (argument_t) opcodeFor(command);
 		instruction->a.labelReference = "";
 
 	} else {

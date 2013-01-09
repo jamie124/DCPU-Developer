@@ -70,17 +70,17 @@ static const enum {
 
 // Special opcodes
 static const enum {
-	OP_JSR			= 0x01,
+	OP_JSR			= 0x20,
 
-	OP_INT			= 0x08,
-	OP_IAG			= 0x09,
-	OP_IAS			= 0x0a,
-	OP_RFI			= 0x0b,
-	OP_IAQ			= 0x0c,
+	OP_INT			= 0x100,
+	OP_IAG			= 0x120,
+	OP_IAS			= 0x140,
+	OP_RFI			= 0x160,
+	OP_IAQ			= 0x180,
 
-	OP_HWN			= 0x10,
-	OP_HWQ			= 0x11,
-	OP_HWI			= 0x12,
+	OP_HWN			= 0x200,
+	OP_HWQ			= 0x220,
+	OP_HWI			= 0x240,
 };
 
 // Return codes

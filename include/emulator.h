@@ -61,7 +61,8 @@ typedef int* memory_array;
 typedef enum {
 	REGISTER,
 	LITERAL,
-	MEMORY
+	MEMORY,
+	MEMORY_OPERATION			// Special operation, Peek, Pick, etc.
 	
 } arg_type;
 
@@ -119,6 +120,10 @@ private:
 	// Set a value to memory or register
 	void setValue(word_t key, int value, arg_type argType);
 
+	void skip();
+	void skipTilNonIf();
+
+	// Deprecated shit
 	word_t* evaluateArgument(argument_t argument, bool inA);
 
 	opcode_t getOpcode(word_t instruction);
