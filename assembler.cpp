@@ -21,7 +21,7 @@ Assembler::~Assembler(void)
 {
 }
 
-opcode_t Assembler::opcodeFor(const QString command)
+word_t Assembler::opcodeFor(const QString command)
 {
 	if (command == "set") {
 		return OP_SET;
@@ -745,7 +745,7 @@ void Assembler::run()
 		word_t swapped = (packed>>8) | (packed<<8);
 
 		// Save instruction
-		//qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
+		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
 
 		fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 

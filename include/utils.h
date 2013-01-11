@@ -19,10 +19,10 @@ public:
 	Utils(void);
 	~Utils(void);
 
-	static word_t pack(opcode_t opcode, argument_t argA, argument_t argB);
+	static word_t pack(word_t opcode, argument_t argA, argument_t argB);
 
 	static bool_t usesNextWord(argument_t argument);
-	static word_t setOpcode(word_t instruction, opcode_t opcode);
+	static word_t setOpcode(word_t instruction, word_t opcode);
 	static word_t setArgument(word_t instruction, bool_t which, argument_t argument);
 
 	static word_t swapByteOrder(word_t instruction);

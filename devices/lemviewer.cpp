@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <QMutexLocker>
+
 LemViewer::LemViewer(Emulator *emu, QWidget *parent) : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 {
 	emulator = emu;
@@ -17,7 +19,7 @@ LemViewer::LemViewer(Emulator *emu, QWidget *parent) : QGLWidget(QGLFormat(QGL::
 
 	for (int y = 0; y < HEIGHT; y++) {
 		for (int x = 0; x < WIDTH; x++) {
-			videoBuffer[x][y] = 0;
+			videoBuffer[y][x] = 0;
 		}
 	}
 
@@ -44,16 +46,64 @@ videoBuffer[(x * PIXEL_WIDTH) + w][(y * PIXEL_HEIGHT) + h] = 255;
 */
 
 void LemViewer::drawLoop() {
+
+	QMutexLocker locker(&mutex);
+
 	word_map memory = emulator->getMemory();
+
+	word_t currentValue;
+
+	char charValue;
+	word_t fontChar[2] = {0, 0};
+
+	word_t frontColour, backgroundColour;
+	bool blink;
+
+	word_t word, hword;
+	word_t pixel;
 
 	if (memory.size() > 0) {
 		for (int r = 0; r < ROWS; r++) {
 			for (int c = 0; c < COLUMNS; c++) {
-				//qDebug() << QString::number(memory[screenAddress + (r * COLUMNS) + c]);
+
+				currentValue = memory[screenAddress + (r * COLUMNS) + c];
+
+				charValue = currentValue & 0x7f;
+				frontColour = getColour((currentValue >> 12) & 0xf);
+				backgroundColour = getColour((currentValue >> 8) & 0xf);
+				blink = (((currentValue >> 7) & 1) == 1);
+
+				fontChar[0] = defaultFont[charValue * 2];
+				fontChar[1] = defaultFont[charValue * 2 + 1];
+
+				for (int w = 0; w < CHAR_WIDTH; w++) {
+					word = fontChar[(w >= 2) * 1];
+					hword = (word >> (!(w % 2) * 8)) & 0xff;
+
+					for (int h = 0; h < CHAR_HEIGHT; h++) {
+
+						pixel = (hword >> h) & 1;
+
+						if (pixel) {
+							videoBuffer[(c * h)][(r * w)] = 255;
+						}
+					}
+				}	
+				//std::cout << QString::number(memory[screenAddress + (r * COLUMNS) + c], 16).toStdString() + " ";
 				//lemViewer->drawChar(c, r, memory[screenRamAddress + (r * COLUMNS) + r]);
 			}
+
+			//std::cout << std::endl;
 		}
 	}
+}
+
+word_t LemViewer::getColour(word_t value) {
+	value &= 0xf;
+
+	word_t colour = defaultPalette[value];
+
+	return colour;
 }
 
 void LemViewer::setScreenAddress(long ramAddress) {
@@ -101,7 +151,7 @@ void LemViewer::paintEvent(QPaintEvent *event)
 			}
 			*/
 
-			pixel = videoBuffer[(int)x / PIXEL_WIDTH][(int)y / PIXEL_HEIGHT];
+			pixel = videoBuffer[(int)y / PIXEL_HEIGHT][(int)x / PIXEL_WIDTH];
 
 			//	qDebug() << pixel;
 

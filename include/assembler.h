@@ -24,7 +24,7 @@ typedef struct assembledInstruction {
 	word_t* data;
 	int dataLength;
 	word_t address;
-	opcode_t opcode;
+	word_t opcode;
 	argumentStruct_t a;
 	argumentStruct_t b;
 	struct assembledInstruction* next;
@@ -51,7 +51,7 @@ private:
 
 	void assemblerError(int errorCode, int lineNumber);
 
-	opcode_t opcodeFor(const QString command);
+	word_t opcodeFor(const QString command);
 	nonbasicOpcode_t nonbasicOpcodeFor(QString command);
 
 	int registerFor(QChar regName);

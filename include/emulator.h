@@ -126,7 +126,7 @@ private:
 	// Deprecated shit
 	word_t* evaluateArgument(argument_t argument, bool inA);
 
-	opcode_t getOpcode(word_t instruction);
+	word_t getOpcode(word_t instruction);
 	argument_t getArgument(word_t instruction, bool_t which);
 
 	bool_t isConst(argument_t argument);

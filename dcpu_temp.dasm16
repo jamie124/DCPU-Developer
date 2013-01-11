@@ -5,26 +5,11 @@ hwn i
 :map_hardware
 	sub i, 1
 
-; 'hwq' will tell us the ID of device i ;
-; as well as version and manufacturer.  ;
-	hwq i
 
-; We want to find the LEM1802 monitor.  ;
-; LEM1802 is the current standard for   ;
-; displays. It's ID is 7349F615. The 1st;
-; half goes to b and second half to a.  ;
-
-; So, lets check that b and a are equal ;
-; to what we need.                      ;
 	ife b, 0x7349
 		ife a, 0xF615
-; If the ID is the one we expected, go  ;
-; to our set_monitor line, and continue.;
 			set pc, set_monitor
-; Setting pc will set what code the DCPU;
-; is looking at.                        ;
 
-; If we still have devices keep looking ;
 	ifn i, 0
 		set pc, map_hardware
 
@@ -33,16 +18,9 @@ hwn i
 ; 2. Setup the monitor to read our msg. ;
 ; ===================================== ;
 
-; Now we set our monitor value and are  ;
-; ready to move on to displaying stuff. ;
 :set_monitor
 	set [MONITOR], i
-; Now that we know where the monitor is ;
-; we can use [MONITOR] to communicate   ;
-; with it when we need.                 ;
 
-; Next, we want to set up the monitor's ;
-; space to read from.                   ;
 :setup_monitor
 	set a, 0
 	set b, 0x8000
@@ -53,10 +31,8 @@ hwn i
 ; 3. Loop through the message to print. ;
 ; ===================================== ;
 
-; Let's reset i to 0. i will be that    ;
-; character in the message we will show.;
-	set i, 0
-; Now we want to print our message.     ;
+set i, 0
+
 :print_message
 	set j, [MESSAGE + i]
 ; If we reached the end of our message, ;

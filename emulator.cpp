@@ -214,11 +214,17 @@ int Emulator::getAddress(word_t value, arg_type &argType, bool a) {
 
 		// other registers
 	case ARG_SP:
-		return 'sp';
+		argType = REGISTER;
+
+		return SP;
 	case ARG_PC:
-		return 'pc';
+		argType = REGISTER;
+
+		return PC;
 	case ARG_EX:
-		return 'ex';
+		argType = REGISTER;
+
+		return EX;
 
 		// extended instruction values
 	case 0x1e: // as address
@@ -247,24 +253,6 @@ word_t Emulator::nextWord(bool isLiteral) {
 
 	return word;
 }
-
-/*
-word_t Emulator::nextWord(bool isLiteral) {
-	word_t word = 0;
-	
-	if (isLiteral) {
-		word = getValue(registers[PC], MEMORY);
-
-	}
-
-	registers[PC] = (registers[PC] + 1) & 0xffff;
-
-	cycle++;
-
-	return word;
-}
-
-*/
 
 instruction_t Emulator::nextInstruction() {
 	word_t word = nextWord();
@@ -1155,7 +1143,7 @@ word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
 }
 
 // Get an opcode from instruction
-opcode_t Emulator::getOpcode(word_t instruction)
+word_t Emulator::getOpcode(word_t instruction)
 {
 	return instruction & 0x1F;
 }

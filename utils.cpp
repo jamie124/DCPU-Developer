@@ -16,13 +16,13 @@ Utils::~Utils(void)
 {
 }
 
-word_t Utils::pack(opcode_t opcode, argument_t argA, argument_t argB)
+word_t Utils::pack(word_t opcode, argument_t argA, argument_t argB)
 {
 	// Format 5 bit opcode, 5 bit argB, 6 bit argA
 	return (argB << 10)  | (argA << 5) | opcode;
 }
 
-word_t Utils::setOpcode(word_t instruction, opcode_t opcode)
+word_t Utils::setOpcode(word_t instruction, word_t opcode)
 {
 	// Clear low 4 bits and OR in opcode
 	return (instruction & 0xFFF0) | opcode; 
