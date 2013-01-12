@@ -15,6 +15,7 @@ Phrases::Phrases(void)
 	responses.insert(ASSEMBLER_INVALID_REG, "Invalid Register");
 	responses.insert(ASSEMBLER_UNRESOLVED_LABEL_A, "Unresolved Label A");
 	responses.insert(ASSEMBLER_UNRESOLVED_LABEL_B, "Unresolved Label B");
+	responses.insert(ASSEMBLER_EMPTY_DAT, "Dat data not found");
 
 }
 
@@ -27,5 +28,5 @@ Phrases::~Phrases(void)
 
 QString Phrases::getResponseMessage(int errorCode)
 {
-	return QString::fromStdString(responses.value(errorCode));
+	return responses.value(errorCode);
 }

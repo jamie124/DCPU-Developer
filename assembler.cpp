@@ -373,23 +373,23 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 				regName = reg.at(0);
 
 				//	if (sscanf(tempBuffer.data() + 1, "0x%x+%c", &hexValue, &regName) == 2) {
-		
-					// TODO enforce closing
-					int regNum = registerFor(regName);
 
-					if (regNum != -1) {
-						toReturn.argument = ARG_REG_NEXTWORD_INDEX_START + regNum;
-						toReturn.nextWord = hexValue;
-						return toReturn;
-					} else {
-						qDebug() << "ERROR: Invalid register name " << regName << " in: " << arg;
+				// TODO enforce closing
+				int regNum = registerFor(regName);
 
-						toReturn.badArgument = true;
-						toReturn.errorCode = ASSEMBLER_INVALID_REG_NAME;
+				if (regNum != -1) {
+					toReturn.argument = ARG_REG_NEXTWORD_INDEX_START + regNum;
+					toReturn.nextWord = hexValue;
+					return toReturn;
+				} else {
+					qDebug() << "ERROR: Invalid register name " << regName << " in: " << arg;
 
-						return toReturn;
-					}
-			
+					toReturn.badArgument = true;
+					toReturn.errorCode = ASSEMBLER_INVALID_REG_NAME;
+
+					return toReturn;
+				}
+
 			} else {
 				// Just hex in brackets
 				// TODO: enforce closing
@@ -908,7 +908,7 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 	//lineIndex += itemIndex;
 
 	//qDebug() << QString::number(itemIndex);
-	command = remainingLine.left(itemIndex);
+	command = remainingLine.left(itemIndex).toLower();
 
 	remainingLine = remainingLine.right(remainingLine.length() - itemIndex).trimmed();
 
@@ -978,84 +978,88 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 
 		qDebug() << "Data: " + data;
 
+		if (data.length() == 0) {
+			emit assemblerError(ASSEMBLER_EMPTY_DAT, instruction->a.lineNumber);
+		} else {
 
-		QChar nextChar = data.at(0);
+			QChar nextChar = data.at(0);
 
-		if (nextChar == '"') {
+			if (nextChar == '"') {
 
-			index = 1;
+				index = 1;
 
-			//if (nextChar == '"') {
-			qDebug() << "Reading string.";
+				//if (nextChar == '"') {
+				qDebug() << "Reading string.";
 
-			bool escaped = false;
-			while(1) {
+				bool escaped = false;
+				while(1) {
 
-				nextChar = data.at(index++).toAscii(); //dataBuffer.data()[index++];
-				char toPut;
+					nextChar = data.at(index++).toAscii(); //dataBuffer.data()[index++];
+					char toPut;
 
-				if (escaped) {
-					// Escape translation
-					switch(nextChar.toAscii()) {
-					case 'n':
-						toPut = '\n';
+					if (escaped) {
+						// Escape translation
+						switch(nextChar.toAscii()) {
+						case 'n':
+							toPut = '\n';
+							break;
+
+						case 't':
+							toPut = '\t';
+							break;
+
+						case '\\':
+							toPut = '\\';
+							break;
+
+						case '"':
+							toPut = '"';
+							break;
+
+						default:
+							qDebug() << "ERROR: Unrecognized escape sequence " << nextChar;
+							return -1;
+						}
+
+						escaped = false;
+					} else if (nextChar == '"') {
 						break;
-
-					case 't':
-						toPut = '\t';
-						break;
-
-					case '\\':
-						toPut = '\\';
-						break;
-
-					case '"':
-						toPut = '"';
-						break;
-
-					default:
-						qDebug() << "ERROR: Unrecognized escape sequence " << nextChar;
-						return -1;
+					} else if (nextChar == '\\') {
+						escaped = true;
+						continue;
+					} else {
+						// Normal character
+						toPut = nextChar.toAscii();
 					}
 
-					escaped = false;
-				} else if (nextChar == '"') {
-					break;
-				} else if (nextChar == '\\') {
-					escaped = true;
-					continue;
-				} else {
-					// Normal character
-					toPut = nextChar.toAscii();
+					instruction->data[instruction->dataLength++] = toPut;
+
+					//qDebug() << instruction->data[instruction->dataLength];
+
+					//for (int j = 0; j < instruction->dataLength; j++) {
+					//	std::cout << (char)instruction->data[j];
+					//}
+
+					//std::cout << std::endl;
 				}
+			} else {
+				QTextStream inputData(&data);
 
-				instruction->data[instruction->dataLength++] = toPut;
+				unsigned short dataValue;
 
-				//qDebug() << instruction->data[instruction->dataLength];
+				inputData >> dataValue;
 
-				//for (int j = 0; j < instruction->dataLength; j++) {
-				//	std::cout << (char)instruction->data[j];
-				//}
+				//qDebug() << QString::number(dataValue);
 
-				//std::cout << std::endl;
+				instruction->data[instruction->dataLength++] = dataValue;
+
+				qDebug() << QString::number(instruction->data[0]);
 			}
-		} else {
-			QTextStream inputData(&data);
 
-			unsigned short dataValue;
 
-			inputData >> dataValue;
 
-			//qDebug() << QString::number(dataValue);
-
-			instruction->data[instruction->dataLength++] = dataValue;
-
-			qDebug() << QString::number(instruction->data[0]);
+			address += instruction->dataLength;
 		}
-
-
-
-		address += instruction->dataLength;
 	}
 
 	return 1;

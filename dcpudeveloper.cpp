@@ -83,9 +83,9 @@ DCPUDeveloper::~DCPUDeveloper()
 
 	delete phrases;
 
-	delete memoryViewer;
+	//delete memoryViewer;
 
-	delete emulator;
+	//delete emulator;
 
 }
 
@@ -458,7 +458,7 @@ void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 
 		loadDisassemblyData();
 
-		delete assembler;
+		//delete assembler;
 
 
 	} else {

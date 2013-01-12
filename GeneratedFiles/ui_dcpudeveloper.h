@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Fri Jan 11 23:16:47 2013
+** Created: Sat Jan 12 22:07:45 2013
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!

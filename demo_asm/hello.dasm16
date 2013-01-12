@@ -1,30 +1,136 @@
-set a, 0x30              ; 7c01 0030
-set [0x1000], 0x20       ; 7de1 1000 0020
-SUB a, [0x1000]          ; 7803 1000
-IFN a, 0x10              ; c00d 
-  SET pc, crash         ; 7dc1 001a [*]
-                      
-; Do a loopy thing
-SET I, 10                ; a861
-SET A, 0x2000            ; 7c01 2000
+;        /'-------~/"\~-------'\        ;
+;        \ |`- /\ | /\ |_| _|_ /        ;
+;        / |`  |< | \1 | |  |  \        ;
+;        \/`'~'`\,~'"'~,/`'~'`\/        ;
+;        :       Tutorial      :        ;
+;        :     Hello World     :        ;
+;        :                     :        ;
+;        :     No comments:    :        ;
+;        :   0x10co.de/fw39u   :        ;
+;        \~'`\,~'`\.^./`'~,/`'~/        ;
+;                                       ;
+; I hope this tutorial can help you in  ;
+; understanding more about DCPU-16,     ;
+; using hardware and interrupts, and    ;
+; assembly in general.                  ;
+;                                       ;
+; Our main goal is to learn the basics  ;
+; of displaying text. We will break the ;
+; tutorial into parts.                  ;
+;                                       ;
+; 1. Locate and store the index of our  ;
+;   monitor, the LEM1802.               ;
+; 2. Setup the monitor to read our msg. ;
+; 3. Loop through the message to print. ;
+; 4. Make space for MONITOR and MESSAGE ;
+;   to hold some memory.                ;
 
-:loop
-SET [0x2000+I], [A]      ; 2161 2000
-SUB I, 1                 ; 8463
-IFN I, 0                 ; 806d
-  SET PC, loop          ; 7dc1 000d [*]
-        
-; Call a subroutine
-SET X, 0x4               ; 9031
-JSR testsub              ; 7c10 0018 [*]
-SET PC, crash            ; 7dc1 001a [*]
-        
-:testsub      SHL X, 4                 ; 9037
-SET PC, POP              ; 61c1
 
-; Hang forever. X should now be 0x40 if everything went right.
-:crash        SET PC, crash            ; 7dc1 001a [*]
-        
-:data
-dat 0x170, "Hello, World!", 0x65, 73, "w0,,0t!"
+; ===================================== ;
+; 1. Locate and store the index of our  ;
+;   monitor, the LEM1802.               ;
+; ===================================== ;
+
+; 'hwn' will tell us how many devices   ;
+; are connected. This number goes to i. ;
+	hwn i
+
+; Now, we will loop through the devices ;
+; until we find the monitor.            ;
+:map_hardware
+	sub i, 1
+
+; 'hwq' will tell us the ID of device i ;
+; as well as version and manufacturer.  ;
+	hwq i
+
+; We want to find the LEM1802 monitor.  ;
+; LEM1802 is the current standard for   ;
+; displays. It's ID is 7349F615. The 1st;
+; half goes to b and second half to a.  ;
+
+; So, lets check that b and a are equal ;
+; to what we need.                      ;
+	ife b, 0x7349
+		ife a, 0xF615
+; If the ID is the one we expected, go  ;
+; to our set_monitor line, and continue.;
+			set pc, set_monitor
+; Setting pc will set what code the DCPU;
+; is looking at.                        ;
+
+; If we still have devices keep looking ;
+	ifn i, 0
+		set pc, map_hardware
+
+
+; ===================================== ;
+; 2. Setup the monitor to read our msg. ;
+; ===================================== ;
+
+; Now we set our monitor value and are  ;
+; ready to move on to displaying stuff. ;
+:set_monitor
+	set [MONITOR], i
+; Now that we know where the monitor is ;
+; we can use [MONITOR] to communicate   ;
+; with it when we need.                 ;
+
+; Next, we want to set up the monitor's ;
+; space to read from.                   ;
+:setup_monitor
+	set a, 0
+	set b, 0x8000
+	hwi [MONITOR]
+
+
+; ===================================== ;
+; 3. Loop through the message to print. ;
+; ===================================== ;
+
+; Let's reset i to 0. i will be that    ;
+; character in the message we will show.;
+	set i, 0
+; Now we want to print our message.     ;
+:print_message
+	set j, [MESSAGE + i]
+; If we reached the end of our message, ;
+; then we will end the program.         ;
+	ife j, 0
+		set pc, end
+; When we 'bor' our character and 0xA000;
+; the color is set to bright green. Try ;
+; changing the A to 0-F.                ;
+	bor j, 0xA000
+; This is where we write our character. ;
+	set [0x8000 + i], j
+; Move on to the next character.        ;
+	add i, 1
+; Print the next character.             ;
+	set pc, print_message
+
+
+; ===================================== ;
+; 4. Make space for MONITOR and MESSAGE ;
+;   to hold some memory.                ;
+; ===================================== ;
+
+; To ensure we don't overwrite anything ;
+; in the memory, we will do these at the;
+; very end of the program.              ;
+
+; We need to make a place to store the  ;
+; monitor's value.                      ;
+:MONITOR	
+	dat 0x0000
+
+; Finally, lets set our message.        ;
+:MESSAGE	
+	dat "Hello, World!", 0
+; We end with a 0 to mark the end.      ;
+
+
+:end
+	dat 0x0
+; The end of the program.               ;
 

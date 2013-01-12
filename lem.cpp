@@ -83,22 +83,32 @@ void Lem::handleInterrupt(int a, int b) {
 
 	case 1:
 		// MEM_MAP_FONT
+		qDebug() << "Map font";
 		break;
 
 	case 2:
 		// MEM_MAP_PALLET
+
+		qDebug() << "Map pallet";
+
 		break;
 
 	case 3:
 		// SET_BORDER_COLOR
+
+		qDebug() << "Set border";
 		break;
 
 	case 4:
 		// MEM_DUMP_FONT
+
+		qDebug() << "Dump font";
 		break;
 
 	case 5:
 		// MEM_DUMP_PALLET
+
+		qDebug() << "Dump pallet";
 		break;
 
 	};

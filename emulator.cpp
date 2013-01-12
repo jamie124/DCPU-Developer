@@ -24,7 +24,7 @@ Started 7-Apr-2012
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
 	DEBUG = false;
-	OPCODE_DEBUGGING = false;
+	OPCODE_DEBUGGING = true;
 
 	stepMode = false;
 
@@ -173,7 +173,7 @@ int Emulator::getAddress(word_t value, arg_type &argType, bool a) {
 			address = value;
 
 		} else if (value >= ARG_REG_INDEX_START && value <= ARG_REG_INDEX_END) {
-			address = registers.at(value);
+			address = registers.at(reg);
 		} else {
 			if (reg < registers.size()) {
 				address = (nextWord() + registers.at(reg)) & 0xffff;

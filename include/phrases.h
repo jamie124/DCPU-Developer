@@ -23,7 +23,7 @@ class Phrases
 {
 
 private:
-	QMap<int, std::string> responses;
+	QMap<int, QString> responses;
 
 public:
 	Phrases(void);

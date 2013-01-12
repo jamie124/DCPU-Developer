@@ -26,7 +26,7 @@
 #include "memoryviewer.h"
 #include "utils.h"
 
-static QString VERSION_NUMBER = "0.2";
+static QString VERSION_NUMBER = "1.0";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";
 static QString COMPILED_TEMP_FILENAME = "dcpu_temp.bin";
 
