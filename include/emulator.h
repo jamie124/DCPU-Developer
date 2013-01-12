@@ -90,6 +90,8 @@ signals:
     void registersChanged(registers_ptr);
 	void instructionChanged(word_t);
 
+	void memoryUpdated(word_t);
+
 	void emulationEnded(int);
 
 private:

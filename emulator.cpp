@@ -24,7 +24,7 @@ Started 7-Apr-2012
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
 	DEBUG = false;
-	OPCODE_DEBUGGING = true;
+	OPCODE_DEBUGGING = false;
 
 	stepMode = false;
 
@@ -343,6 +343,8 @@ void Emulator::setValue(word_t key, int value, arg_type argType) {
 		
 		if (key < RAM_SIZE) {
 			memory.insert(key, value);
+
+			emit memoryUpdated(key);
 		} else {
 			// Program tried to write to an area of memory that doesn't exist.
 			emit emulationEnded(DCPU_BAD_MEMORY_ACCESS);
@@ -935,6 +937,10 @@ void Emulator::run()
 
 				Device *device = connectedDevices.at(aValue);
 
+				this->disconnect(SIGNAL(memoryUpdated(word_t)));
+
+				connect(this, SIGNAL(memoryUpdated(word_t)), device, SLOT(memoryUpdated(word_t)));
+
 				device->handleInterrupt(registers.at(A), registers.at(B));
 
 				cycle += 4;
@@ -942,16 +948,13 @@ void Emulator::run()
 				break;
 			}
 
-			std::cout << std::endl;
-
-			emit registersChanged(getRegisters());
-
+			//std::cout << std::endl;
 			if (stepMode) {
+				emit registersChanged(getRegisters());
+
 				// May not be a good way of doing it.
 				emit fullMemorySync(memory);
-			}
-
-			if (stepMode) {
+			
 				emit instructionChanged(instruction.rawInstruction);
 			}
 
@@ -995,152 +998,7 @@ registers_ptr Emulator::getRegisters()
 	return latestRegisters;
 }
 
-word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
-{
-	/*
-	if (argument >= ARG_REG_START && argument < ARG_REG_END) {
-		// Register value
-		word_t regNumber = argument - ARG_REG_START;
 
-		if (DEBUG) {
-			std::cout << "register " << regNumber << std::endl;
-		}
-
-		return &registers[regNumber];
-	}
-
-	if (argument >= ARG_REG_INDEX_START && argument < ARG_REG_INDEX_END) {
-		// [register value] - Value at address in register
-		word_t regNumber = argument - ARG_REG_INDEX_START;
-
-		if (DEBUG) {
-			std::cout << "[register " << regNumber << "]" << std::endl;
-		}
-
-		return &memory[registers[regNumber]];
-	}
-
-	if (argument >= ARG_REG_NEXTWORD_INDEX_START && argument < ARG_REG_NEXTWORD_INDEX_END) {
-		// [next ram word + register value] - Memory address offset by register value
-		word_t regNumber = argument - ARG_REG_NEXTWORD_INDEX_START;
-
-		if (DEBUG) {
-			std::cout << "[" << memory[registers.at(PC)] << " + register " << regNumber + "]" << std::endl;
-		}
-
-		cycle++;
-
-		return &memory[registers[regNumber] + memory[registers.at(PC)++]];
-	}
-
-	if (argument >= ARG_LITERAL_START && argument < ARG_LITERAL_END) {
-		if (argument == ARG_LITERAL_START) {
-			return 0;
-		} else {
-			// Literal value 0-31 - does nothing on assign
-			if (DEBUG) {
-				std::cout << "literal " << argument - ARG_LITERAL_START << std::endl;
-			}
-
-			return &literals[argument - 0x21];
-		}
-	}
-
-	// Single values
-	switch(argument) {
-	case ARG_PUSH_POP:
-		// Value at stack address, increments stack counter
-		if (inA){
-			// Push
-
-			if (DEBUG) {
-				std::cout << "PUSH" << std::endl;
-			}
-
-			return &memory[--stackPointer];
-		} else {
-			// Pop
-
-			if (DEBUG) {
-				std::cout << "POP" << std::endl;
-			}
-
-			return &memory[stackPointer++];
-		}
-		break;
-
-	case ARG_PEEK:
-		// Value at stack address
-		if (DEBUG) {
-			std::cout << "PEEK" << std::endl;
-		}
-
-		return &memory[stackPointer + sizeof(word_t)];
-		break;
-
-	case ARG_PICK:
-		// Value at stack address plus next word
-		if (DEBUG) {
-			std::cout << "PEEK" << std::endl;
-		}
-
-		return &memory[stackPointer];
-
-		break;
-
-
-	case ARG_SP:
-		// Current stack pointer value
-		if (DEBUG) {
-			std::cout << "stack pointer" << std::endl;
-		}
-
-		return &stackPointer;
-		break;
-
-	case ARG_PC:
-		// Program counter
-		if (DEBUG) {
-			std::cout << "program counter" << std::endl;
-		}
-
-		return &registers.at(PC);
-		break;
-
-	case ARG_EX:
-		// Overflow
-		if (DEBUG) {
-			std::cout << "overflow" << std::endl;
-		}
-
-		return &ex;
-		break;
-
-	case ARG_NEXTWORD_INDEX:
-		// Next word of ram
-		if (DEBUG) {
-			std::cout << "[" << memory[registers.at(PC)] << "]" << std::endl;
-		}
-
-		cycle++;
-		return &memory[memory[registers.at(PC)++]];
-		break;
-
-	case ARG_NEXTWORD:
-		// Next word of ram - literal
-		if (DEBUG) {
-			qDebug() << QString::number(memory[registers.at(PC)]);
-		}
-
-		cycle++;
-		return &memory[registers.at(PC)++];
-		break;
-
-	};
-	*/
-
-	return 0;
-}
 
 // Get an opcode from instruction
 word_t Emulator::getOpcode(word_t instruction)
@@ -1166,12 +1024,6 @@ argument_t Emulator::getArgument(word_t instruction, bool_t which)
 
 
 
-// Is argument constant
-bool_t Emulator::isConst(argument_t argument)
-{
-	return (argument >= ARG_LITERAL_START && argument < ARG_LITERAL_END)
-		|| argument == ARG_NEXTWORD;
-}
 
 // How many words does instruction take
 word_t Emulator::getInstructionLength(word_t instruction)

@@ -32,13 +32,16 @@ public:
 
 	void handleInterrupt(int a, int b);
 
+public slots:
+	void memoryUpdated(word_t value);
+
 private:
 	Ui::LemMonitor *ui;
 
 	LemViewer *lemViewer;
 	Emulator *emulator;
 
-	void drawScreen();
+	//void drawScreen();
 
 	void setScreen(word_t row, word_t column, word_t character);
 	void setCursorPos(int x, int y);

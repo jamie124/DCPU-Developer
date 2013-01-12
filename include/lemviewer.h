@@ -58,8 +58,13 @@ public:
 	LemViewer(Emulator *emu, QWidget *parent = 0);
 	~LemViewer();
 
-	//void drawChar(int x, int y, word_t value);
+	void queueChar(int c, int r);
+	void drawScreen();
+
+	void drawChar(int c, int r);
 	void drawLoop();
+
+	void updateChar(word_t key);
 
 	word_t getColour(word_t value);
 
@@ -78,9 +83,15 @@ private:
 
 	long screenAddress;
 
+	word_map memory;
+
 	word_t videoBuffer[WIDTH][HEIGHT];
 
-	QMutex mutex;
+	//QMap<int, QMap<int, int>> videoBuffer;
+
+	QMap<int, QMap<int, bool>> cellQueue;
+
+	bool initialised;
 
 };
 

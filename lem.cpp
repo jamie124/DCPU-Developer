@@ -77,7 +77,7 @@ void Lem::handleInterrupt(int a, int b) {
 
 		lemViewer->setScreenAddress(screenRamAddress);
 
-		drawScreen();
+		lemViewer->drawScreen();
 
 		break;
 
@@ -104,6 +104,14 @@ void Lem::handleInterrupt(int a, int b) {
 	};
 }
 
+void Lem::memoryUpdated(word_t value) {
+	//qDebug() << "Memory updated: " << QString::number(value);
+
+	lemViewer->updateChar(value - screenRamAddress);
+
+}
+
+/*
 void Lem::drawScreen() {
 	word_map memory = emulator->getMemory();
 
@@ -118,6 +126,7 @@ void Lem::drawScreen() {
 
 	//lemViewer->drawChar(0, 0, 4);
 }
+*/
 
 void Lem::setScreen(word_t row, word_t column, word_t character)
 {
