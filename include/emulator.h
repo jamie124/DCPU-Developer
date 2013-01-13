@@ -53,8 +53,8 @@ typedef struct {
 
 // Pointer typedefs
 typedef QSharedPointer<registers_t> registers_ptr;
-typedef QList<word_t> word_vector;
-typedef QHash<int, word_t> word_map;
+//typedef QList<word_t> word_vector;
+//typedef QHash<int, word_t> word_map;
 typedef int* memory_array;
 
 // Type of an argument.
@@ -125,6 +125,10 @@ private:
 	void skip();
 	void skipTilNonIf();
 
+	void interrupt(word_t value);
+
+	void trigger(word_t value);
+
 	// Deprecated shit
 	word_t* evaluateArgument(argument_t argument, bool inA);
 
@@ -161,11 +165,13 @@ public:
 
 	word_map getMemory();
 private:
-	//word_t* memory;
 	word_map memory;
 	word_vector registers;
 	word_map literals;
-	//word_t* colourTable;
+
+	word_vector interruptQueue;
+
+	bool triggerInterrupts, returnedFromInterrupt;
 
 	//word_t programCounter;
 	word_t stackPointer;

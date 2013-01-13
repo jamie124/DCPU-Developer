@@ -28,6 +28,8 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 
 	stepMode = false;
 
+	triggerInterrupts = true;
+	returnedFromInterrupt = false;
 
 	connectedDevices.clear();
 
@@ -167,7 +169,7 @@ int Emulator::getAddress(word_t value, arg_type &argType, bool a) {
 		} 
 
 		if (value >= ARG_REG_START && value <= ARG_REG_END) {
-			
+
 			argType = REGISTER;
 
 			address = value;
@@ -326,7 +328,7 @@ void Emulator::setValue(word_t key, int value, arg_type argType) {
 		if (DEBUG) {
 			qDebug() << "Setting Register: " << QString::number(key) << " with value: " << QString::number(value);
 		}
-		
+
 		if (key < registers.size()) {
 			registers.replace(key, value);
 
@@ -340,7 +342,7 @@ void Emulator::setValue(word_t key, int value, arg_type argType) {
 		if (DEBUG) {
 			qDebug() << "Setting Memory: " << QString::number(key) << " with value: " << QString::number(value);
 		}
-		
+
 		if (key < RAM_SIZE) {
 			memory.insert(key, value);
 
@@ -393,6 +395,31 @@ void Emulator::skipTilNonIf() {
 	}
 
 	skip();
+}
+
+void Emulator::interrupt(word_t value) {
+	if (!triggerInterrupts) {
+		if (interruptQueue.length() >= 256) {
+
+			emulatorRunning = false;
+
+			emit emulationEnded(DCPU_OVERFULL_INTERRUPT_QUEUE);
+
+		} else {
+			interruptQueue.append(value);
+		}
+	} else {
+		trigger(value);
+	}
+}
+
+void Emulator::trigger(word_t value) {
+	if (registers.at(IA) != 0) {
+		setValue(PUSH, registers.at(PC), MEMORY_OPERATION);
+		setValue(PUSH, registers.at(A), MEMORY_OPERATION);
+		setValue(PC, registers.at(IA), REGISTER);
+		setValue(A, value, REGISTER);
+	}
 }
 
 void Emulator::run()
@@ -454,6 +481,14 @@ void Emulator::run()
 
 		if (skippingCurrentPass == false) {
 
+			if (returnedFromInterrupt) {
+				returnedFromInterrupt = false;
+			} else if (triggerInterrupts && interruptQueue.length() > 0) {
+				trigger(interruptQueue.last());
+
+				interruptQueue.removeLast();
+			}
+
 			aValue = bValue = result = 0;
 
 			instruction = nextInstruction();
@@ -466,16 +501,16 @@ void Emulator::run()
 			}
 
 			//qDebug() << "A: " + QString::number(aValue) + ", B: " + QString::number(bValue);
-			
+
 			switch (instruction.opcode) {
 			case OP_NULL:
-				
+
 				emulatorRunning = false;
 
 				if (OPCODE_DEBUGGING) {
-					qDebug() << "Null opcode.";
+					qDebug() << "Null opcode: " << QString::number(instruction.rawInstruction);
 				}
-				
+
 				break;
 			case OP_SET:
 				// Set Stores the value of A in B.
@@ -550,7 +585,7 @@ void Emulator::run()
 
 			case OP_DIV:
 				// Divide Stores the value of B/A in B. Sets B to 0 if A is 0 (not an error).
-				
+
 				if (aValue == 0) {
 					setValue(instruction.argB, 0x0000, instruction.argTypeB);
 					setValue(EX, 0x0000, REGISTER);
@@ -570,7 +605,7 @@ void Emulator::run()
 			case OP_DVI:
 				// Divide Inverse Stores the value of B/A in B, where A and B are treated as signed. 
 				// Sets B to 0 if A is 0 (not an error). Rounds the result towards 0.
-				
+
 				if (aValue == 0) {
 					setValue(instruction.argB, 0x0000, instruction.argTypeB);
 					setValue(EX, 0x0000, REGISTER);
@@ -683,7 +718,7 @@ void Emulator::run()
 				cycle += 1;
 
 				break;
-							
+
 			case OP_SHL:
 				// Shift Left Shifts B to the left by A bits.
 
@@ -814,45 +849,45 @@ void Emulator::run()
 
 			case OP_ADX:
 				{
-				// Add EX Stores the value of A+B+EX in B.
+					// Add EX Stores the value of A+B+EX in B.
 
-				int value = bValue + aValue + registers.at(EX);
+					int value = bValue + aValue + registers.at(EX);
 
-				if (value > MAX_VALUE) {
-					setValue(EX, 1, REGISTER);
-				} else {
-					setValue(EX, 0, REGISTER);
-				}
+					if (value > MAX_VALUE) {
+						setValue(EX, 1, REGISTER);
+					} else {
+						setValue(EX, 0, REGISTER);
+					}
 
-				setValue(instruction.argB, value, instruction.argTypeB);
+					setValue(instruction.argB, value, instruction.argTypeB);
 
-				if (OPCODE_DEBUGGING) {
-					qDebug() << "ADX: " << QString::number(bValue) << " + " << QString::number(aValue) << QString::number(registers.at(EX));
-				}
+					if (OPCODE_DEBUGGING) {
+						qDebug() << "ADX: " << QString::number(bValue) << " + " << QString::number(aValue) << QString::number(registers.at(EX));
+					}
 
-				cycle += 3;
+					cycle += 3;
 				}
 				break;
 
 			case OP_SBX: 
 				{
-				// Subtract [with] EX Stores the value of A−B+EX in B.
+					// Subtract [with] EX Stores the value of A−B+EX in B.
 
-				int value = bValue + aValue + getSigned(registers.at(EX));
+					int value = bValue + aValue + getSigned(registers.at(EX));
 
-				if (value < 0) {
-					setValue(EX, 0xffff, REGISTER);
-				} else {
-					setValue(EX, 0, REGISTER);
-				}
+					if (value < 0) {
+						setValue(EX, 0xffff, REGISTER);
+					} else {
+						setValue(EX, 0, REGISTER);
+					}
 
-				setValue(instruction.argB, value, instruction.argTypeB);
+					setValue(instruction.argB, value, instruction.argTypeB);
 
-				if (OPCODE_DEBUGGING) {
-					qDebug() << "SBX: " << QString::number(bValue) << " + " << QString::number(aValue) << QString::number(getSigned(registers.at(EX)));
-				}
+					if (OPCODE_DEBUGGING) {
+						qDebug() << "SBX: " << QString::number(bValue) << " + " << QString::number(aValue) << QString::number(getSigned(registers.at(EX)));
+					}
 
-				cycle += 3;
+					cycle += 3;
 				}
 				break;
 
@@ -891,7 +926,77 @@ void Emulator::run()
 				setValue(PUSH, getValue(PC, REGISTER), MEMORY_OPERATION);
 				setValue(PC, aValue, REGISTER);
 
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "JSR: " << QString::number(aValue);
+				}
+
 				cycle += 3;
+				break;
+
+			case OP_INT:
+				// Interrupt Triggers an interrupt from software with message A.
+
+				interrupt(aValue);
+
+				cycle += 4;
+				break;
+
+			case OP_IAG:
+				// Interrupt Address Get Sets A to IA.
+
+				setValue(instruction.argA, registers.at(IA), instruction.argTypeA);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IAG: " << QString::number(registers.at(IA));
+				}
+
+				cycle += 1;
+				break;
+
+			case OP_IAS:
+				// Interrupt Address Set Sets IA to A.
+
+				setValue(IA, aValue, REGISTER);
+
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IAS: " << QString::number(aValue);
+				}
+
+				cycle += 1;
+				break;
+
+			case OP_RFI:
+				// Return From Interrupt Disables interrupt queueing, pops A from the stack, then pops PC from the stack.
+
+				triggerInterrupts = true;
+				
+				setValue(A, getValue(POP, MEMORY_OPERATION), REGISTER);
+				setValue(PC, getValue(POP, MEMORY_OPERATION), REGISTER);
+
+				returnedFromInterrupt = true;
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "RFI: ";
+				}
+
+				cycle += 3;
+				break;
+
+			case OP_IAQ:
+				// Interrupt Address Queue If A is nonzero, interrupts will be added to the queue instead of triggered.
+				// If A is zero, interrupts will be triggered as normal again.
+
+				if (aValue) {
+					triggerInterrupts = false;
+				} else {
+					triggerInterrupts = true;
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IAQ: " << QString::number(aValue);
+				}
+				cycle += 2;
 				break;
 
 			case OP_HWN:
@@ -908,57 +1013,59 @@ void Emulator::run()
 
 			case OP_HWQ:
 				{
-				// Hardware Query Sets A, B, C, X and Y registers to information about hardware A.
-				// A+(B<<16) is the 32-bit hardware ID. C is the hardware version. X+(Y<<16) is the 32-bit manufacturer code.
+					// Hardware Query Sets A, B, C, X and Y registers to information about hardware A.
+					// A+(B<<16) is the 32-bit hardware ID. C is the hardware version. X+(Y<<16) is the 32-bit manufacturer code.
 
-				if (aValue < connectedDevices.size()) {
-					Device *device = connectedDevices.at(aValue);
+					if (aValue < connectedDevices.size()) {
+						Device *device = connectedDevices.at(aValue);
 
-					setValue(B, device->id >> 16, REGISTER);
-					setValue(A, device->id & 0xffff, REGISTER);
-					setValue(C, device->version, REGISTER);
-					setValue(Y, device->manufacturer >> 16, REGISTER);
-					setValue(X, device->id & 0xffff, REGISTER);
-				} else {
-					setValue(B, 0, REGISTER);
-					setValue(A, 0, REGISTER);
-					setValue(C, 0, REGISTER);
-					setValue(Y, 0, REGISTER);
-					setValue(X, 0, REGISTER);
-				}
+						setValue(B, device->id >> 16, REGISTER);
+						setValue(A, device->id & 0xffff, REGISTER);
+						setValue(C, device->version, REGISTER);
+						setValue(Y, device->manufacturer >> 16, REGISTER);
+						setValue(X, device->id & 0xffff, REGISTER);
+					} else {
+						setValue(B, 0, REGISTER);
+						setValue(A, 0, REGISTER);
+						setValue(C, 0, REGISTER);
+						setValue(Y, 0, REGISTER);
+						setValue(X, 0, REGISTER);
+					}
 
-				cycle += 4;
+					cycle += 4;
 				}
 				break;
 
 			case OP_HWI:
 				{
-				// Hardware Interrupt Sends an interrupt to hardware A.
+					// Hardware Interrupt Sends an interrupt to hardware A.
 
-				Device *device = connectedDevices.at(aValue);
+					Device *device = connectedDevices.at(aValue);
 
-				this->disconnect(SIGNAL(memoryUpdated(word_t)));
+					this->disconnect(SIGNAL(memoryUpdated(word_t)));
 
-				connect(this, SIGNAL(memoryUpdated(word_t)), device, SLOT(memoryUpdated(word_t)));
+					connect(this, SIGNAL(memoryUpdated(word_t)), device, SLOT(memoryUpdated(word_t)));
 
-				device->handleInterrupt(registers.at(A), registers.at(B));
+					device->handleInterrupt(registers);
 
-				cycle += 4;
+					cycle += 4;
 				}
 				break;
 			}
 
-			//std::cout << std::endl;
+
+			emit registersChanged(getRegisters());
+
 			if (stepMode) {
-				emit registersChanged(getRegisters());
+				
 
 				// May not be a good way of doing it.
 				emit fullMemorySync(memory);
-			
+
 				emit instructionChanged(instruction.rawInstruction);
 			}
 
-	
+
 			if (stepMode) {
 				// Skip next pass
 				skippingCurrentPass = true;

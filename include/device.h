@@ -20,7 +20,7 @@ public:
 	int version;
 	int manufacturer;
 
-	virtual void handleInterrupt(int a, int b) = 0;
+	virtual void handleInterrupt(word_vector registers) = 0;
 
 public slots:
 	virtual void memoryUpdated(word_t value) = 0;

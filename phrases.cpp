@@ -11,6 +11,9 @@ Phrases::Phrases(void)
 	responses.insert(ASSEMBLER_SUCESSFUL, "Assembler finished");
 	responses.insert(ASSEMBLER_FAILED, "Assembler failed");
 
+	// Emulator error messages
+	responses.insert(DCPU_OVERFULL_INTERRUPT_QUEUE, "Overfull interrupt queue");
+
 	// Assembler error messages
 	responses.insert(ASSEMBLER_INVALID_REG, "Invalid Register");
 	responses.insert(ASSEMBLER_UNRESOLVED_LABEL_A, "Unresolved Label A");

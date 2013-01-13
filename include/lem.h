@@ -30,7 +30,7 @@ public:
 	Lem(Emulator *emu, QWidget *parent = 0);
 	~Lem();
 
-	void handleInterrupt(int a, int b);
+	void handleInterrupt(word_vector registers);
 
 public slots:
 	void memoryUpdated(word_t value);

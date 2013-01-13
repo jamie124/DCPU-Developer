@@ -119,9 +119,6 @@
     <ClCompile Include="devices\device.cpp">
       <Filter>Source Files\Devices</Filter>
     </ClCompile>
-    <ClCompile Include="lem.cpp">
-      <Filter>Source Files\Devices</Filter>
-    </ClCompile>
     <ClCompile Include="Debug\moc_device.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -161,6 +158,18 @@
     <ClCompile Include="editor.cpp">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
+    <ClCompile Include="devices\clock.cpp">
+      <Filter>Source Files\Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="devices\lem.cpp">
+      <Filter>Source Files\Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_clock.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_clock.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="dcpudeveloper.ui">
@@ -198,6 +207,9 @@
     </CustomBuild>
     <CustomBuild Include="include\lemviewer.h">
       <Filter>Header Files\UI</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\clock.h">
+      <Filter>Header Files\Devices</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

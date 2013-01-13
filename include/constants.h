@@ -8,11 +8,17 @@ Started 7-Apr-2012
 #ifndef _CONSTANTS_H
 #define _CONSTANTS_H
 
+#include <QList>
+#include <QHash>
+
 typedef unsigned short word_t;
 typedef unsigned char argument_t;
 typedef unsigned char opcode_t;
 typedef argument_t nonbasicOpcode_t;
 typedef unsigned char bool_t;
+
+typedef QList<word_t> word_vector;
+typedef QHash<int, word_t> word_map;
 
 // Registers 
 static enum {
@@ -26,7 +32,8 @@ static enum {
 	J	= 7,
 	SP	= 8,
 	PC	= 9,
-	EX	= 10
+	EX	= 10,
+	IA	= 11
 	
 } registers;
 
@@ -86,17 +93,29 @@ static const enum {
 // Return codes
 static const enum { 
 	// General
-	SOURCE_FILE_MISSING, BIN_FILE_MISSING,
+	SOURCE_FILE_MISSING				= 0x0, 
+	BIN_FILE_MISSING				= 0x1,
 	// Emulation
-	DCPU_SUCCESSFUL, DCPU_RESERVED_OPCODE, DCPU_BAD_REGISTER_ACCESS, DCPU_BAD_MEMORY_ACCESS,
+	DCPU_SUCCESSFUL					= 0x2, 
+	DCPU_RESERVED_OPCODE			= 0x3, 
+	DCPU_BAD_REGISTER_ACCESS		= 0x4, 
+	DCPU_BAD_MEMORY_ACCESS			= 0x5, 
+	DCPU_OVERFULL_INTERRUPT_QUEUE	= 0x6,
 	// Assembler
-	ASSEMBLER_SUCESSFUL, ASSEMBLER_FAILED, 
+	ASSEMBLER_SUCESSFUL				= 0x7, 
+	ASSEMBLER_FAILED				= 0x8, 
 };
 
 // Assembler errors
 static const enum {
-	ASSEMBLER_EMPTY_ARG_STR, ASSEMBLER_INVALID_LITERAL, ASSEMBLER_INVALID_REG_NAME,
-	ASSEMBLER_INVALID_REG, ASSEMBLER_UNTERM_LABEL, ASSEMBLER_UNRESOLVED_LABEL_A, ASSEMBLER_UNRESOLVED_LABEL_B, ASSEMBLER_EMPTY_DAT
+	ASSEMBLER_EMPTY_ARG_STR			= 0x20, 
+	ASSEMBLER_INVALID_LITERAL		= 0x21, 
+	ASSEMBLER_INVALID_REG_NAME		= 0x22,
+	ASSEMBLER_INVALID_REG			= 0x23, 
+	ASSEMBLER_UNTERM_LABEL			= 0x24, 
+	ASSEMBLER_UNRESOLVED_LABEL_A	= 0x25, 
+	ASSEMBLER_UNRESOLVED_LABEL_B	= 0x26, 
+	ASSEMBLER_EMPTY_DAT				= 0x27
 };
 
 // Registers
