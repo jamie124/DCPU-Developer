@@ -56,6 +56,16 @@ QMainWindow(parent),
 	// Setup syntax highlighting
 	highlighter = new Highlighter(editor->document());
 
+	// Find Dialog
+	findDialog = new FindDialog(this);
+	findDialog->setModal(false);
+	findDialog->setTextEdit(editor);
+
+	// Find Replace Dialog
+	findReplaceDialog = new FindReplaceDialog(this);
+	findReplaceDialog->setModal(false);
+	findReplaceDialog->setTextEdit(editor);
+
 	assemblerRunning = false;
 	emulatorRunning = false;
 	inStepMode = false;
@@ -68,6 +78,7 @@ QMainWindow(parent),
 	loadSettings();
 
 	connect(ui->disassembly_list, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(disassembledRowChanged(QListWidgetItem *, QListWidgetItem *)));
+
 
 	// Run emulator in background.
 	startEmulator();
@@ -142,6 +153,14 @@ void DCPUDeveloper::editorChanged()
 	}
 }
 
+void DCPUDeveloper::openFindDialog() {
+
+}
+
+void DCPUDeveloper::openFindReplaceDialog() {
+
+}
+
 QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
 {
 	QFile file(filename);
@@ -202,9 +221,9 @@ void DCPUDeveloper::loadDisassemblyData() {
 
 		currentLine = debugInput.readLine().trimmed();
 
-		lineNumber = currentLine.left(currentLine.indexOf(':')).toInt();
+		lineNumber = currentLine.left(currentLine.indexOf('|')).toInt();
 
-		currentLine = currentLine.right(currentLine.length() - currentLine.indexOf(':') - 1);
+		currentLine = currentLine.right(currentLine.length() - currentLine.indexOf('|') - 1);
 
 		//qDebug() << currentLine + " ";
 
@@ -451,14 +470,9 @@ void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 
 		assembler->stopAssembler();
 
-		// Update disassembly
-		// Shitty fix, too stupid to fix it properly right now. 
-		// I think the issue was being caused when occasionally the method attempts to set the data before it's allowed too. 
-		//QTimer::singleShot(500, this, SLOT(loadDisassemblyData()));
 
 		loadDisassemblyData();
 
-		//delete assembler;
 
 
 	} else {
@@ -648,4 +662,8 @@ void DCPUDeveloper::on_actionSave_As_triggered()
 			currentFilename = fileName;
 		}
 	}
+}
+
+void  DCPUDeveloper::on_actionFind_File_triggered() {
+	findDialog->show();
 }

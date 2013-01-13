@@ -1,3 +1,8 @@
+add a, 1
+
+add a, 1
+
+
 SET PC, __boot__
 
 :sec
@@ -16,6 +21,9 @@ SET PC, __boot__
 	DAT 0
 
 :speaker
+	DAT 0
+
+:beep_val
 	DAT 0
 
 :scr_ram
@@ -159,12 +167,7 @@ SET PC, __boot__
 :colorize_end
 	SET [scr_ram], 0x8000
 	SET A, POP
-
 	SET PC, POP
-
-
-:beep_val
-	DAT 0
 
 :beep
 	SET PUSH, B

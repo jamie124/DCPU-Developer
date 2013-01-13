@@ -721,7 +721,7 @@ void Assembler::run()
 		if (instruction->data != NULL) {
 			// Reverse endianess
 			for (int i = 0; i < instruction->dataLength; i++) {
-				debugOut << ":" << QString::number(instruction->data[i], 16).rightJustified(4, '0');
+				debugOut << "|" << QString::number(instruction->data[i], 16).rightJustified(4, '0');
 
 				instruction->data[i] = Utils::swapByteOrder(instruction->data[i]);
 			}
@@ -739,7 +739,7 @@ void Assembler::run()
 		packed = Utils::pack(instruction->opcode, instruction->a.argument, instruction->b.argument);
 
 
-		//qDebug() << instruction->opcode << instruction->a.argument << instruction->b.argument;
+		qDebug() << instruction->opcode << instruction->a.argument << instruction->b.argument;
 
 
 		word_t swapped = (packed>>8) | (packed<<8);
@@ -749,7 +749,7 @@ void Assembler::run()
 
 		fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 
-		debugOut << ":" << QString::number(packed, 16).rightJustified(4, '0');
+		debugOut << "|" << QString::number(packed, 16).rightJustified(4, '0');
 
 		if (instruction->opcode != OP_NULL && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);

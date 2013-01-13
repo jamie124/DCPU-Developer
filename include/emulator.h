@@ -30,7 +30,7 @@ const long LITERAL_SIZE = 0x10000;
 //const long MAX_VALUE = 65535;
 
 const long RAM_SIZE = 0x10000;
-const int NUM_REGISTERS = 11;
+const int NUM_REGISTERS = 12;
 
 const int TERM_WIDTH = 32;
 const int TERM_HEIGHT = 16;

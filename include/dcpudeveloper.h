@@ -26,6 +26,9 @@
 #include "memoryviewer.h"
 #include "utils.h"
 
+#include "finddialog.h"
+#include "findreplacedialog.h"
+
 static QString VERSION_NUMBER = "1.0";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";
 static QString COMPILED_TEMP_FILENAME = "dcpu_temp.bin";
@@ -38,6 +41,9 @@ class DCPUDeveloper;
 
 class QCompleter;
 class Editor;
+
+class FindDialog;
+class FindReplaceDialog;
 
 class DCPUDeveloper : public QMainWindow
 {
@@ -69,6 +75,9 @@ private slots:
 	void disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow);
 
 	void editorChanged();
+
+	void openFindDialog();
+	void openFindReplaceDialog();
 
     void on_actionOpen_triggered();
 
@@ -102,6 +111,8 @@ private slots:
 
     void on_actionSave_As_triggered();
 
+	void on_actionFind_File_triggered();
+
 private:
     Ui::DCPUDeveloper *ui;
 
@@ -121,6 +132,9 @@ private:
 
 	Editor *editor;
     MemoryViewer *memoryViewer;
+
+	FindDialog *findDialog;
+	FindReplaceDialog *findReplaceDialog;
 
     QString currentFilename;
 

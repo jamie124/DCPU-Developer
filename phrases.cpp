@@ -12,6 +12,7 @@ Phrases::Phrases(void)
 	responses.insert(ASSEMBLER_FAILED, "Assembler failed");
 
 	// Emulator error messages
+	responses.insert(DCPU_BAD_REGISTER_ACCESS, "Bad Register Access");
 	responses.insert(DCPU_OVERFULL_INTERRUPT_QUEUE, "Overfull interrupt queue");
 
 	// Assembler error messages

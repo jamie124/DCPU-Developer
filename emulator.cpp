@@ -320,6 +320,8 @@ word_t Emulator::getValue(int key, arg_type argType) {
 
 		return 0;
 	}
+
+	return 0;
 }
 
 void Emulator::setValue(word_t key, int value, arg_type argType) {
@@ -329,7 +331,7 @@ void Emulator::setValue(word_t key, int value, arg_type argType) {
 			qDebug() << "Setting Register: " << QString::number(key) << " with value: " << QString::number(value);
 		}
 
-		if (key < registers.size()) {
+		if (key < NUM_REGISTERS) {
 			registers.replace(key, value);
 
 		} else {
@@ -1054,10 +1056,11 @@ void Emulator::run()
 			}
 
 
-			emit registersChanged(getRegisters());
+
 
 			if (stepMode) {
 				
+				emit registersChanged(getRegisters());
 
 				// May not be a good way of doing it.
 				emit fullMemorySync(memory);
