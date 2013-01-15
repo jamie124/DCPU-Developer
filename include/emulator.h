@@ -109,7 +109,7 @@ private:
 	int getAddress(word_t value, arg_type &argType, bool a = false);
 
 	word_t getWord(word_t value);
-	word_t nextWord(bool isLiteral = false);
+	word_t nextWord();
 	instruction_t nextInstruction();
 
 	word_t getSigned(word_t value);

@@ -246,7 +246,7 @@ word_t Emulator::getWord(word_t value) {
 	return memory.value(value, 0);
 }
 
-word_t Emulator::nextWord(bool isLiteral) {
+word_t Emulator::nextWord() {
 	word_t word = getWord(registers[PC]);
 
 	registers[PC] = (registers[PC] + 1) & 0xffff;
@@ -258,6 +258,15 @@ word_t Emulator::nextWord(bool isLiteral) {
 
 instruction_t Emulator::nextInstruction() {
 	word_t word = nextWord();
+
+	qDebug() << "Debug instruction: " + QString::number(word, 16);
+	if (stepMode) {
+		emit instructionChanged(word);
+	}
+
+	word = nextWord();
+
+	qDebug() << "Actual instruction: " + QString::number(word, 16);
 
 	instruction_t instruction;
 
@@ -445,22 +454,23 @@ void Emulator::run()
 
 	QByteArray tempArray = program.readAll();
 
+
 	QDataStream inputStream(&tempArray, QIODevice::ReadOnly);
+
 
 	// Store stream in memory
 	int i = 0;
 
+	
 	while (!inputStream.atEnd()) {
 		word_t currentWord;
-
 		inputStream >> currentWord;
 
+		memory.insert(i++, currentWord);
 		//memory[i++] = currentWord;
 
-		memory[i++] = currentWord;
 
 	}
-
 	program.close();
 
 	// Send the initial memory block to main thread
@@ -1065,7 +1075,7 @@ void Emulator::run()
 				// May not be a good way of doing it.
 				emit fullMemorySync(memory);
 
-				emit instructionChanged(instruction.rawInstruction);
+				//emit instructionChanged(instruction.rawInstruction);
 			}
 
 

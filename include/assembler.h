@@ -22,6 +22,7 @@ typedef struct argumentStruct {
 typedef struct assembledInstruction {
 	QString label;
 	word_t* data;
+	int lineNumber;
 	int dataLength;
 	word_t address;
 	word_t opcode;
@@ -46,6 +47,12 @@ private:
 
 	volatile bool assemblerRunning;
 	volatile int lineNumber;
+
+	// Create a version of the program with extra debugging data
+	bool createDebugFile;			
+
+	// Number of places to 
+	int instructionOffset;
 
 	QString sourceFilename;
 

@@ -31,7 +31,9 @@
 
 static QString VERSION_NUMBER = "1.0";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";
-static QString COMPILED_TEMP_FILENAME = "dcpu_temp.bin";
+//static QString COMPILED_TEMP_FILENAME = "dcpu_temp.bin";
+static QString COMPILED_TEMP_FILENAME = "debug_dcpu_temp.bin";
+
 
 Q_DECLARE_METATYPE(word_vector)
 

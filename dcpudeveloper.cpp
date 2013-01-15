@@ -197,7 +197,7 @@ void DCPUDeveloper::loadDisassemblyData() {
 
 	QStandardItem *test = new QStandardItem();
 
-	std::string debugFilename = "debug_" + Utils::replace(TEMP_FILENAME.toStdString(), "dasm16", "dbg");
+	std::string debugFilename = Utils::replace(TEMP_FILENAME.toStdString(), "dasm16", "dbg");
 
 	QFile debugFile(debugFilename.c_str());
 
@@ -322,11 +322,15 @@ void DCPUDeveloper::loadSettings()
 	}
 }
 
-void DCPUDeveloper::setSelectedDisassembedInstruction(word_t instruction) {
+void DCPUDeveloper::setSelectedDisassembedInstruction(word_t value) {
 	// TODO: Add a map to prevent lookups
+
 
 	bool ok;
 	uint test = 0;
+
+	word_t lineNumber = 0;
+	word_t lineNumberDisassembled = value ^ 0xA000;
 
 	QString currentLine;
 	QListWidgetItem *item;
@@ -335,24 +339,29 @@ void DCPUDeveloper::setSelectedDisassembedInstruction(word_t instruction) {
 	for (int i = 0; i < ui->disassembly_list->count(); i++) {
 		item = ui->disassembly_list->item(i);
 
-		currentLine = item->data(0).toString();
+	//	currentLine = item->data(0).toString();
+		lineNumber = item->data(1).toInt();
 
 	//	qDebug() << currentLine;
 
+		/*
 		if (currentLine.contains('\t')) {
 			test = ("0x" + currentLine.left(currentLine.indexOf('\t'))).toUInt(&ok, 16);
 		} else {
 			test = ("0x" + currentLine).toUInt(&ok, 16);
 		}
+		*/
+
 
 		//qDebug() << QString::number(instruction);
 
 
-		//qDebug() << QString::number(test) + ":" + QString::number(instruction);
+		//qDebug() << QString::number(lineNumber) + ":" + QString::number(lineNumberDisassembled);
+
 		//qDebug() << item->data(0);
 
 
-		if (test == instruction) {
+		if (lineNumber == lineNumberDisassembled) {
 			break;
 		}
 
