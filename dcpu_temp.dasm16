@@ -18,14 +18,13 @@ SET PC, __boot__
 :speaker
 	DAT 0
 
-:beep_val
-	DAT 0
-
 :scr_ram
 	DAT 0x8000
 
 :__boot__
-	JSR test		;JSR hw_init
+	JSR hw_init
+	JSR hw_setup
+	JSR kernel
 
 :print_time
 	ADD C, 0x0030
@@ -34,10 +33,197 @@ SET PC, __boot__
 	ADD X, 0x0030
 	ADD Y, 0x0030
 	ADD Z, 0x0030
-
+	SET [scr_ram], 0x80EB
+	SET A, C
+	JSR print_char
+	SET A, I
+	JSR print_char
+	SET A, 0x003A
+	JSR print_char
+	SET A, J
+	JSR print_char
+	SET A, X
+	JSR print_char
+	SET A, 0x003A
+	JSR print_char
+	SET A, Y
+	JSR print_char
+	SET A, Z
+	JSR print_char
+	SET PC, POP
 
 :int_handler
+	ADD [sec], 1
+	IFE [sec], 60
+   		JSR add_min 
+	IFE [min], 60
+		JSR add_hour
+	IFE [hour], 24
+		JSR reset
+	SET PUSH, [sec]
+	DIV [sec], 10
+	SET A, [sec]
+	SET [sec], POP
+	SET PUSH, [sec]
+	MOD [sec], 10
+	SET B,[sec]
+	SET [sec], POP
+	SET Z, B
+	SET Y, A
+	SET PUSH, [min]
+	DIV [min], 10
+	SET A, [min]
+	SET [min], POP
+	SET PUSH, [min]
+	MOD [min], 10
+	SET B,[min]
+	SET [min], POP
+	SET X, B
+	SET J, A
+	SET PUSH, [hour]
+	DIV [hour], 10
+	SET A, [hour]
+	SET [hour], POP
+	SET PUSH, [hour]
+	MOD [hour], 10
+	SET B,[hour]
+	SET [hour], POP
+	SET I, B
+	SET C, A
+	JSR print_time
 	RFI 0
 
-:test
-	SET a, 3
+:add_min
+	SET [sec], 0
+	ADD [min], 1
+	SET PC, POP
+
+:add_hour
+	SET [min], 0
+	ADD [hour], 1
+	SET PC, POP
+
+:reset
+	SET [hour], 0
+	SET PC, POP
+
+:hw_init
+	HWN I
+
+:hw_map
+	SUB I, 1
+	HWQ I
+	IFE B, 0x7349
+   		IFE A, 0xf615
+			SET [monitor], I
+	IFE B, 0x12d0
+    		IFE A, 0xb402       
+       			 SET [clock], I
+	IFE B, 0x0206
+		IFE A, 0x0001
+			SET [speaker], I        
+	IFN I, 0
+  		SET PC, hw_map
+	SET PC, POP
+
+:hw_setup
+	IAS int_handler
+        
+SET A, 0
+SET B, [scr_ram]
+HWI [monitor]
+
+SET A, 3
+SET B, 9
+HWI [monitor]
+    
+SET A, 0
+SET B, 60
+HWI [clock]
+
+SET A, 2
+SET B, 0x0003
+HWI [clock]
+
+; Colorize monitor.
+SET PUSH, A
+SET A, [scr_ram]
+:colorize
+IFE A, 0x8180
+    SET PC, colorize_end
+SET [A], 0x9900
+ADD A, 1
+SET PC, colorize
+:colorize_end
+SET [scr_ram], 0x8000
+SET A, POP
+
+SET PC, POP
+
+
+:beep_val
+DAT 0
+:beep
+SET PUSH, B
+SET B, A
+SET A, 0
+HWI [speaker]
+SET  [beep_val], [sec]
+ADD [beep_val], 1
+:beep_loop
+IFG [sec], [beep_val]
+    SET PC, beep_end
+SET PC, beep_loop
+:beep_end
+SET A, 0
+SET B, 0
+HWI [speaker]
+SET B, POP
+SET PC, POP
+
+:print_char
+SET B, [scr_ram]
+BOR A, 0xE900
+SET [B], A
+ADD B, 1
+SET [scr_ram], B
+SET PC, POP
+        
+:print_str ; ### print_str(pointer_to_string
+SET B, [scr_ram]
+:print_str_loop
+IFE [A], 0
+    SET PC, print_str_end
+BOR [A], 0xE900
+SET [B], [A]
+ADD B, 1
+ADD A, 1
+SET PC, print_str_loop
+:print_str_end
+SET [scr_ram], B
+SET PC, POP
+
+:set_time_pos
+SET PUSH, I
+SET I, 0
+:set_time_pos_loop
+IFE I, 6
+    SET PC, set_time_pos_end
+AND [scr_ram], 0xFFE0
+ADD [scr_ram], 0x0020
+ADD I, 1
+SET PC, set_time_pos_loop
+:set_time_pos_end
+SET I, POP
+SET PC, POP
+
+:prompt
+DAT "      Welcome to Voyager!",0
+:kernel
+SET A, prompt
+JSR print_str
+JSR set_time_pos
+SET A, 420
+JSR beep
+:end
+SET PC, end

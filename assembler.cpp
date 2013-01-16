@@ -567,7 +567,7 @@ void Assembler::run()
 		assemblerError(BIN_FILE_MISSING, lineNumber);
 	}
 
-	
+
 	QFile debugInfoFile(debugInfoFilename.c_str());
 
 	if (!debugInfoFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -576,7 +576,7 @@ void Assembler::run()
 
 	// Open debug stream
 	QTextStream debugOut(&debugInfoFile);
-	
+
 
 	FILE* debugFile = fopen(debugFilename.c_str(), "wb");
 
@@ -689,10 +689,10 @@ void Assembler::run()
 			for (assembledInstruction_t* other = head; other != NULL; other = other->next) {
 				if (other->label != NULL && other->label == instruction->a.labelReference) {
 					// Match
-					qDebug() << "Resolved " << instruction->a.labelReference << " to address " << other->address + (createDebugFile ? instructionOffset : 0);
-					instruction->a.nextWord = other->address + (createDebugFile ? instructionOffset : 0);
-					
-					instructionOffset += 2;
+					qDebug() << "Resolved " << instruction->a.labelReference << " to address " << other->address;
+					instruction->a.nextWord = other->address;
+
+					//instructionOffset += 2;
 
 					instruction->a.labelReference = "";
 					break;
@@ -708,10 +708,10 @@ void Assembler::run()
 
 				if (other->label != NULL && other->label == instruction->b.labelReference) {
 					// Match
-					qDebug() << "Resolved " << instruction->b.labelReference << " to address " << other->address + (createDebugFile ? instructionOffset : 0);
-					instruction->b.nextWord = other->address  + (createDebugFile ? instructionOffset : 0);
+					qDebug() << "Resolved " << instruction->b.labelReference << " to address " << other->address;
+					instruction->b.nextWord = other->address;
 
-					instructionOffset += 2;
+					//instructionOffset += 2;
 
 					instruction->b.labelReference = "";
 					break;
@@ -732,6 +732,8 @@ void Assembler::run()
 			assemblerError(ASSEMBLER_UNRESOLVED_LABEL_B, instruction->b.lineNumber);
 		}
 	}
+
+	//address = 0;
 
 	// Write out code
 	for (assembledInstruction_t* instruction = head; instruction != NULL; instruction = instruction->next) {
@@ -772,7 +774,7 @@ void Assembler::run()
 		word_t swapped = (packed>>8) | (packed<<8);
 
 		// Save instruction
-		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
+		qDebug() << instruction->address << ": Assembled instruction: " << QString::number(packed, 16).rightJustified(4, '0') << " Swapped: " << QString::number(swapped, 16).rightJustified(4, '0') << "Opcode: " << instruction->opcode;
 
 		if (createDebugFile) {
 			word_t debugInfo = ((word_t)instruction->lineNumber) | 0xA000;
@@ -793,7 +795,7 @@ void Assembler::run()
 		if (instruction->opcode != OP_NULL && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
 
-			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord << " Swapped: " << swapped;
+			qDebug() << instruction->address << ": Extra Word A: " << QString::number(instruction->a.nextWord, 16).rightJustified(4, '0') << " Swapped: " << QString::number(swapped, 16).rightJustified(4, '0');
 
 			debugOut << ":" << QString::number(instruction->a.nextWord, 16).rightJustified(4, '0');
 
@@ -807,7 +809,7 @@ void Assembler::run()
 		if (Utils::usesNextWord(instruction->b.argument)) {
 			swapped = (instruction->b.nextWord>>8) | (instruction->b.nextWord<<8);
 
-			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord << " Swapped: " << swapped;
+			qDebug() << instruction->address << ": Extra Word B: " << QString::number(instruction->b.nextWord, 16).rightJustified(4, '0') << " Swapped: " << QString::number(swapped, 16).rightJustified(4, '0');
 
 			debugOut << ":" << QString::number(instruction->b.nextWord, 16).rightJustified(4, '0');
 
@@ -833,7 +835,7 @@ void Assembler::run()
 	// Close files
 
 	fclose(compiledFile);
-	
+
 	fclose(debugFile);
 
 	assemblerError(ASSEMBLER_SUCESSFUL, 0);
@@ -932,14 +934,7 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 
 
 		if (itemIndex > -1) {
-			/*
-			if (remainingLine.length() > label.length()) {
-			functionOnNextLine = false;
-			} else {
-			functionOnNextLine = true;
-			return 1;
-			}
-			*/
+
 			functionOnNextLine = false;
 		} else {
 			remainingLine = "";
@@ -1015,7 +1010,16 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 	}
 
 	instruction->next = NULL;
+
+	// Set base address
 	instruction->address = address;
+
+	if (command != "dat") {
+		// When creating a debug file add extra instrcution
+		address += (createDebugFile ? 1 : 0);
+	}
+
+
 	instruction->label = label;
 
 	instruction->data = NULL;
@@ -1108,7 +1112,9 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 
 			address += instruction->dataLength;
 		}
-	}
+	} 
+
+	//address = instruction->address;
 
 	return 1;
 }
@@ -1144,10 +1150,11 @@ void Assembler::processArg1(QString &command, QString &arg, word_t &address, QSt
 	address++;
 
 	if (Utils::usesNextWord(instruction->a.argument)) {
+		//address +=  (createDebugFile ? 2 : 1);
 		address++;
 	}
 
-	//delete tempArg
+	//address = instruction->address;
 }
 
 // Process argument 2
@@ -1170,21 +1177,6 @@ void Assembler::processArg2(QString &command, QString &arg, word_t &address, QSt
 		instruction->a.labelReference = "";
 
 	} else {
-		//memcpy(tempArg, arg, len + 1);
-
-		/*
-		while (arg[i] != '\0') {
-		if (arg[i] == ',') {
-
-		arg[i] = '\0';
-
-		continue;
-		} 
-
-		arg[i] = tolower(arg[i]);
-		i++;
-		}
-		*/
 
 		arg = arg.toLower().trimmed();
 
@@ -1197,11 +1189,14 @@ void Assembler::processArg2(QString &command, QString &arg, word_t &address, QSt
 			assemblerError(instruction->b.errorCode, lineNumber);
 		}
 
+		//address++;
+
 		if (Utils::usesNextWord(instruction->b.argument)) {
+			//address +=  (createDebugFile ? 2 : 1);
 			address++;
 		}
 
 	}
-
-
+	
+	//address = instruction->address;
 }
