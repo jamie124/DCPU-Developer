@@ -129,40 +129,41 @@ SET PC, __boot__
 :hw_setup
 	IAS int_handler
         
-SET A, 0
-SET B, [scr_ram]
-HWI [monitor]
+	SET A, 0
+	SET B, [scr_ram]
+	HWI [monitor]
 
-SET A, 3
-SET B, 9
-HWI [monitor]
+	SET A, 3
+	SET B, 9
+	HWI [monitor]
     
-SET A, 0
-SET B, 60
-HWI [clock]
+	SET A, 0
+	SET B, 60
+	HWI [clock]
 
-SET A, 2
-SET B, 0x0003
-HWI [clock]
+	SET A, 2
+	SET B, 0x0003
+	HWI [clock]
 
-; Colorize monitor.
-SET PUSH, A
-SET A, [scr_ram]
+	; Colorize monitor.
+	SET PUSH, A
+	SET A, [scr_ram]
+
 :colorize
-IFE A, 0x8180
-    SET PC, colorize_end
-SET [A], 0x9900
-ADD A, 1
-SET PC, colorize
+	IFE A, 0x8180
+    		SET PC, colorize_end
+	SET [A], 0x9900
+	ADD A, 1
+	SET PC, colorize
+
 :colorize_end
-SET [scr_ram], 0x8000
-SET A, POP
-
-SET PC, POP
-
+	SET [scr_ram], 0x8000
+	SET A, POP
+	SET PC, POP
 
 :beep_val
-DAT 0
+	DAT 0
+
 :beep
 SET PUSH, B
 SET B, A
@@ -170,10 +171,12 @@ SET A, 0
 HWI [speaker]
 SET  [beep_val], [sec]
 ADD [beep_val], 1
+
 :beep_loop
 IFG [sec], [beep_val]
     SET PC, beep_end
 SET PC, beep_loop
+
 :beep_end
 SET A, 0
 SET B, 0
@@ -189,8 +192,9 @@ ADD B, 1
 SET [scr_ram], B
 SET PC, POP
         
-:print_str ; ### print_str(pointer_to_string
+:print_str
 SET B, [scr_ram]
+
 :print_str_loop
 IFE [A], 0
     SET PC, print_str_end
@@ -199,6 +203,7 @@ SET [B], [A]
 ADD B, 1
 ADD A, 1
 SET PC, print_str_loop
+
 :print_str_end
 SET [scr_ram], B
 SET PC, POP
@@ -206,6 +211,7 @@ SET PC, POP
 :set_time_pos
 SET PUSH, I
 SET I, 0
+
 :set_time_pos_loop
 IFE I, 6
     SET PC, set_time_pos_end
@@ -213,17 +219,20 @@ AND [scr_ram], 0xFFE0
 ADD [scr_ram], 0x0020
 ADD I, 1
 SET PC, set_time_pos_loop
+
 :set_time_pos_end
 SET I, POP
 SET PC, POP
 
 :prompt
 DAT "      Welcome to Voyager!",0
+
 :kernel
 SET A, prompt
 JSR print_str
 JSR set_time_pos
 SET A, 420
 JSR beep
+
 :end
 SET PC, end

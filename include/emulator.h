@@ -184,6 +184,8 @@ private:
 	//word_t keyboardPosition;
 	QVector<Device*> connectedDevices;
 
+	word_t lastInstruction;
+
 };
 
 #endif

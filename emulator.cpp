@@ -259,14 +259,16 @@ word_t Emulator::nextWord() {
 instruction_t Emulator::nextInstruction() {
 	word_t word = nextWord();
 
-	qDebug() << "Debug instruction: " + QString::number(word, 16);
+	lastInstruction = word;
+
+	//qDebug() << "Debug instruction: " + QString::number(word, 16);
 	if (stepMode) {
-		emit instructionChanged(word);
+		emit instructionChanged(lastInstruction);
 	}
 
 	word = nextWord();
 
-	qDebug() << "Actual instruction: " + QString::number(word, 16);
+	//qDebug() << "Actual instruction: " + QString::number(word, 16);
 
 	instruction_t instruction;
 
@@ -521,6 +523,8 @@ void Emulator::run()
 
 				if (OPCODE_DEBUGGING) {
 					qDebug() << "Null opcode: " << QString::number(instruction.rawInstruction);
+
+					emit instructionChanged(lastInstruction);
 				}
 
 				break;
