@@ -54,7 +54,7 @@ instruction_t Utils::swapByteOrder(instruction_t instruction)
 }
 
 
-std::string Utils::replace(std::string& str, const std::string& from, const std::string& to) {
+std::string Utils::replace(std::string str, const std::string from, const std::string to) {
 	std::string temp = str;
 
 	size_t start_pos = str.find(from);

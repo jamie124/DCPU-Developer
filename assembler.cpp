@@ -189,7 +189,7 @@ nonbasicOpcode_t Assembler::nonbasicOpcodeFor(QString command)
 // Check register number 
 int Assembler::registerFor(QChar regName)
 {
-	switch(regName.toAscii()) {
+    switch(regName.toLatin1()) {
 	case 'a':
 		return REG_A;
 		break;
@@ -224,7 +224,7 @@ int Assembler::registerFor(QChar regName)
 argumentStruct_t Assembler::argumentFor(QString arg) {
 
 
-	QScopedPointer<const char> tempBuffer(_strdup(arg.toStdString().c_str()));
+    QScopedPointer<const char> tempBuffer(strdup(arg.toStdString().c_str()));
 
 	argumentStruct_t toReturn;
 
@@ -575,9 +575,11 @@ void Assembler::run()
 		//qDebug() << currentLine;
 
 		if (currentLine.length() <= 1) {
+            /*
 			if (label.length() > 0) {
 				processCommand(QString(""), QString(""), address, label, head, tail, instruction);
 			}
+            */
 		} else {
 			// Non blank line, start processing
 
@@ -898,7 +900,7 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 		// Find start of second arg
 		bool hasArg2 = false;
 
-		QRegExp argSeperator(",(\s+)?");
+        QRegExp argSeperator(",(\\s+)?");
 
 		itemIndex = remainingLine.indexOf(argSeperator);
 
@@ -965,12 +967,12 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 			bool escaped = false;
 			while(1) {
 
-				nextChar = data.at(index++).toAscii(); //dataBuffer.data()[index++];
+                nextChar = data.at(index++).toLatin1(); //dataBuffer.data()[index++];
 				char toPut;
 
 				if (escaped) {
 					// Escape translation
-					switch(nextChar.toAscii()) {
+                    switch(nextChar.toLatin1()) {
 					case 'n':
 						toPut = '\n';
 						break;
@@ -1000,7 +1002,7 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 					continue;
 				} else {
 					// Normal character
-					toPut = nextChar.toAscii();
+                    toPut = nextChar.toLatin1();
 				}
 
 				instruction->data[instruction->dataLength++] = toPut;

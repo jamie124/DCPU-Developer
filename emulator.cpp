@@ -918,6 +918,7 @@ bool Emulator::inStepMode()
 	return stepMode;
 }
 
+/*
 void Emulator::setScreen(word_t row, word_t column, word_t character)
 {
 	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -961,6 +962,7 @@ void Emulator::clearScreen()
 		);
 	SetConsoleCursorPosition(console, topLeft);
 }
+*/
 
 word_map Emulator::getMemory() {
 	return memory;

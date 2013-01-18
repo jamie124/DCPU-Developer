@@ -27,7 +27,7 @@ public:
 
 	static instruction_t swapByteOrder(instruction_t instruction);
 
-	static std::string replace(std::string& str, const std::string& from, const std::string& to);
+    static std::string replace(std::string str, const std::string from, const std::string to);
 };
 
 #endif

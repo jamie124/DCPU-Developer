@@ -22,7 +22,6 @@ namespace Ui {
 }
 
 
-
 class Lem : public Device
 {
 	Q_OBJECT

@@ -19,7 +19,12 @@ SOURCES += main.cpp\
     editor.cpp \
     memoryviewer.cpp \
     glhelper.cpp \
-    utils.cpp
+    utils.cpp \
+    hexspinbox.cpp \
+    lem.cpp \
+    devices/lemviewer.cpp \
+    devices/lem.cpp \
+    devices/device.cpp
 
 HEADERS  += dcpudeveloper.h \
     emulator.h \
@@ -36,6 +41,13 @@ HEADERS  += dcpudeveloper.h \
     include/memoryviewer.h \
     include/glhelper.h \
     include/utils.h \
-    include/constants.h
+    include/constants.h \
+    include/lemviewer.h \
+    include/lem.h \
+    include/hexspinbox.h \
+    include/device.h
 
-FORMS    += dcpudeveloper.ui
+INCLUDEPATH += include/
+
+FORMS    += dcpudeveloper.ui \
+    lem_monitor.ui

@@ -18,7 +18,7 @@ Started 7-Apr-2012
 
 #include <iostream>
 
-#include <Windows.h>
+//#include <Windows.h>
 
 #include "constants.h"
 #include "utils.h"

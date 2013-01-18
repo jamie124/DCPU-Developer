@@ -16,7 +16,7 @@ typedef argument_t nonbasicOpcode_t;
 typedef unsigned char bool_t;
 
 // Basic opcodes
-static const enum {
+static enum {
 	 OP_NONBASIC	= 0x00,
 	 OP_SET			= 0x01,
 	 OP_ADD			= 0x02,
@@ -51,10 +51,10 @@ static const enum {
 
 	 OP_STI			= 0x1e,
 	 OP_STD			= 0x1f
-};
+} opcodes;
 
 // Special opcodes
-static const enum {
+static enum {
 	OP_JSR			= 0x01,
 
 	OP_INT			= 0x08,
@@ -66,23 +66,23 @@ static const enum {
 	OP_HWN			= 0x10,
 	OP_HWQ			= 0x11,
 	OP_HWI			= 0x12,
-};
+} special_opcodes;
 
 // Return codes
-static const enum { 
+static enum {
 	// General
 	SOURCE_FILE_MISSING, BIN_FILE_MISSING,
 	// Emulation
 	DCPU_SUCCESSFUL, DCPU_RESERVED_OPCODE,
 	// Assembler
 	ASSEMBLER_SUCESSFUL, ASSEMBLER_FAILED, 
-};
+} assembler_returns;
 
 // Assembler errors
-static const enum {
+static enum {
 	ASSEMBLER_EMPTY_ARG_STR, ASSEMBLER_INVALID_LITERAL, ASSEMBLER_INVALID_REG_NAME,
 	ASSEMBLER_INVALID_REG, ASSEMBLER_UNTERM_LABEL, ASSEMBLER_UNRESOLVED_LABEL_A, ASSEMBLER_UNRESOLVED_LABEL_B
-};
+} assembler_errors;
 
 // Registers
 static const word_t REG_A = 0x0;
