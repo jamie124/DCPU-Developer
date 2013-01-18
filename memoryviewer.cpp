@@ -17,7 +17,7 @@ MemoryViewer::~MemoryViewer(void)
 	memoryMap.clear();
 }
 
-void MemoryViewer::setMemoryMap(QMap<int, int> map) 
+void MemoryViewer::setMemoryMap(word_map map) 
 {
 	memoryMap = map;
 }

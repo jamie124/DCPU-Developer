@@ -5,6 +5,8 @@
 #include <QFont>
 #include <QPen>
 
+#include "emulator.h"
+
 class QPainter;
 class QPaintEvent;
 
@@ -24,7 +26,7 @@ public:
 
 	void setRowOffset(int value);
 
-	void paint(QPainter *painter, QMap<int, int> &memoryMap, QPaintEvent *event, int elapsed);
+	void paint(QPainter *painter, word_map &memoryMap, QPaintEvent *event, int elapsed);
 
 private:
 	QBrush background;

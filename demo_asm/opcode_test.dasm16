@@ -38,6 +38,10 @@
 ; Now, we will loop through the devices ;
 ; until we find the monitor.            ;
 :map_hardware
+
+; To start the loop, we remove one from ;
+; the loop. In short, because the list  ;
+; is 0-indexed.                         ;
 	sub i, 1
 
 ; 'hwq' will tell us the ID of device i ;
@@ -71,6 +75,10 @@
 ; Now we set our monitor value and are  ;
 ; ready to move on to displaying stuff. ;
 :set_monitor
+; Using brackets [] we say we want to   ;
+; write to the memory at that address.  ;
+; So [MONITOR] will write over the space;
+; we create at the end of the program.  ;
 	set [MONITOR], i
 ; Now that we know where the monitor is ;
 ; we can use [MONITOR] to communicate   ;
@@ -79,6 +87,11 @@
 ; Next, we want to set up the monitor's ;
 ; space to read from.                   ;
 :setup_monitor
+; Using 'hwi' we send a message to the  ;
+; specified device. Here, we are sending;
+; 0 (MEM_MAP_SCREEN) with the address   ;
+; 0x8000 to our monitor. This sets the  ;
+; monitor to display memory at 0x8000.  ;
 	set a, 0
 	set b, 0x8000
 	hwi [MONITOR]
@@ -93,6 +106,7 @@
 	set i, 0
 ; Now we want to print our message.     ;
 :print_message
+; We copy the next character to j.      ;
 	set j, [MESSAGE + i]
 ; If we reached the end of our message, ;
 ; then we will end the program.         ;
@@ -121,16 +135,12 @@
 
 ; We need to make a place to store the  ;
 ; monitor's value.                      ;
-:MONITOR	
-	dat 0x0000
+:MONITOR	dat 0x0000
 
 ; Finally, lets set our message.        ;
-:MESSAGE	
-	dat "Hello, World!", 0
+:MESSAGE	dat "Hello, World!", 0
 ; We end with a 0 to mark the end.      ;
 
 
 :end
-	dat 0x0
 ; The end of the program.               ;
-

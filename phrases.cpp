@@ -11,10 +11,15 @@ Phrases::Phrases(void)
 	responses.insert(ASSEMBLER_SUCESSFUL, "Assembler finished");
 	responses.insert(ASSEMBLER_FAILED, "Assembler failed");
 
+	// Emulator error messages
+	responses.insert(DCPU_BAD_REGISTER_ACCESS, "Bad Register Access");
+	responses.insert(DCPU_OVERFULL_INTERRUPT_QUEUE, "Overfull interrupt queue");
+
 	// Assembler error messages
 	responses.insert(ASSEMBLER_INVALID_REG, "Invalid Register");
 	responses.insert(ASSEMBLER_UNRESOLVED_LABEL_A, "Unresolved Label A");
 	responses.insert(ASSEMBLER_UNRESOLVED_LABEL_B, "Unresolved Label B");
+	responses.insert(ASSEMBLER_EMPTY_DAT, "Dat data not found");
 
 }
 
@@ -27,5 +32,5 @@ Phrases::~Phrases(void)
 
 QString Phrases::getResponseMessage(int errorCode)
 {
-	return QString::fromStdString(responses.value(errorCode));
+	return responses.value(errorCode);
 }

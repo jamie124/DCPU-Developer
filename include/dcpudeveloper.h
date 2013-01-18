@@ -26,7 +26,10 @@
 #include "memoryviewer.h"
 #include "utils.h"
 
-static QString VERSION_NUMBER = "0.2";
+#include "finddialog.h"
+#include "findreplacedialog.h"
+
+static QString VERSION_NUMBER = "1.0";
 static QString TEMP_FILENAME = "dcpu_temp.dasm16";
 static QString COMPILED_TEMP_FILENAME = "dcpu_temp.bin";
 
@@ -38,6 +41,9 @@ class DCPUDeveloper;
 
 class QCompleter;
 class Editor;
+
+class FindDialog;
+class FindReplaceDialog;
 
 class DCPUDeveloper : public QMainWindow
 {
@@ -52,7 +58,7 @@ private slots:
 	void assemblerUpdate(assembler_update_t* error);
 
 	// Emulator UI update requests
-	void setFullMemoryBlock(memory_array memory);
+	void setFullMemoryBlock(word_map memory);
     void updateRegisters(registers_ptr registers);
 	void emulatorInstructionChanged(word_t instruction);
 
@@ -68,8 +74,10 @@ private slots:
 
 	void disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow);
 
-
 	void editorChanged();
+
+	void openFindDialog();
+	void openFindReplaceDialog();
 
     void on_actionOpen_triggered();
 
@@ -103,11 +111,15 @@ private slots:
 
     void on_actionSave_As_triggered();
 
+	void on_actionFind_File_triggered();
+
 private:
     Ui::DCPUDeveloper *ui;
 
     Assembler *assembler;
-    QSharedPointer<Emulator> emulator;
+    
+	Emulator *emulator;
+	//QSharedPointer<Emulator> emulator;
 
 	Phrases *phrases;
 	Highlighter *highlighter;
@@ -121,6 +133,9 @@ private:
 	Editor *editor;
     MemoryViewer *memoryViewer;
 
+	FindDialog *findDialog;
+	FindReplaceDialog *findReplaceDialog;
+
     QString currentFilename;
 
     bool assemblerRunning, emulatorRunning;
@@ -133,15 +148,23 @@ private:
 
 	QAbstractItemModel* modelFromFile(const QString &filename);
 
-	void loadDisassemblyData();
-
+	// Assembler
 	void createAndRunAssembler();
-	void createAndRunEmulator(QString binFile);
+
+	// Emulation
+	void startEmulator();
+	void runProgram(QString binFile);
+
+	//void createAndRunEmulator(QString binFile);
+
+	void loadDisassemblyData();
 
 	void saveSettings();
 	void loadSettings();
 
 	void setSelectedDisassembedInstruction(word_t instruction);
+
+	void resetRegisters();
 };
 
 #endif // DCPUDEVELOPER_H

@@ -19,27 +19,36 @@ Started 7-Apr-2012
 #include "include/emulator.h"
 #include "include/lem.h"
 
+#include <math.h>
 
 Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 {
-	DEBUG = true;
-	OPCODE_DEBUGGING = false;
+	DEBUG = false;
+	OPCODE_DEBUGGING = true;
 
 	stepMode = false;
 
-	//memory = word_vector(RAM_SIZE);
-	registers = word_vector(NUM_REGISTERS);
-	//literals = word_vector(ARG_LITERAL_END - ARG_LITERAL_START);
+	triggerInterrupts = true;
+	returnedFromInterrupt = false;
 
-	//reset();
+	connectedDevices.clear();
+
+
+	Lem *lemDevice = new Lem(this);
+	lemDevice->show();
+
+	connectedDevices.append(lemDevice);
+
+	//connectedDevices.append(qobject_cast<Device*>(lemDevice.data()));
+
+	//qDebug() << QString::number(connectedDevices.size());
 }
 
-Emulator::~Emulator(void)
+Emulator::~Emulator()
 {
 	memory.clear();
 	//memory.squeeze();
 	registers.clear();
-	registers.squeeze();
 	literals.clear();
 
 	emulatorRunning = false;
@@ -102,7 +111,7 @@ void Emulator::reset()
 
 	/*
 	for (int i = 0; i < RAM_SIZE; i++) {
-	memory[i] = 0;
+	memory.insert(i, 0);
 	//memory[i] = 0;
 	}
 	*/
@@ -117,50 +126,19 @@ void Emulator::reset()
 	}
 
 
-	programCounter = 0;
 	stackPointer = 0;
 	interruptAddress = 0;
-
 	ex = 0;
+
 	currentOpcode = 0;
 
 	cycle = 0;
 
-	connectedDevices.clear();
-
-	//QSharedPointer<Lem> lemDevice(new Lem());
-
-	Lem *lemDevice = new Lem(this);
-	lemDevice->show();
-
-	connectedDevices.append(lemDevice);
-
-	//connectedDevices.append(qobject_cast<Device*>(lemDevice.data()));
-
-	//qDebug() << QString::number(connectedDevices.size());
 }
 
 void Emulator::stopEmulator()
 {
-	memory.clear();
-	registers.clear();
-	literals.clear();
 
-	emulatorRunning = false;
-
-	/*
-	Device *currentDevice;
-
-	for (int i = 0; i < connectedDevices.size(); i++) {
-		currentDevice = connectedDevices.at(i);
-
-		if (currentDevice->deviceName == "lem1802") {
-			//currentDevice.
-		}
-	}
-	*/
-
-	//this->wait();
 }
 
 // Borrowed from https://github.com/fogleman/DCPU-16/blob/master/emulator/emulator.c
@@ -172,6 +150,278 @@ int divMod(int x, int *quo)
 	}
 	*quo = quotient;
 	return x % MAX_SIZE;
+}
+
+/////////////////////////////////////
+// Partially rewritten with logic from 0x10c.de
+/////////////////////////////////////
+int Emulator::getAddress(word_t value, arg_type &argType, bool a) {
+	word_t reg, address;
+
+	argType = MEMORY;
+
+	//qDebug() << QString::number(value);
+	if (value <= ARG_REG_NEXTWORD_INDEX_END || value == ARG_PICK) {
+		reg = value % 8;
+
+		if (value == ARG_PICK) {
+			reg = SP;
+		} 
+
+		if (value >= ARG_REG_START && value <= ARG_REG_END) {
+
+			argType = REGISTER;
+
+			address = value;
+
+		} else if (value >= ARG_REG_INDEX_START && value <= ARG_REG_INDEX_END) {
+			address = registers.at(reg);
+		} else {
+			if (reg < registers.size()) {
+				address = (nextWord() + registers.at(reg)) & 0xffff;
+			} else {
+				address = 0;
+			}
+		}
+
+		return address;
+	}
+
+	// Encoded literals
+	if(value >= 0x20 && value <= 0x3f) {
+		argType = LITERAL;
+
+		int output = value - 0x21;
+
+		output &= MAX_VALUE;
+
+		return output | LITERAL_SIZE;
+	}
+
+	// Other kinds of values
+	switch(value) {
+		// stack pointer
+	case ARG_PUSH_POP:
+		if(a) {
+			word_t pre = registers.at(SP);
+			registers[SP] = (pre + 1) & sizeof(word_t);
+			return pre;
+		} else {
+			word_t output = ((registers.at(SP) - 1) & sizeof(word_t));
+			registers[SP] = output;
+			return output;
+		}
+	case ARG_PEEK:
+		return registers.at(SP);
+
+		// other registers
+	case ARG_SP:
+		argType = REGISTER;
+
+		return SP;
+	case ARG_PC:
+		argType = REGISTER;
+
+		return PC;
+	case ARG_EX:
+		argType = REGISTER;
+
+		return EX;
+
+		// extended instruction values
+	case 0x1e: // as address
+		return nextWord();
+	case 0x1f: // as literal
+		argType = LITERAL;
+		return nextWord() | LITERAL_SIZE;
+
+	default:
+		return -1;
+	}
+}
+
+word_t Emulator::getWord(word_t value) {
+	// TODO: Add pop
+
+	return memory.value(value, 0);
+}
+
+word_t Emulator::nextWord(bool isLiteral) {
+	word_t word = getWord(registers[PC]);
+
+	registers[PC] = (registers[PC] + 1) & 0xffff;
+
+	cycle++;
+
+	return word;
+}
+
+instruction_t Emulator::nextInstruction() {
+	word_t word = nextWord();
+
+	instruction_t instruction;
+
+	// Used to debug
+	instruction.rawInstruction = word;
+
+	if ((word & 0x1f) == 0) {
+		//qDebug() << "Processing just A: " + QString:: number(word);
+		instruction.opcode = word & 0x3ff;
+		instruction.argA = getAddress((word & 0xfc00) >> 10, instruction.argTypeA, true);
+
+		instruction.hasB = false;
+	} else {
+		//qDebug() << "Processing A and B: " + QString:: number(word);
+		instruction.opcode = word & 0x1f;
+		instruction.argA = getAddress((word & 0xfc00) >> 10, instruction.argTypeA, true);
+		instruction.argB = getAddress((word & 0x3e0) >> 5, instruction.argTypeB, false);
+
+		instruction.hasB = true;
+	}
+
+	return instruction;
+}
+
+word_t Emulator::getSigned(word_t value) {
+	word_t sign = (value << 1) & 65536;		// Move sign bit to bit 16
+
+	return value - sign;
+}
+
+word_t Emulator::roundTowardsZero(int value) {
+	if (value > 0) {
+		return (word_t)floor((double)value);
+	} else {
+		return (word_t)ceil((double)value);
+	}
+}
+
+word_t Emulator::getValue(int key, arg_type argType) {
+	switch (argType) {
+	case REGISTER:
+		if (DEBUG) {
+			qDebug() << "Checking Register for value at: " << QString::number(key);
+		}
+		return registers.at(key);
+	case MEMORY:
+		if (DEBUG) {
+			qDebug() << "Checking Memory for value at: " << QString::number(key);
+		}
+		return memory.value(key);
+	case LITERAL:
+		if (key & LITERAL_SIZE) {
+			return key ^ LITERAL_SIZE;
+		}
+		break;
+	default:
+		if (DEBUG) {
+			qDebug() << "Key: " << QString::number(key) << " doesn't match anything";
+		}
+
+		return 0;
+	}
+
+	return 0;
+}
+
+void Emulator::setValue(word_t key, int value, arg_type argType) {
+	switch (argType) {
+	case REGISTER:
+		if (DEBUG) {
+			qDebug() << "Setting Register: " << QString::number(key) << " with value: " << QString::number(value);
+		}
+
+		if (key < NUM_REGISTERS) {
+			registers.replace(key, value);
+
+		} else {
+			// Program tried to write to a register that doesn't exist.
+			emit emulationEnded(DCPU_BAD_REGISTER_ACCESS);
+		}
+		break;
+
+	case MEMORY:
+		if (DEBUG) {
+			qDebug() << "Setting Memory: " << QString::number(key) << " with value: " << QString::number(value);
+		}
+
+		if (key < RAM_SIZE) {
+			memory.insert(key, value);
+
+			emit memoryUpdated(key);
+		} else {
+			// Program tried to write to an area of memory that doesn't exist.
+			emit emulationEnded(DCPU_BAD_MEMORY_ACCESS);
+		}
+		break;
+
+	case MEMORY_OPERATION:
+		if (key == PUSH) {
+			word_t stackPointer = registers.at(SP) - 1 & MAX_VALUE;
+
+			registers.replace(SP, stackPointer);
+
+			memory.insert(stackPointer, value);
+		}
+
+		break;
+
+	case LITERAL:
+		break;
+
+	default:
+		if (DEBUG) {
+			qDebug() << "Key: " << QString::number(key) << " doesn't match anything";
+		}
+		break;
+
+	}
+}
+
+void Emulator::skip() {
+	int storedCycle = cycle;
+	int storedSP = registers.at(SP);
+
+	nextInstruction();
+
+	registers.replace(SP, storedSP);
+	cycle = storedCycle + 1;
+
+}
+
+void Emulator::skipTilNonIf() {
+	word_t currentMemory = getValue((registers.at(PC) & 0x1f), MEMORY);
+
+	while (currentMemory >= 0x10 && currentMemory <= 0x17) {
+		skip();
+	}
+
+	skip();
+}
+
+void Emulator::interrupt(word_t value) {
+	if (!triggerInterrupts) {
+		if (interruptQueue.length() >= 256) {
+
+			emulatorRunning = false;
+
+			emit emulationEnded(DCPU_OVERFULL_INTERRUPT_QUEUE);
+
+		} else {
+			interruptQueue.append(value);
+		}
+	} else {
+		trigger(value);
+	}
+}
+
+void Emulator::trigger(word_t value) {
+	if (registers.at(IA) != 0) {
+		setValue(PUSH, registers.at(PC), MEMORY_OPERATION);
+		setValue(PUSH, registers.at(A), MEMORY_OPERATION);
+		setValue(PC, registers.at(IA), REGISTER);
+		setValue(A, value, REGISTER);
+	}
 }
 
 void Emulator::run()
@@ -221,215 +471,133 @@ void Emulator::run()
 	}
 	*/
 
-	//emit fullMemorySync(memoryDump);
+	emit fullMemorySync(memory);
 
 	bool videoDirty = false;
+
+	instruction_t instruction;
+	int aValue, bValue, result;
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
 
 		if (skippingCurrentPass == false) {
 
+			if (returnedFromInterrupt) {
+				returnedFromInterrupt = false;
+			} else if (triggerInterrupts && interruptQueue.length() > 0) {
+				trigger(interruptQueue.last());
 
-			word_t executingPC = programCounter;
-
-			//qDebug() << QString::number(programCounter);
-
-			instruction_t instruction = memory[programCounter++];
-
-			if (stepMode) {
-				emit instructionChanged(instruction);
+				interruptQueue.removeLast();
 			}
 
-			//qDebug() << QString::number(instruction);
+			aValue = bValue = result = 0;
 
-			// Decode
-			opcode_t opcode = getOpcode(instruction);
-			opcode_t nonbasicOpcode;
+			instruction = nextInstruction();
 
-			word_t* aLoc;
-			word_t* bLoc;
-			bool skipStore;
+			//qDebug() << QString::number(instruction.argA);
+			aValue = getValue(instruction.argA, instruction.argTypeA);
 
-			if (opcode == OP_NONBASIC) {
-				nonbasicOpcode = (opcode_t) getArgument(instruction, 0);
-
-				aLoc = evaluateArgument(getArgument(instruction, 1), false);
-
-				skipStore = 1;
-
-				if (DEBUG) {
-					qDebug() << "NON BASIC: " << opcode << *aLoc;
-				}
-			} else {
-				aLoc = evaluateArgument(getArgument(instruction, 0), true);
-				bLoc = evaluateArgument(getArgument(instruction, 1), false);
-				skipStore = isConst(getArgument(instruction, 0));		// If literal
-
-				if (DEBUG) {
-					qDebug() << "BASIC: " << opcode << *aLoc << *bLoc;
-				}
+			if (instruction.hasB) {
+				bValue = getValue(instruction.argB, instruction.argTypeB);
 			}
 
+			//qDebug() << "A: " + QString::number(aValue) + ", B: " + QString::number(bValue);
 
+			switch (instruction.opcode) {
+			case OP_NULL:
 
-			/*
-			argument_t temp =  ((instruction >> 4) >> 6 * 0) & 0x3E;
-			argument_t temp2 =  ((instruction >> 4) >> 6 * 1);// & 0x3E;
-			qDebug() << "Opcode:" << opcode << "Instruction: " << instruction << "Arg A:" << temp << "Arg B: " << temp2;
+				emulatorRunning = false;
 
-			temp =  ((instruction >> 4) >> 6 * 0) & 0x3F;
-			temp2 =  ((instruction >> 4) >> 6 * 1) & 0x3F;
-			qDebug() << "Opcode:" << opcode << "Instruction: " << instruction << "Arg A:" << temp << "Arg B: " << temp2;
-			*/
-
-			word_t result = 0;
-
-			// Execute
-			unsigned int resultWithCarry;		// Some opcodes use internal variable
-			bool skipNext = 0;				// Skip the next instruction
-			int quo;
-
-			switch(opcode) {
-			case OP_NONBASIC:
-				skipStore = 1;
-
-				// Special Opcodes
-
-				switch(nonbasicOpcode) {
-				case OP_JSR:
-					// 0x01 JSR - pushes the address of next instruction onto stack.
-					// Sets PC to A
-					memory[--stackPointer] = programCounter;
-					programCounter = *aLoc;
-					cycle += 2;
-					break;
-
-				case OP_INT:
-					// 0x08 INT
-					cycle += 4;
-					break;
-
-				case OP_IAG:
-					// 0x09 IAG
-					cycle += 1;
-					break;
-
-				case OP_IAS:
-					// 0x0a IAS
-					cycle += 1;
-					break;
-
-				case OP_RFI:
-					// 0x0b RFI
-					cycle += 3;
-					break;
-
-				case OP_IAQ:
-					// 0x0c IAQ
-					cycle += 2;
-					break;
-
-				case OP_HWN:
-					// 0x10 HWN
-					registers[6] = connectedDevices.size();
-
-					cycle += 2;
-					break;
-
-				case OP_HWQ:
-					{
-					// 0x11 HWQ
-						qDebug() << QString::number(*aLoc);
-
-						Device *device = connectedDevices.at(*aLoc);
-
-					if (device != NULL) {
-
-						registers[1] = device->id >> 16;
-						registers[0] = device->id & 0xffff;
-						registers[2] = device->version;
-						registers[4] = device->manufacturer >> 16;
-						registers[3] = device->manufacturer & 0xffff;
-					} else {
-						registers[1] = 0;
-						registers[0] = 0;
-						registers[2] = 0;
-						registers[4] = 0;
-						registers[3] = 0;
-					}
-
-
-					cycle += 4;
-					break;
-
-					}
-				case OP_HWI:
-					{
-					// 0x12
-					Device *device = connectedDevices.at(*aLoc);
-					
-					device->handleInterrupt(registers[0], registers[1]);
-
-					cycle += 4;
-					break;
-					}
-				default:
-					emit emulationEnded(DCPU_RESERVED_OPCODE);
-
-					emulatorRunning = false;
-
-					break;
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "Null opcode: " << QString::number(instruction.rawInstruction);
 				}
+
 				break;
-
 			case OP_SET:
-				// Set value of A to B
-				result = *bLoc;
+				// Set Stores the value of A in B.
+				setValue(instruction.argB, aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "SET: " << QString::number(instruction.argB) << ", Value: " << QString::number(aValue) << ", Arg Type: " << QString::number(instruction.argTypeB);
+				}
+
 				cycle += 1;
 
 				break;
-
 			case OP_ADD:
-				// Add B to A, sets O
-				result = divMod(*aLoc + *bLoc, &quo);
-				ex = quo ? 1 : 0;
+				// Add Stores the value of B+A in B.
+				result = bValue + aValue;
+
+				setValue(EX, (result > MAX_VALUE) ? 0x0001 : 0x0000, REGISTER);
+				setValue(instruction.argB, result, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "ADD: " << QString::number(aValue) << " to " << QString::number(bValue);
+				}
+
 				cycle += 2;
 
 				break;
-
 			case OP_SUB:
-				// Subtracts B from a, sets O
-				result = divMod(*aLoc - *bLoc, &quo);
-				ex = quo ? MAX_VALUE : 0;
+				// Subtract Stores the value of B−A in B.
+				result = bValue - aValue;
+
+				setValue(EX, (result < 0) ? MAX_VALUE : 0x0000, REGISTER);
+				setValue(instruction.argB, result, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "SUB: " << QString::number(aValue) << " from " << QString::number(bValue);
+				}
+
 				cycle += 2;
 
 				break;
 
 			case OP_MUL:
-				// Multiple A by B, set O
-				result = divMod(*aLoc * *bLoc, &quo);
-				ex = quo % MAX_SIZE;
+				// Multiply Stores the value of B*A in B.
+				result = bValue * aValue;
+
+				setValue(EX, result >> 16, REGISTER);
+				setValue(instruction.argB, result, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "MUL: " << QString::number(aValue) << " to " << QString::number(bValue);
+				}
+
 				cycle += 2;
 
 				break;
 
 			case OP_MLI:
-				// Multiple A by B
-				result = divMod((unsigned short)*aLoc * (unsigned short)*bLoc, &quo);
-				ex = quo % MAX_SIZE;
+				// Multiply Inverse Stores the value of B*A in B.
+				// A and B treated as signed
+				result = getSigned(bValue) * getSigned(aValue);
+
+				setValue(EX, result >> 16, REGISTER);
+				setValue(instruction.argB, result, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "MLI: " << QString::number(aValue) << " to " << QString::number(bValue);
+				}
+
 				cycle += 2;
 
 				break;
 
 			case OP_DIV:
-				// Divide A by B, set EX
-				if (*bLoc != 0) {
-					ex = ((*aLoc << 16) / *bLoc) % MAX_SIZE;
-					result = (*aLoc / *bLoc) % MAX_SIZE;
+				// Divide Stores the value of B/A in B. Sets B to 0 if A is 0 (not an error).
+
+				if (aValue == 0) {
+					setValue(instruction.argB, 0x0000, instruction.argTypeB);
+					setValue(EX, 0x0000, REGISTER);
 				} else {
-					result = 0;
-					ex = 0;
+					setValue(instruction.argB, (word_t)floor((double)bValue / (double)aValue), instruction.argTypeB);
+					setValue(EX, (bValue * 0x10000) / aValue, REGISTER);
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "DIV: " << QString::number(bValue) << " by " << QString::number(aValue);
 				}
 
 				cycle += 3;
@@ -437,13 +605,21 @@ void Emulator::run()
 				break;
 
 			case OP_DVI:
-				// Divide A by B, set EX. Signed
-				if (*bLoc != 0) {
-					ex = (((unsigned short)*aLoc << 16) / (unsigned short)*bLoc) % MAX_SIZE;
-					result = (*aLoc / *bLoc) % MAX_SIZE;
+				// Divide Inverse Stores the value of B/A in B, where A and B are treated as signed. 
+				// Sets B to 0 if A is 0 (not an error). Rounds the result towards 0.
+
+				if (aValue == 0) {
+					setValue(instruction.argB, 0x0000, instruction.argTypeB);
+					setValue(EX, 0x0000, REGISTER);
 				} else {
-					result = 0;
-					ex = 0;
+					int quotient = getSigned(bValue) / getSigned(aValue);
+
+					setValue(instruction.argB, roundTowardsZero(quotient), instruction.argTypeB);
+					setValue(EX, (getSigned(bValue) << 16) / getSigned(aValue), REGISTER);
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "DVI: " << QString::number(bValue) << " by " << QString::number(aValue);
 				}
 
 				cycle += 3;
@@ -451,11 +627,13 @@ void Emulator::run()
 				break;
 
 			case OP_MOD:
-				// Remainder of A over B
-				if (*bLoc != 0) {
-					result = (*aLoc % *bLoc) % MAX_SIZE;
-				} else {
-					result = 0;
+				// Modulo Stores the remainder of B/A in B. Sets B to 0 if A is 0 (not an error).
+
+				setValue(instruction.argB, (aValue == 0) ? 0x0000 : (bValue % aValue), instruction.argTypeB);
+
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "MOD: " << QString::number(bValue) << " by " << QString::number(aValue);
 				}
 
 				cycle += 3;
@@ -463,11 +641,13 @@ void Emulator::run()
 				break;
 
 			case OP_MDI:
-				// Remainder of A over B. Signed
-				if (*bLoc != 0) {
-					result = ((unsigned short)*aLoc % (unsigned short)*bLoc) % MAX_SIZE;
-				} else {
-					result = 0;
+				// Modulo Inverse Stores the remainder of B/A in B. Sets B to 0 if A is 0 (not an error).
+
+				setValue(instruction.argB, (aValue == 0) ? 0x0000 : (getSigned(bValue) % getSigned(aValue)), instruction.argTypeB);
+
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "MDI: " << QString::number(bValue) << " by " << QString::number(aValue);
 				}
 
 				cycle += 3;
@@ -475,209 +655,434 @@ void Emulator::run()
 				break;
 
 			case OP_AND:
-				// Binary AND of A and B
-				result = (*aLoc & *bLoc) % MAX_SIZE;
+				// AND Stores bitwise AND of B and A in B
+
+				setValue(instruction.argB, bValue & aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "AND: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
 				cycle += 1;
+
 				break;
 
 			case OP_BOR:
-				// Binary OR of A and B
-				result = (*aLoc | *bLoc) % MAX_SIZE;
+				// Bitwise OR Stores bitwise OR of B and A in B.
+
+				setValue(instruction.argB, bValue | aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "OR: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
 				cycle += 1;
+
 				break;
 
 			case OP_XOR:
-				// Binary XOR of A and B
-				result = (*aLoc ^ *bLoc) % MAX_SIZE;
+				// Exclusive-OR Stores bitwise EXCLUSIVE OR of B and A in B.
+
+				setValue(instruction.argB, bValue ^ aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "XOR: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
+
 				cycle += 1;
+
 				break;
 
 			case OP_SHR:
-				// Shift A right B places, set O
-				ex = ((*aLoc << 16) >> *bLoc) % MAX_SIZE;
-				result = (*aLoc >> *bLoc) % MAX_SIZE;
+				// Shift Right Shifts B to the right by A bits.
+
+				setValue(EX, (bValue << 16) >> aValue, REGISTER);
+				setValue(instruction.argB, bValue >> aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "SHR: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
 
 				cycle += 1;
+
 				break;
 
 			case OP_ASR:
-				// Arithmetic Shift A right B places, set O
-				ex = (((unsigned short)*aLoc << 16) >> *bLoc) % MAX_SIZE;
-				result = ((unsigned short)*aLoc >> *bLoc) % MAX_SIZE;
+				// Arithmetic Shift Right Shifts B to the right by A bits. B is treated as signed.
+
+				setValue(EX, (getSigned(bValue) << 16) >> aValue, REGISTER);
+				setValue(instruction.argB, getSigned(bValue) >> aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "ASR: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
 
 				cycle += 1;
+
 				break;
 
 			case OP_SHL:
-				// Shift A left B places, set O
-				ex = ((*aLoc << *bLoc) >> 16) % MAX_SIZE;
-				result = (*aLoc << *bLoc) % MAX_SIZE;
+				// Shift Left Shifts B to the left by A bits.
+
+				setValue(EX, (bValue << aValue) >> 16, REGISTER);
+				setValue(instruction.argB, bValue << aValue, instruction.argTypeB);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "SHL: " << QString::number(bValue) << " by " << QString::number(aValue);
+				}
 
 				cycle += 1;
+
 				break;
 
 			case OP_IFB:
-				// Skip next instruction if (A & B) != 0
-				skipStore = 1;
-				skipNext = (*aLoc & *bLoc) != 0 ? 0 : 1;
+				// If Bits[/If Blank] Perform the next instruction if B&A is not zero. 
+				// In other words, if B and A have any of the same bits set, perform the next instruction.
 
-				cycle += (2 + skipNext);
+				if ((bValue & aValue) == 0) {
+					skipTilNonIf();
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IFB: " << QString::number(bValue) << " & " << QString::number(aValue) << " == 0";
+				}
+
+				cycle += 2;
 				break;
 
 			case OP_IFC:
-				// Skip next instruction if (A & B) == 0
-				skipStore = 1;
-				skipNext = (*aLoc & *bLoc) == 0 ? 0 : 1;
+				// If Clear Perform the next instruction if B&A is zero. 
+				// In other words, if B and A have any of the same bits set, omit the next instruction.
 
-				cycle += (2 + skipNext);
+				if (bValue & aValue) {
+					skipTilNonIf();
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IFC: " << QString::number(bValue) << " & " << QString::number(aValue);
+				}
+
+				cycle += 2;
 				break;
 
 			case OP_IFE:
-				// Skip next instruction if A == B
-				skipStore = 1;
+				// If Equal Perform the next instruction if B is equal to A.
 
-				skipNext = (*aLoc == *bLoc) ? 0 : 1;
+				if (bValue != aValue) {
+					skipTilNonIf();
+				}
 
-				//qDebug() << skipNext << argA << argB;
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IFE: " << QString::number(bValue) << " == " << QString::number(aValue);
+				}
 
-				cycle += (2 + skipNext);
+				cycle += 2;
 				break;
 
 			case OP_IFN:
-				// Skip next instruction if A != B
-				skipStore = 1;
-				skipNext = (*aLoc != *bLoc) ? 0 : 1;
+				// If Not Equal Perform the next instruction if B is not equal to A.
 
-				cycle += (2 + skipNext);
+				if (bValue == aValue) {
+					skipTilNonIf();
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IFN: " << QString::number(bValue) << " != " << QString::number(aValue);
+				}
+
+				cycle += 2;
 				break;
 
 			case OP_IFG:
-				// Skip next instruction if A < B
-				skipStore = 1;
-				skipNext = (*aLoc > *bLoc) ? 0 : 1;
+				// If Greater Perform the next instruction if B is strictly greater than A.
 
-				cycle += (2 + skipNext);
+				if (bValue <= aValue) {
+					skipTilNonIf();
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IFG: " << QString::number(bValue) << " >= " << QString::number(aValue);
+				}
+
+				cycle += 2;
 				break;
 
 			case OP_IFA:
-				// Skip next instruction if A > B. Signed
-				skipStore = 1;
-				skipNext = ((unsigned short)*aLoc > (unsigned short)*bLoc) ? 0 : 1;
+				// If After Perform the next instruction if B is strictly greater than A. A and B are treated as signed.
 
-				cycle += (2 + skipNext);
+				if (getSigned(bValue) <= getSigned(aValue)) {
+					skipTilNonIf();
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IFA: " << QString::number(bValue) << " >= " << QString::number(aValue);
+				}
+
+				cycle += 2;
 				break;
 
 			case OP_IFL:
-				// Skip next instruction if A < B
-				skipStore = 1;
-				skipNext = (*aLoc < *bLoc) ? 0 : 1;
+				// If Less Perform the next instruction if B is strictly less than A.
 
-				cycle += (2 + skipNext);
+				if (bValue >= aValue) {
+					skipTilNonIf();
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IFL: " << QString::number(bValue) << " <= " << QString::number(aValue);
+				}
+
+				cycle += 2;
 				break;
 
 			case OP_IFU:
-				// Skip next instruction if A < B. Signed
-				skipStore = 1;
-				skipNext = ((unsigned short)*aLoc < (unsigned short)*bLoc) ? 0 : 1;
+				// If Under Perform the next instruction if B is strictly less than A. A and B are treated as signed.
 
-				cycle += (2 + skipNext);
+				if (getSigned(bValue) >= getSigned(aValue)) {
+					skipTilNonIf();
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IFU: " << QString::number(bValue) << " <= " << QString::number(aValue);
+				}
+
+				cycle += 2;
 				break;
 
 			case OP_ADX:
-				// Set A to A + B + EX
-				skipStore = 1;
-				result = divMod(*aLoc + *bLoc + ex, &quo);
-				ex = quo ? 1 : 0;
+				{
+					// Add EX Stores the value of A+B+EX in B.
 
-				cycle += 3;
+					int value = bValue + aValue + registers.at(EX);
+
+					if (value > MAX_VALUE) {
+						setValue(EX, 1, REGISTER);
+					} else {
+						setValue(EX, 0, REGISTER);
+					}
+
+					setValue(instruction.argB, value, instruction.argTypeB);
+
+					if (OPCODE_DEBUGGING) {
+						qDebug() << "ADX: " << QString::number(bValue) << " + " << QString::number(aValue) << QString::number(registers.at(EX));
+					}
+
+					cycle += 3;
+				}
 				break;
 
-			case OP_SBX:
-				// Set A to A - B + EX
-				skipStore = 1;
-				result = divMod(*aLoc - *bLoc + ex, &quo);
-				ex = quo ? 1 : 0;
+			case OP_SBX: 
+				{
+					// Subtract [with] EX Stores the value of A−B+EX in B.
 
-				cycle += 3;
+					int value = bValue + aValue + getSigned(registers.at(EX));
+
+					if (value < 0) {
+						setValue(EX, 0xffff, REGISTER);
+					} else {
+						setValue(EX, 0, REGISTER);
+					}
+
+					setValue(instruction.argB, value, instruction.argTypeB);
+
+					if (OPCODE_DEBUGGING) {
+						qDebug() << "SBX: " << QString::number(bValue) << " + " << QString::number(aValue) << QString::number(getSigned(registers.at(EX)));
+					}
+
+					cycle += 3;
+				}
 				break;
 
 			case OP_STI:
-				// Set A to B then decrease I and J by 1
-				result = *bLoc;
-				registers[6] += 1;
-				registers[7] += 1;
+				// Set-Increment Stores A in B, then increases I and J by 1.
+
+				setValue(instruction.argB, aValue, instruction.argTypeB);
+
+				setValue(I, registers.at(I) + 1, REGISTER);
+				setValue(J, registers.at(J) + 1, REGISTER);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "STI: " << QString::number(aValue);
+				}
 
 				cycle += 2;
 				break;
 
 			case OP_STD:
-				// Set A to B then decrease I and J by 1
-				result = *bLoc;
-				registers[6] -= 1;
-				registers[7] -= 1;
+				// Set-Decrement Stores A in B, then decreases I and J by 1.
+
+				setValue(instruction.argB, aValue, instruction.argTypeB);
+
+				setValue(I, registers.at(I) - 1, REGISTER);
+				setValue(J, registers.at(J) - 1, REGISTER);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "STD: " << QString::number(aValue);
+				}
+
+				cycle += 2;
+				break;
+			case OP_JSR:
+				// Jump Subroutine Stores the address of the next instruction on the stack and begins the subroutine located at A.
+
+				setValue(PUSH, getValue(PC, REGISTER), MEMORY_OPERATION);
+				setValue(PC, aValue, REGISTER);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "JSR: " << QString::number(aValue);
+				}
+
+				cycle += 3;
+				break;
+
+			case OP_INT:
+				// Interrupt Triggers an interrupt from software with message A.
+
+				interrupt(aValue);
+
+				cycle += 4;
+				break;
+
+			case OP_IAG:
+				// Interrupt Address Get Sets A to IA.
+
+				setValue(instruction.argA, registers.at(IA), instruction.argTypeA);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IAG: " << QString::number(registers.at(IA));
+				}
+
+				cycle += 1;
+				break;
+
+			case OP_IAS:
+				// Interrupt Address Set Sets IA to A.
+
+				setValue(IA, aValue, REGISTER);
+
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IAS: " << QString::number(aValue);
+				}
+
+				cycle += 1;
+				break;
+
+			case OP_RFI:
+				// Return From Interrupt Disables interrupt queueing, pops A from the stack, then pops PC from the stack.
+
+				triggerInterrupts = true;
+				
+				setValue(A, getValue(POP, MEMORY_OPERATION), REGISTER);
+				setValue(PC, getValue(POP, MEMORY_OPERATION), REGISTER);
+
+				returnedFromInterrupt = true;
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "RFI: ";
+				}
+
+				cycle += 3;
+				break;
+
+			case OP_IAQ:
+				// Interrupt Address Queue If A is nonzero, interrupts will be added to the queue instead of triggered.
+				// If A is zero, interrupts will be triggered as normal again.
+
+				if (aValue) {
+					triggerInterrupts = false;
+				} else {
+					triggerInterrupts = true;
+				}
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "IAQ: " << QString::number(aValue);
+				}
+				cycle += 2;
+				break;
+
+			case OP_HWN:
+				// Hardware Number Sets A to the number of hardware devices.
+
+				setValue(instruction.argA, connectedDevices.size(), instruction.argTypeA);
+
+				if (OPCODE_DEBUGGING) {
+					qDebug() << "HWN: " << QString::number(connectedDevices.size());
+				}
 
 				cycle += 2;
 				break;
 
-			default:
-				cycle += 1;
+			case OP_HWQ:
+				{
+					// Hardware Query Sets A, B, C, X and Y registers to information about hardware A.
+					// A+(B<<16) is the 32-bit hardware ID. C is the hardware version. X+(Y<<16) is the 32-bit manufacturer code.
+
+					if (aValue < connectedDevices.size()) {
+						Device *device = connectedDevices.at(aValue);
+
+						setValue(B, device->id >> 16, REGISTER);
+						setValue(A, device->id & 0xffff, REGISTER);
+						setValue(C, device->version, REGISTER);
+						setValue(Y, device->manufacturer >> 16, REGISTER);
+						setValue(X, device->id & 0xffff, REGISTER);
+					} else {
+						setValue(B, 0, REGISTER);
+						setValue(A, 0, REGISTER);
+						setValue(C, 0, REGISTER);
+						setValue(Y, 0, REGISTER);
+						setValue(X, 0, REGISTER);
+					}
+
+					cycle += 4;
+				}
+				break;
+
+			case OP_HWI:
+				{
+					// Hardware Interrupt Sends an interrupt to hardware A.
+
+					Device *device = connectedDevices.at(aValue);
+
+					this->disconnect(SIGNAL(memoryUpdated(word_t)));
+
+					connect(this, SIGNAL(memoryUpdated(word_t)), device, SLOT(memoryUpdated(word_t)));
+
+					device->handleInterrupt(registers);
+
+					cycle += 4;
+				}
 				break;
 			}
 
-			// Store result back in A, if it's not being skipped
-			if (!skipStore) {
-				// Halt?
-				if (aLoc == &programCounter && result == executingPC
-					&& ((opcode == OP_SET && getArgument(instruction, 1) == ARG_NEXTWORD)
-					|| (opcode == OP_SUB && getArgument(instruction, 1) == ARG_LITERAL_START + 1))) {
-						qDebug() << "SYSTEM HALTED!";
 
-						emulatorRunning = false;
-						break;
-				}
 
-				// Check if video needs to be updated
-				if (aLoc >= &memory[CONSOLE_START] && aLoc < &memory[CONSOLE_END]) {
-					videoDirty = true;
-				}
 
-				*aLoc = result;
+			if (stepMode) {
+				
+				emit registersChanged(getRegisters());
+
+				// May not be a good way of doing it.
+				emit fullMemorySync(memory);
+
+				emit instructionChanged(instruction.rawInstruction);
 			}
 
-			// Skip next instruction if needed
-			if (skipNext) {
-				programCounter += getInstructionLength(memory[programCounter]);
-			}
-
-			/*
-			if (videoDirty) {
-
-				clearScreen();
-				for (int i = 0; i < TERM_HEIGHT; i++) {
-					for (int j = 0; j < TERM_WIDTH; j +=1) {
-
-						word_t toPrint = memory[CONSOLE_START + i * TERM_WIDTH + j];
-
-						setScreen(i, j, toPrint);
-					}
-
-				}
-				videoDirty = false;
-
-			}
-			*/
-
-			// TODO: Add a way to toggle this
-			emit registersChanged(getRegisters());
 
 			if (stepMode) {
 				// Skip next pass
 				skippingCurrentPass = true;
 			}
+
 		} 
 	}
 
+	// Show the final memory state.
+	emit fullMemorySync(memory);
+
+	qDebug() << "Emulation Ended Sucessfully";
 	emit emulationEnded(DCPU_SUCCESSFUL);
+
 }
 
 // Update and return the latest registers
@@ -685,184 +1090,33 @@ registers_ptr Emulator::getRegisters()
 {
 	registers_ptr latestRegisters(new registers_t());
 
-	latestRegisters->a = registers[0];
-	latestRegisters->b = registers[1];
-	latestRegisters->c = registers[2];
-	latestRegisters->x = registers[3];
-	latestRegisters->y = registers[4];
-	latestRegisters->z = registers[5];
-	latestRegisters->i = registers[6];
-	latestRegisters->j = registers[7];
-	latestRegisters->pc = programCounter;
-	latestRegisters->sp = stackPointer;
+	latestRegisters->a = registers[A];
+	latestRegisters->b = registers[B];
+	latestRegisters->c = registers[C];
+	latestRegisters->x = registers[X];
+	latestRegisters->y = registers[Y];
+	latestRegisters->z = registers[Z];
+	latestRegisters->i = registers[I];
+	latestRegisters->j = registers[J];
+	latestRegisters->sp = registers[SP];
+	latestRegisters->pc = registers[PC];
+	latestRegisters->o = registers[EX];
+
 	latestRegisters->ia = interruptAddress;
-	latestRegisters->o = ex;
+
 
 	return latestRegisters;
 }
 
-word_t* Emulator::evaluateArgument(argument_t argument, bool inA)
-{
 
-	if (argument >= ARG_REG_START && argument < ARG_REG_END) {
-		// Register value
-		word_t regNumber = argument - ARG_REG_START;
-
-		if (DEBUG) {
-			std::cout << "register " << regNumber << std::endl;
-		}
-
-		return &registers[regNumber];
-	}
-
-	if (argument >= ARG_REG_INDEX_START && argument < ARG_REG_INDEX_END) {
-		// [register value] - Value at address in register
-		word_t regNumber = argument - ARG_REG_INDEX_START;
-
-		if (DEBUG) {
-			std::cout << "[register " << regNumber << "]" << std::endl;
-		}
-
-		return &memory[registers[regNumber]];
-	}
-
-	if (argument >= ARG_REG_NEXTWORD_INDEX_START && argument < ARG_REG_NEXTWORD_INDEX_END) {
-		// [next ram word + register value] - Memory address offset by register value
-		word_t regNumber = argument - ARG_REG_NEXTWORD_INDEX_START;
-
-		if (DEBUG) {
-			std::cout << "[" << memory[programCounter] << " + register " << regNumber + "]" << std::endl;
-		}
-
-		cycle++;
-
-		return &memory[registers[regNumber] + memory[programCounter++]];
-	}
-
-	if (argument >= ARG_LITERAL_START && argument < ARG_LITERAL_END) {
-		if (argument == ARG_LITERAL_START) {
-			return 0;
-		} else {
-			// Literal value 0-31 - does nothing on assign
-			if (DEBUG) {
-				std::cout << "literal " << argument - ARG_LITERAL_START << std::endl;
-			}
-
-			return &literals[argument - 0x21];
-		}
-	}
-
-	// Single values
-	switch(argument) {
-	case ARG_PUSH_POP:
-		// Value at stack address, increments stack counter
-		if (inA){
-			// Push
-
-			if (DEBUG) {
-				std::cout << "PUSH" << std::endl;
-			}
-
-			return &memory[--stackPointer];
-		} else {
-			// Pop
-
-			if (DEBUG) {
-				std::cout << "POP" << std::endl;
-			}
-
-			return &memory[stackPointer++];
-		}
-		break;
-
-	case ARG_PEEK:
-		// Value at stack address
-		if (DEBUG) {
-			std::cout << "PEEK" << std::endl;
-		}
-
-		return &memory[stackPointer + sizeof(word_t)];
-		break;
-
-	case ARG_PICK:
-		// Value at stack address plus next word
-		if (DEBUG) {
-			std::cout << "PEEK" << std::endl;
-		}
-
-		return &memory[stackPointer];
-
-		break;
-
-		/*
-		case ARG_PUSH:
-		// Decreases stack address, returns value at stack address
-		if (DEBUG) {
-		std::cout << "PUSH" << std::endl;
-		}
-
-		return &memory[--stackPointer];
-		break;
-		*/
-
-	case ARG_SP:
-		// Current stack pointer value
-		if (DEBUG) {
-			std::cout << "stack pointer" << std::endl;
-		}
-
-		return &stackPointer;
-		break;
-
-	case ARG_PC:
-		// Program counter
-		if (DEBUG) {
-			std::cout << "program counter" << std::endl;
-		}
-
-		return &programCounter;
-		break;
-
-	case ARG_EX:
-		// Overflow
-		if (DEBUG) {
-			std::cout << "overflow" << std::endl;
-		}
-
-		return &ex;
-		break;
-
-	case ARG_NEXTWORD_INDEX:
-		// Next word of ram
-		if (DEBUG) {
-			std::cout << "[" << memory[programCounter] << "]" << std::endl;
-		}
-
-		cycle++;
-		return &memory[memory[programCounter++]];
-		break;
-
-	case ARG_NEXTWORD:
-		// Next word of ram - literal
-		if (DEBUG) {
-			qDebug() << QString::number(memory[programCounter]);
-		}
-
-		cycle++;
-		return &memory[programCounter++];
-		break;
-
-	};
-
-}
 
 // Get an opcode from instruction
-opcode_t Emulator::getOpcode(instruction_t instruction)
+word_t Emulator::getOpcode(word_t instruction)
 {
 	return instruction & 0x1F;
 }
 
-argument_t Emulator::getArgument(instruction_t instruction, bool_t which)
+argument_t Emulator::getArgument(word_t instruction, bool_t which)
 {
 	// First 6 bits for true, second 6 for false
 	//return ((instruction >> 4) >> 6 * which) & 0x3F;
@@ -880,17 +1134,11 @@ argument_t Emulator::getArgument(instruction_t instruction, bool_t which)
 
 
 
-// Is argument constant
-bool_t Emulator::isConst(argument_t argument)
-{
-	return (argument >= ARG_LITERAL_START && argument < ARG_LITERAL_END)
-		|| argument == ARG_NEXTWORD;
-}
 
 // How many words does instruction take
-word_t Emulator::getInstructionLength(instruction_t instruction)
+word_t Emulator::getInstructionLength(word_t instruction)
 {
-	if (getOpcode(instruction) == OP_NONBASIC) {
+	if (getOpcode(instruction) == OP_NULL) {
 		// 1 argument
 		return 1 + Utils::usesNextWord(getArgument(instruction, 1));
 	} else {
@@ -899,9 +1147,9 @@ word_t Emulator::getInstructionLength(instruction_t instruction)
 }
 
 // Get offset from instruction for next word
-word_t Emulator::getNextWordOffset(instruction_t instruction, bool_t which)
+word_t Emulator::getNextWordOffset(word_t instruction, bool_t which)
 {
-	if (getOpcode(instruction) == OP_NONBASIC) {
+	if (getOpcode(instruction) == OP_NULL) {
 		// 1 argument, 1 extra word
 		return (which == 0) && Utils::usesNextWord(getArgument(instruction, 1));
 	} else {
@@ -917,52 +1165,6 @@ bool Emulator::inStepMode()
 {
 	return stepMode;
 }
-
-/*
-void Emulator::setScreen(word_t row, word_t column, word_t character)
-{
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	setCursorPos(column, row);
-
-	char letter = (character & 0x7F);
-
-	if (letter == '\0') {
-		letter = ' ';
-	}
-
-	//SetConsoleTextAttribute(console, 6);
-
-	std::cout << letter;
-}
-
-void Emulator::setCursorPos(int x, int y)
-{
-	COORD pos  = {x, y};
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	//SetConsoleTextAttribute(console, 7);
-	SetConsoleCursorPosition(console, pos);
-}
-
-void Emulator::clearScreen()
-{
-	COORD topLeft  = { 0, 0 };
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_SCREEN_BUFFER_INFO screen;
-	DWORD written;
-
-	GetConsoleScreenBufferInfo(console, &screen);
-	FillConsoleOutputCharacterA(
-		console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-		);
-	FillConsoleOutputAttribute(
-		console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
-		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-		);
-	SetConsoleCursorPosition(console, topLeft);
-}
-*/
 
 word_map Emulator::getMemory() {
 	return memory;

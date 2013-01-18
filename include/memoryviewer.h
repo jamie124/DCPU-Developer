@@ -3,9 +3,13 @@
 
 #include <QGLWidget>
 
+#include "emulator.h"
+#include "constants.h"
+
 class GLHelper;
 class QPaintEvent;
 class QWidget;
+
 
 class MemoryViewer : public QGLWidget 
 {
@@ -15,7 +19,7 @@ public:
 	MemoryViewer(GLHelper *glHelper, QWidget *parent = 0);
 	~MemoryViewer();
 
-	void setMemoryMap(QMap<int, int> map);
+	void setMemoryMap(word_map map);
 
 public slots:
 	void animate();
@@ -30,7 +34,7 @@ private:
 	GLHelper *glHelper;
 	int elapsed;
 
-	QMap<int, int> memoryMap;
+	word_map memoryMap;
 };
 
 #endif

@@ -21,7 +21,7 @@ Assembler::~Assembler(void)
 {
 }
 
-opcode_t Assembler::opcodeFor(const QString command)
+word_t Assembler::opcodeFor(const QString command)
 {
 	if (command == "set") {
 		return OP_SET;
@@ -127,8 +127,57 @@ opcode_t Assembler::opcodeFor(const QString command)
 		return OP_STD;
 	}
 
+	// SPECIAL OPCODES 
+
+	// Push address of next instruction to stack
+	if (command == "jsr") {
+		return OP_JSR;
+	}
+
+	// Trigger software interupt with message a
+	if (command == "int") {
+		return OP_INT;
+	}
+
+	// Sets a to IA
+	if (command == "iag") {
+		return OP_IAG;
+	}
+
+	// Sets IA to a
+	if (command == "ias") {
+		return OP_IAS;
+	}
+
+	// Disables interrupt queueing, pop A from stack then pop PC
+	if (command == "rfi") {
+		return OP_RFI;
+	}
+
+	// If a is non-zero, interrupts will be added to queue instead of triggered.
+	// If a is zero interrupts will be triggered.
+	if (command == "iaq") {
+		return OP_IAQ;
+	}
+
+	// Sets a to number of connected hardware devices
+	if (command == "hwn") {
+		return OP_HWN;
+	}
+
+	// Sets A, B, C, X, Y registers to information about hardware a A+(B<<16) is a 32 bit word 
+	// identifying the hardware id. C is the hardware version
+	if (command == "hwq") {
+		return OP_HWQ;
+	}
+
+	// Sends an interrupt to hardware a
+	if (command == "hwi") {
+		return OP_HWI;
+	}
+
 	// Assume non-basic
-	return OP_NONBASIC;
+	return OP_NULL;
 }
 
 // Get non-basic opcode from string
@@ -223,9 +272,6 @@ int Assembler::registerFor(QChar regName)
 // Get argument value for string
 argumentStruct_t Assembler::argumentFor(QString arg) {
 
-
-    QScopedPointer<const char> tempBuffer(strdup(arg.toStdString().c_str()));
-
 	argumentStruct_t toReturn;
 
 	toReturn.badArgument = false;
@@ -241,26 +287,18 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 	}
 
 	// If it begins with 0-9 it's a number
-	if (tempBuffer.data()[0] >= '0' && tempBuffer.data()[0] <= '9') {
-		int argValue;
-		char* format;
+	QChar charCheck = arg.at(0);
 
-		if (arg.length() > 2 && tempBuffer.data()[0] == '0' && tempBuffer.data()[1] == 'x') {
-			// Value is hex
-			format = "%x";
-		} else {
-			// Decimal
-			format = "%d";
-		}
+	if (charCheck.toAscii() >= '0' && charCheck.toAscii() <= '9') {
+		word_t argValue;
 
-		if (sscanf(tempBuffer.data(), format, &argValue) != 1) {
-			qDebug() << "ERROR: Invalid literal value: " << arg;
+		QTextStream inputData(&arg);
 
-			toReturn.badArgument = true;
-			toReturn.errorCode = ASSEMBLER_INVALID_LITERAL;
 
-			return toReturn;
-		}
+		inputData >> argValue;
+
+		qDebug() << QString::number(argValue);
+
 
 		if (argValue == ARG_LITERAL_START) {
 			toReturn.argument = 0xffff;
@@ -283,10 +321,10 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 		return toReturn;
 	}
 
-	if (tempBuffer.data()[0] == '[' || tempBuffer.data()[0] == '(') {
-		if (arg.length() == 3 && (tempBuffer.data()[2] == ']' || tempBuffer.data()[2] == ')')) {
+	if (charCheck.toAscii() == '[' || charCheck.toAscii() == '(') {
+		if (arg.length() == 3 && (arg.at(2).toAscii() == ']' || arg.at(2).toAscii() == ')')) {
 			// If it's 1 char in bracket it's a register
-			int regNum = registerFor(tempBuffer.data()[1]);
+			int regNum = registerFor(arg.at(1).toAscii());
 
 			if (regNum != -1) {
 				toReturn.argument = ARG_REG_INDEX_START + regNum;
@@ -303,10 +341,39 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 		// Hex value?
 		int hexValue;
-		if (sscanf(tempBuffer.data() + 1, "0x%x", &hexValue) == 1) {
+
+		QTextStream inputData(&arg);
+
+
+		if (arg.contains("0x")) {
+			//if (arg.at(1).toAscii() >= '0' && arg.at(1).toAscii() <= '9') {
 			// +register?
-			char regName;
-			if (sscanf(tempBuffer.data() + 1, "0x%x+%c", &hexValue, &regName) == 2) {
+			int hexValue;
+			QChar regName;
+			QString reg;
+
+			arg = arg.replace("[", "").replace("]", "").replace("+", "").trimmed();
+			arg = arg.replace("(", "").replace(")", "").trimmed();
+
+			if (arg.at(0).toAscii() >= '0' && arg.at(0).toAscii() <= '9') {
+				// Hex value before register
+				inputData >> hex >> hexValue;
+				inputData >> reg;
+			} else {
+				// Register before hex value
+				inputData >> reg;
+				inputData >> hex >> hexValue;
+			}
+
+			qDebug() << arg;
+
+			qDebug() << "Hex: " + QString::number(hexValue) + ", Reg: " + reg;
+
+			if (reg.length() == 1) {
+				regName = reg.at(0);
+
+				//	if (sscanf(tempBuffer.data() + 1, "0x%x+%c", &hexValue, &regName) == 2) {
+
 				// TODO enforce closing
 				int regNum = registerFor(regName);
 
@@ -322,6 +389,7 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 					return toReturn;
 				}
+
 			} else {
 				// Just hex in brackets
 				// TODO: enforce closing
@@ -425,7 +493,7 @@ argumentStruct_t Assembler::argumentFor(QString arg) {
 
 	// Is register?
 	if (arg.length() == 1) {
-		int regNum = registerFor(tempBuffer.data()[0]);
+		int regNum = registerFor(arg.at(0));
 		if (regNum != -1) {
 			toReturn.argument = ARG_REG_START + regNum;
 			return toReturn;
@@ -530,19 +598,7 @@ void Assembler::run()
 		//qDebug() << currentLine;
 
 		// Reset variables
-		/*
-		for (int i = 0; i < MAX_CHARS; i++) {
-		data[i] = '\0';
 
-		if (!skipTillNextLine) {
-		label[i] = '\0';
-		}
-
-		command[i] = '\0';
-		arg1[i] = '\0';
-		arg2[i] = '\0';
-		}
-		*/
 		if (!skipTillNextLine) {
 			label = "";
 		}
@@ -558,29 +614,17 @@ void Assembler::run()
 
 		lineNumber++;
 
-		/*
-		if (sourceFile.getline(lineBuffer, MAX_CHARS).eof()) {
-		finished = true;
-		}
-		*/
-
 		removeComment(currentLine);
 
-		//char* temp = cleanString(lineBuffer);
-
-		// Check if whole line is a blank
-
-		//qDebug() << "Line length: " + QString::number(currentLine.length());
-
-		//qDebug() << currentLine;
-
 		if (currentLine.length() <= 1) {
-            /*
+
+			/*
 			if (label.length() > 0) {
-				processCommand(QString(""), QString(""), address, label, head, tail, instruction);
+			processCommand(QString(""), QString(""), address, label, head, tail, instruction);
 			}
-            */
+			*/
 		} else {
+
 			// Non blank line, start processing
 
 			// Get label if applicable
@@ -609,15 +653,10 @@ void Assembler::run()
 			}
 		}
 
-		//delete temp;
-
 		if (finished) {
 			break;
 		}
 
-		//currentLine = sourceFile.readLine();
-
-		//qDebug() << currentLine;
 	}
 
 	std::cout << std::endl;
@@ -682,7 +721,7 @@ void Assembler::run()
 		if (instruction->data != NULL) {
 			// Reverse endianess
 			for (int i = 0; i < instruction->dataLength; i++) {
-				debugOut << ":" << QString::number(instruction->data[i], 16).rightJustified(4, '0');
+				debugOut << "|" << QString::number(instruction->data[i], 16).rightJustified(4, '0');
 
 				instruction->data[i] = Utils::swapByteOrder(instruction->data[i]);
 			}
@@ -692,38 +731,27 @@ void Assembler::run()
 			continue;
 		}
 
-		instruction_t packed = 0;
-
-		//qDebug() << instruction->opcode;
-
-		//packed = Utils::setOpcode(packed, instruction->opcode);
+		word_t packed = 0;
 
 		//qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
 
-		// packed = Utils::setArgument(packed, 0, instruction->a.argument);
-		// packed = Utils::setArgument(packed, 1, instruction->b.argument);
 
 		packed = Utils::pack(instruction->opcode, instruction->a.argument, instruction->b.argument);
-		/*
-		packed = Utils::pack(packed, instruction->opcode, 0);
-		packed = Utils::pack(packed, instruction->a.argument, 0);
-		packed = Utils::pack(packed, instruction->b.argument, 1);
-		*/
 
-		//qDebug() << instruction->opcode << instruction->a.argument << instruction->b.argument;
 
-		//printf("%x\n", packed);
+		qDebug() << instruction->opcode << instruction->a.argument << instruction->b.argument;
 
-		instruction_t swapped = (packed>>8) | (packed<<8);
+
+		word_t swapped = (packed>>8) | (packed<<8);
 
 		// Save instruction
-		//qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
+		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
 
-		fwrite(&swapped, sizeof(instruction_t), 1, compiledFile);
+		fwrite(&swapped, sizeof(word_t), 1, compiledFile);
 
-		debugOut << ":" << QString::number(packed, 16).rightJustified(4, '0');
+		debugOut << "|" << QString::number(packed, 16).rightJustified(4, '0');
 
-		if (instruction->opcode != OP_NONBASIC && Utils::usesNextWord(instruction->a.argument)) {
+		if (instruction->opcode != OP_NULL && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
 
 			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord << " Swapped: " << swapped;
@@ -751,16 +779,16 @@ void Assembler::run()
 
 	qDebug() << "Compile finished.";
 
-	assemblerError(ASSEMBLER_SUCESSFUL, 0);
+	//debugOut.flush();
+	debugFile.flush();
+	debugFile.close();
 
 	// Close files
 
-	//delete[] command;
 
 	fclose(compiledFile);
 
-	//debugOut.flush();
-	debugFile.close();
+	assemblerError(ASSEMBLER_SUCESSFUL, 0);
 }
 
 void Assembler::assemblerError(int errorCode, int lineNumber)
@@ -815,14 +843,10 @@ char* Assembler::cleanString(char *rawLine)
 // Remove comments from a string
 void Assembler::removeComment(QString &input) {
 	if (input.contains(";")) {
-		//qDebug() << "Contains comment";
-
 		int startOfComment = input.indexOf(";");
 
 		input = input.left(startOfComment).trimmed();
 
-		//qDebug() << QString::number(startOfComment);
-		//qDebug() << input;
 	}
 }
 
@@ -884,7 +908,7 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 	//lineIndex += itemIndex;
 
 	//qDebug() << QString::number(itemIndex);
-	command = remainingLine.left(itemIndex);
+	command = remainingLine.left(itemIndex).toLower();
 
 	remainingLine = remainingLine.right(remainingLine.length() - itemIndex).trimmed();
 
@@ -954,84 +978,88 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 
 		qDebug() << "Data: " + data;
 
+		if (data.length() == 0) {
+			emit assemblerError(ASSEMBLER_EMPTY_DAT, instruction->a.lineNumber);
+		} else {
 
-		QChar nextChar = data.at(0);
+			QChar nextChar = data.at(0);
 
-		if (nextChar == '"') {
-			
-			index = 1;
+			if (nextChar == '"') {
 
-			//if (nextChar == '"') {
-			qDebug() << "Reading string.";
+				index = 1;
 
-			bool escaped = false;
-			while(1) {
+				//if (nextChar == '"') {
+				qDebug() << "Reading string.";
 
-                nextChar = data.at(index++).toLatin1(); //dataBuffer.data()[index++];
-				char toPut;
+				bool escaped = false;
+				while(1) {
 
-				if (escaped) {
-					// Escape translation
-                    switch(nextChar.toLatin1()) {
-					case 'n':
-						toPut = '\n';
+					nextChar = data.at(index++).toAscii(); //dataBuffer.data()[index++];
+					char toPut;
+
+					if (escaped) {
+						// Escape translation
+						switch(nextChar.toAscii()) {
+						case 'n':
+							toPut = '\n';
+							break;
+
+						case 't':
+							toPut = '\t';
+							break;
+
+						case '\\':
+							toPut = '\\';
+							break;
+
+						case '"':
+							toPut = '"';
+							break;
+
+						default:
+							qDebug() << "ERROR: Unrecognized escape sequence " << nextChar;
+							return -1;
+						}
+
+						escaped = false;
+					} else if (nextChar == '"') {
 						break;
-
-					case 't':
-						toPut = '\t';
-						break;
-
-					case '\\':
-						toPut = '\\';
-						break;
-
-					case '"':
-						toPut = '"';
-						break;
-
-					default:
-						qDebug() << "ERROR: Unrecognized escape sequence " << nextChar;
-						return -1;
+					} else if (nextChar == '\\') {
+						escaped = true;
+						continue;
+					} else {
+						// Normal character
+						toPut = nextChar.toAscii();
 					}
 
-					escaped = false;
-				} else if (nextChar == '"') {
-					break;
-				} else if (nextChar == '\\') {
-					escaped = true;
-					continue;
-				} else {
-					// Normal character
-                    toPut = nextChar.toLatin1();
+					instruction->data[instruction->dataLength++] = toPut;
+
+					//qDebug() << instruction->data[instruction->dataLength];
+
+					//for (int j = 0; j < instruction->dataLength; j++) {
+					//	std::cout << (char)instruction->data[j];
+					//}
+
+					//std::cout << std::endl;
 				}
+			} else {
+				QTextStream inputData(&data);
 
-				instruction->data[instruction->dataLength++] = toPut;
+				unsigned short dataValue;
 
-				//qDebug() << instruction->data[instruction->dataLength];
+				inputData >> dataValue;
 
-				//for (int j = 0; j < instruction->dataLength; j++) {
-				//	std::cout << (char)instruction->data[j];
-				//}
+				//qDebug() << QString::number(dataValue);
 
-				//std::cout << std::endl;
+				instruction->data[instruction->dataLength++] = dataValue;
+
+				qDebug() << QString::number(instruction->data[0]);
 			}
-		} else {
-			QTextStream inputData(&data);
 
-			unsigned short dataValue;
 
-			inputData >> dataValue;
 
-			//qDebug() << QString::number(dataValue);
-
-			instruction->data[instruction->dataLength++] = dataValue;
-
-			qDebug() << QString::number(instruction->data[0]);
+			address += instruction->dataLength;
 		}
-
-
-
-		address += instruction->dataLength;
 	}
 
 	return 1;
@@ -1088,7 +1116,7 @@ void Assembler::processArg2(QString &command, QString &arg, word_t &address, QSt
 		// No second arg
 		instruction->b = instruction->a;
 
-		instruction->a.argument = (argument_t) nonbasicOpcodeFor(command);
+		instruction->a.argument = (argument_t) opcodeFor(command);
 		instruction->a.labelReference = "";
 
 	} else {

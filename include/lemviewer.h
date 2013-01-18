@@ -5,6 +5,10 @@
 
 #include "constants.h"
 
+#include "emulator.h"
+
+#include <QMutex>
+
 const int CHAR_WIDTH = 4;
 const int CHAR_HEIGHT = 8;
 const int COLUMNS = 32;
@@ -20,14 +24,14 @@ const int PIXEL_HEIGHT = 3;
 const int REAL_WIDTH = WIDTH * PIXEL_WIDTH;
 const int REAL_HEIGHT = HEIGHT * PIXEL_HEIGHT;
 
-int const defaultPalette[] = {
+const word_t  defaultPalette[] = {
 	0x000, 0x00a, 0x0a0, 0x0aa, 
 	0xa00, 0xa0a, 0xa50, 0xaaa, 
 	0x555, 0x55f, 0x5f5, 0x5ff, 
 	0xf55, 0xf5f, 0xff5, 0xfff
 };
 
-int const defaultFont[] = {
+const word_t defaultFont[] = {
 	0xb79e, 0x388e, 0x722c, 0x75f4, 0x19bb, 0x7f8f, 0x85f9, 0xb158, 0x242e, 0x2400, 0x082a, 0x0800, 0x0008, 0x0000, 0x0808, 0x0808,
 	0x00ff, 0x0000, 0x00f8, 0x0808, 0x08f8, 0x0000, 0x080f, 0x0000, 0x000f, 0x0808, 0x00ff, 0x0808, 0x08f8, 0x0808, 0x08ff, 0x0000,
 	0x080f, 0x0808, 0x08ff, 0x0808, 0x6633, 0x99cc, 0x9933, 0x66cc, 0xfef8, 0xe080, 0x7f1f, 0x0701, 0x0107, 0x1f7f, 0x80e0, 0xf8fe,
@@ -51,10 +55,20 @@ class LemViewer :
 {
 	Q_OBJECT
 public:
-	LemViewer(QWidget *parent = 0);
+	LemViewer(Emulator *emu, QWidget *parent = 0);
 	~LemViewer();
 
-	void drawChar(int x, int y, word_t value);
+	void queueChar(int c, int r);
+	void drawScreen();
+
+	void drawChar(int c, int r);
+	void drawLoop();
+
+	void updateChar(word_t key);
+
+	word_t getColour(word_t value);
+
+	void setScreenAddress(long ramAddress);
 
 public slots:
 		void animate();
@@ -65,7 +79,20 @@ protected:
 private:
 	int elapsed;
 
+	Emulator *emulator;
+
+	long screenAddress;
+
+	word_map memory;
+
 	word_t videoBuffer[WIDTH][HEIGHT];
+
+	//QMap<int, QMap<int, int>> videoBuffer;
+
+	QMap<int, QMap<int, bool>> cellQueue;
+
+	bool initialised;
+
 };
 
 #endif

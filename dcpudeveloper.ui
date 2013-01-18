@@ -358,12 +358,16 @@
              <item row="2" column="5">
               <widget class="HexSpinBox" name="register_o">
                <property name="maximum">
-                <number>999</number>
+                <number>99999</number>
                </property>
               </widget>
              </item>
              <item row="3" column="5">
-              <widget class="HexSpinBox" name="register_ia"/>
+              <widget class="HexSpinBox" name="register_ia">
+               <property name="maximum">
+                <number>99999</number>
+               </property>
+              </widget>
              </item>
              <item row="3" column="4">
               <widget class="QLabel" name="label_12">

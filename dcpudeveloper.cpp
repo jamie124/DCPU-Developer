@@ -57,6 +57,16 @@ QMainWindow(parent),
 	// Setup syntax highlighting
 	highlighter = new Highlighter(editor->document());
 
+	// Find Dialog
+	findDialog = new FindDialog(this);
+	findDialog->setModal(false);
+	findDialog->setTextEdit(editor);
+
+	// Find Replace Dialog
+	findReplaceDialog = new FindReplaceDialog(this);
+	findReplaceDialog->setModal(false);
+	findReplaceDialog->setTextEdit(editor);
+
 	assemblerRunning = false;
 	emulatorRunning = false;
 	inStepMode = false;
@@ -69,6 +79,11 @@ QMainWindow(parent),
 	loadSettings();
 
 	connect(ui->disassembly_list, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(disassembledRowChanged(QListWidgetItem *, QListWidgetItem *)));
+
+
+	// Run emulator in background.
+	startEmulator();
+
 }
 
 DCPUDeveloper::~DCPUDeveloper()
@@ -80,7 +95,10 @@ DCPUDeveloper::~DCPUDeveloper()
 
 	delete phrases;
 
-	delete memoryViewer;
+	//delete memoryViewer;
+
+	//delete emulator;
+
 }
 
 void DCPUDeveloper::setupConnections() 
@@ -134,6 +152,14 @@ void DCPUDeveloper::editorChanged()
 
 		ui->editors_tabwidget->setTabText(tabIndex, tabText);
 	}
+}
+
+void DCPUDeveloper::openFindDialog() {
+
+}
+
+void DCPUDeveloper::openFindReplaceDialog() {
+
 }
 
 QAbstractItemModel* DCPUDeveloper::modelFromFile(const QString &filename)
@@ -191,13 +217,14 @@ void DCPUDeveloper::loadDisassemblyData() {
 
 	ui->disassembly_list->clear();
 
+
 	while (!debugInput.atEnd()) {
 
 		currentLine = debugInput.readLine().trimmed();
 
-		lineNumber = currentLine.left(currentLine.indexOf(':')).toInt();
+		lineNumber = currentLine.left(currentLine.indexOf('|')).toInt();
 
-		currentLine = currentLine.right(currentLine.length() - currentLine.indexOf(':') - 1);
+		currentLine = currentLine.right(currentLine.length() - currentLine.indexOf('|') - 1);
 
 		//qDebug() << currentLine + " ";
 
@@ -223,6 +250,8 @@ void DCPUDeveloper::loadDisassemblyData() {
 // Setup and new assembler thread and start it.
 void DCPUDeveloper::createAndRunAssembler()
 {
+	on_actionSave_triggered();
+
 	ui->compile_button->setEnabled(false);
 
 	assembler = new Assembler;
@@ -235,30 +264,31 @@ void DCPUDeveloper::createAndRunAssembler()
 	assembler->startAssembler();
 }
 
-// Setup and new assembler thread and start it.
-void DCPUDeveloper::createAndRunEmulator(QString binFile)
-{
-	emulator = QSharedPointer<Emulator>(new Emulator());
-	//emulator = new Emulator;
+void DCPUDeveloper::startEmulator() {
+	//emulator = QSharedPointer<Emulator>(new Emulator());
+	emulator = new Emulator();
 
 	qRegisterMetaType<word_t>("word_t");
-
-	/*
-	connect(emulator, SIGNAL(fullMemorySync(memory_array)), this, 
-	SLOT(setFullMemoryBlock(memory_array)), Qt::QueuedConnection);
-	*/
-	connect(emulator.data(), SIGNAL(registersChanged(registers_ptr)), this,
+	qRegisterMetaType<word_map>("word_map");
+	
+	connect(emulator, SIGNAL(fullMemorySync(word_map)), this, 
+	SLOT(setFullMemoryBlock(word_map)), Qt::QueuedConnection);
+	
+	connect(emulator, SIGNAL(registersChanged(registers_ptr)), this,
 		SLOT(updateRegisters(registers_ptr)), Qt::BlockingQueuedConnection);
-	connect(emulator.data(), SIGNAL(instructionChanged(word_t)), this, SLOT(emulatorInstructionChanged(word_t)), Qt::QueuedConnection);
+	connect(emulator, SIGNAL(instructionChanged(word_t)), this, SLOT(emulatorInstructionChanged(word_t)), Qt::QueuedConnection);
 
-	connect(emulator.data(), SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+}
 
+void DCPUDeveloper::runProgram(QString binFile) {
 	emulator->setFilename(binFile);
 
 	emulator->setStepMode(inStepMode);
 
 	emulator->startEmulator();
 }
+
 
 void DCPUDeveloper::saveSettings()
 {
@@ -296,11 +326,11 @@ void DCPUDeveloper::loadSettings()
 void DCPUDeveloper::setSelectedDisassembedInstruction(word_t instruction) {
 	// TODO: Add a map to prevent lookups
 
-	QListWidgetItem *item;
 	bool ok;
 	uint test = 0;
 
 	QString currentLine;
+	QListWidgetItem *item;
 
 	int index = 0;
 	for (int i = 0; i < ui->disassembly_list->count(); i++) {
@@ -333,6 +363,25 @@ void DCPUDeveloper::setSelectedDisassembedInstruction(word_t instruction) {
 	if (index <= ui->disassembly_list->count()) {
 		ui->disassembly_list->setCurrentRow(index);
 	}
+}
+
+void DCPUDeveloper::resetRegisters() {
+	ui->register_a->setValue(0);
+	ui->register_b->setValue(0);
+	ui->register_c->setValue(0);
+
+	ui->register_x->setValue(0);
+	ui->register_y->setValue(0);
+	ui->register_z->setValue(0);
+
+	ui->register_i->setValue(0);
+	ui->register_j->setValue(0);
+
+	ui->register_pc->setValue(0);
+	ui->register_sp->setValue(0);
+	ui->register_ia->setValue(0);
+
+	ui->register_o->setValue(0);
 }
 
 void DCPUDeveloper::on_actionOpen_triggered()
@@ -395,20 +444,22 @@ void DCPUDeveloper::on_run_button_clicked()
 
 	if (!emulatorRunning ){
 
-		createAndRunEmulator(COMPILED_TEMP_FILENAME);
+		resetRegisters();
+
+		runProgram(COMPILED_TEMP_FILENAME);
 
 		emulatorRunning = true;
 
 		ui->run_button->setText("Stop");
 
 	} else {
-		emulator->stopEmulator();
+		//emulator->stopEmulator();
 
 		//delete emulator;
 
-		appendLogMessage("User stopped emulator");
+		appendLogMessage("User stopped program");
 
-		emulatorRunning = false;
+		//emulatorRunning = false;
 	}
 }
 
@@ -420,10 +471,10 @@ void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 
 		assembler->stopAssembler();
 
-		delete assembler;
 
-		// Update disassembly
 		loadDisassemblyData();
+
+
 
 	} else {
 		ui->run_button->setEnabled(false);
@@ -434,8 +485,9 @@ void DCPUDeveloper::assemblerUpdate(assembler_update_t* error)
 	delete error;
 }
 
-void DCPUDeveloper::setFullMemoryBlock(memory_array memory)
+void DCPUDeveloper::setFullMemoryBlock(word_map memory)
 {
+	/*
 	QMap<int, int> temp;
 
 	for(int i = 0; i < RAM_SIZE; i++) {
@@ -443,8 +495,10 @@ void DCPUDeveloper::setFullMemoryBlock(memory_array memory)
 	}
 
 	delete memory;
+	*/
 
-	memoryViewer->setMemoryMap(temp);
+
+	memoryViewer->setMemoryMap(memory);
 
 }
 
@@ -481,9 +535,9 @@ void DCPUDeveloper::updateScrollbarValue(int value)
 }
 
 void DCPUDeveloper::disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow) {
-
-	editor->setLine(currentRow->data(1).toInt());
-
+	if (currentRow != NULL) {
+		editor->setLine(currentRow->data(1).toInt());
+	}
 }
 
 void DCPUDeveloper::endEmulation(int endCode)
@@ -609,4 +663,8 @@ void DCPUDeveloper::on_actionSave_As_triggered()
 			currentFilename = fileName;
 		}
 	}
+}
+
+void  DCPUDeveloper::on_actionFind_File_triggered() {
+	findDialog->show();
 }

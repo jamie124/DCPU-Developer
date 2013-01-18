@@ -16,19 +16,19 @@ Utils::~Utils(void)
 {
 }
 
-instruction_t Utils::pack(opcode_t opcode, argument_t argA, argument_t argB)
+word_t Utils::pack(word_t opcode, argument_t argA, argument_t argB)
 {
 	// Format 5 bit opcode, 5 bit argB, 6 bit argA
 	return (argB << 10)  | (argA << 5) | opcode;
 }
 
-instruction_t Utils::setOpcode(instruction_t instruction, opcode_t opcode)
+word_t Utils::setOpcode(word_t instruction, word_t opcode)
 {
 	// Clear low 4 bits and OR in opcode
 	return (instruction & 0xFFF0) | opcode; 
 }
 
-instruction_t Utils::setArgument(instruction_t instruction, bool_t which, argument_t argument)
+word_t Utils::setArgument(word_t instruction, bool_t which, argument_t argument)
 {
 	if (!which) {
 		// A argument
@@ -48,7 +48,7 @@ bool_t Utils::usesNextWord(argument_t argument)
 }
 
 // Reverse the byte order
-instruction_t Utils::swapByteOrder(instruction_t instruction)
+word_t Utils::swapByteOrder(word_t instruction)
 {
 	return (instruction<<8) | (instruction>>8);
 }

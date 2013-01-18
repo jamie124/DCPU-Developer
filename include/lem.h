@@ -29,7 +29,10 @@ public:
 	Lem(Emulator *emu, QWidget *parent = 0);
 	~Lem();
 
-	void handleInterrupt(int a, int b);
+	void handleInterrupt(word_vector registers);
+
+public slots:
+	void memoryUpdated(word_t value);
 
 private:
 	Ui::LemMonitor *ui;
@@ -37,7 +40,7 @@ private:
 	LemViewer *lemViewer;
 	Emulator *emulator;
 
-	void drawScreen();
+	//void drawScreen();
 
 	void setScreen(word_t row, word_t column, word_t character);
 	void setCursorPos(int x, int y);
