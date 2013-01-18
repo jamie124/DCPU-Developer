@@ -78,7 +78,19 @@ QMainWindow(parent),
 	loadSettings();
 
 	connect(ui->disassembly_list, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(disassembledRowChanged(QListWidgetItem *, QListWidgetItem *)));
+	
+	ui->disassembly_list->setContextMenuPolicy(Qt::ActionsContextMenu);
 
+	
+	QAction *act = new QAction(tr("Add Breakpoint"), ui->disassembly_list);
+	connect(act, SIGNAL(triggered()), this, SLOT(addBreakpoint()));
+	ui->disassembly_list->addAction(act);
+
+	act = new QAction(tr("Remove Breakpoint"), ui->disassembly_list);
+	connect(act, SIGNAL(triggered()), this, SLOT(removeBreakpoint()));
+	ui->disassembly_list->addAction(act);
+
+	//connect(ui->disassembly_list, SIGNAL(contextMenuEvent(QContextMenuEvent *)), this, SLOT(disassemblerContextEvent(QContextMenuEvent *)));
 
 	// Run emulator in background.
 	startEmulator();
@@ -225,19 +237,12 @@ void DCPUDeveloper::loadDisassemblyData() {
 
 		currentLine = currentLine.right(currentLine.length() - currentLine.indexOf('|') - 1);
 
-		//qDebug() << currentLine + " ";
-
 		currentLine = currentLine.replace(":", "\t");
 
 		debugItem = new QListWidgetItem;
 
-		//debugItem->setText(currentLine);
 		debugItem->setData(0, currentLine);
 		debugItem->setData(1, lineNumber);
-		//qDebug() << QString::number(instruction);
-		//debugItem->setData(2, instruction);
-		//qDebug() << debugItem->data(2).toString();
-
 
 		ui->disassembly_list->insertItem(rowIndex++, debugItem);
 	}
@@ -264,7 +269,6 @@ void DCPUDeveloper::createAndRunAssembler()
 }
 
 void DCPUDeveloper::startEmulator() {
-	//emulator = QSharedPointer<Emulator>(new Emulator());
 	emulator = new Emulator();
 
 	qRegisterMetaType<word_t>("word_t");
@@ -278,6 +282,8 @@ void DCPUDeveloper::startEmulator() {
 	connect(emulator, SIGNAL(instructionChanged(word_t)), this, SLOT(emulatorInstructionChanged(word_t)), Qt::QueuedConnection);
 
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
+
+	//connect(emulator, SIGNAL(disableStepMode()), this, SLOT(disableStepMode()), Qt::QueuedConnection);
 }
 
 void DCPUDeveloper::runProgram(QString binFile) {
@@ -339,27 +345,7 @@ void DCPUDeveloper::setSelectedDisassembedInstruction(word_t value) {
 	for (int i = 0; i < ui->disassembly_list->count(); i++) {
 		item = ui->disassembly_list->item(i);
 
-	//	currentLine = item->data(0).toString();
 		lineNumber = item->data(1).toInt();
-
-	//	qDebug() << currentLine;
-
-		/*
-		if (currentLine.contains('\t')) {
-			test = ("0x" + currentLine.left(currentLine.indexOf('\t'))).toUInt(&ok, 16);
-		} else {
-			test = ("0x" + currentLine).toUInt(&ok, 16);
-		}
-		*/
-
-
-		//qDebug() << QString::number(instruction);
-
-
-		//qDebug() << QString::number(lineNumber) + ":" + QString::number(lineNumberDisassembled);
-
-		//qDebug() << item->data(0);
-
 
 		if (lineNumber == lineNumberDisassembled) {
 			break;
@@ -546,6 +532,42 @@ void DCPUDeveloper::disassembledRowChanged(QListWidgetItem *currentRow, QListWid
 	if (currentRow != NULL) {
 		editor->setLine(currentRow->data(1).toInt());
 	}
+}
+
+void DCPUDeveloper::disableStepMode() {
+	qDebug() << "Disabled step mode";
+}
+
+void DCPUDeveloper::addBreakpoint() {
+	int row = ui->disassembly_list->currentRow();
+
+	if (row < 0) {
+		return;
+	}
+
+	QListWidgetItem *item = ui->disassembly_list->item(row);
+
+	item->setBackground(Qt::red);
+
+	emulator->addBreakpoint(item->data(1).toInt());
+
+	//item->setIcon(QIcon("icons/breakpoint.png"));
+}
+
+void DCPUDeveloper::removeBreakpoint() {
+	int row = ui->disassembly_list->currentRow();
+
+	if (row < 0) {
+		return;
+	}
+
+	QListWidgetItem *item = ui->disassembly_list->item(row);
+
+	item->setBackground(Qt::NoBrush);
+
+	//item->setIcon(QIcon("icons/blank.png"));
+
+	emulator->removeBreakpoint(item->data(1).toInt());
 }
 
 void DCPUDeveloper::endEmulation(int endCode)

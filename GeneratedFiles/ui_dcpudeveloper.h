@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Sun Jan 13 16:19:28 2013
+** Created: Thu Jan 17 19:32:49 2013
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -492,6 +492,7 @@ public:
         disassembly_list = new QListWidget(disassembly_tab);
         disassembly_list->setObjectName(QString::fromUtf8("disassembly_list"));
         disassembly_list->setGeometry(QRect(0, 0, 301, 411));
+        disassembly_list->setContextMenuPolicy(Qt::ActionsContextMenu);
         project_tabwidget->addTab(disassembly_tab, QString());
 
         gridLayout->addWidget(project_tabwidget, 0, 0, 1, 1);

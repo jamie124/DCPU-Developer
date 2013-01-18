@@ -31,6 +31,8 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 	triggerInterrupts = true;
 	returnedFromInterrupt = false;
 
+	hitBreakpoint = false;
+
 	connectedDevices.clear();
 
 
@@ -39,9 +41,7 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 
 	connectedDevices.append(lemDevice);
 
-	//connectedDevices.append(qobject_cast<Device*>(lemDevice.data()));
 
-	//qDebug() << QString::number(connectedDevices.size());
 }
 
 Emulator::~Emulator()
@@ -105,26 +105,13 @@ void Emulator::reset()
 		literals[i] = i;
 	}
 
-
-
 	memory.clear();
-
-	/*
-	for (int i = 0; i < RAM_SIZE; i++) {
-	memory.insert(i, 0);
-	//memory[i] = 0;
-	}
-	*/
-
-
 
 	registers.clear();
 
 	for (word_t i = 0; i < NUM_REGISTERS; i++) {
 		registers.append(0);
-		//registers[i] = 0;
 	}
-
 
 	stackPointer = 0;
 	interruptAddress = 0;
@@ -258,15 +245,6 @@ word_t Emulator::nextWord() {
 
 instruction_t Emulator::nextInstruction() {
 	word_t word = nextWord();
-
-	lastInstruction = word;
-
-	//qDebug() << "Debug instruction: " + QString::number(word, 16);
-	if (stepMode) {
-		emit instructionChanged(lastInstruction);
-	}
-
-	word = nextWord();
 
 	//qDebug() << "Actual instruction: " + QString::number(word, 16);
 
@@ -463,7 +441,7 @@ void Emulator::run()
 	// Store stream in memory
 	int i = 0;
 
-	
+
 	while (!inputStream.atEnd()) {
 		word_t currentWord;
 		inputStream >> currentWord;
@@ -492,6 +470,30 @@ void Emulator::run()
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
+
+		// In debug mode get the debug instruction before each regular instruction
+		if (!hitBreakpoint && !skippingCurrentPass) {
+			word_t word = nextWord();
+
+			int lineNumber = word ^ 0xA000;
+
+			qDebug() << "Checking breakpoint for line: " + QString::number(lineNumber);
+
+			if (breakpoints.contains(lineNumber)) {
+				qDebug() << "Breakpoint hit, line number: " + QString::number(lineNumber);
+
+				hitBreakpoint = true;
+				skippingCurrentPass = true;
+			}
+
+			lastInstruction = word;
+
+			//qDebug() << "Debug instruction: " + QString::number(word, 16);
+			if (stepMode) {
+				emit instructionChanged(lastInstruction);
+			}
+
+		}
 
 		if (skippingCurrentPass == false) {
 
@@ -524,7 +526,7 @@ void Emulator::run()
 				if (OPCODE_DEBUGGING) {
 					qDebug() << "Null opcode: " << QString::number(instruction.rawInstruction);
 
-					emit instructionChanged(lastInstruction);
+					//emit instructionChanged(lastInstruction);
 				}
 
 				break;
@@ -986,7 +988,7 @@ void Emulator::run()
 				// Return From Interrupt Disables interrupt queueing, pops A from the stack, then pops PC from the stack.
 
 				triggerInterrupts = true;
-				
+
 				setValue(A, getValue(POP, MEMORY_OPERATION), REGISTER);
 				setValue(PC, getValue(POP, MEMORY_OPERATION), REGISTER);
 
@@ -1070,10 +1072,17 @@ void Emulator::run()
 			}
 
 
+			if (hitBreakpoint) {
 
+				//stepMode = false;
+				hitBreakpoint = false;
+
+				// Disable step mode
+				//emit disableStepMode();
+			}
 
 			if (stepMode) {
-				
+
 				emit registersChanged(getRegisters());
 
 				// May not be a good way of doing it.
@@ -1182,4 +1191,26 @@ bool Emulator::inStepMode()
 
 word_map Emulator::getMemory() {
 	return memory;
+}
+
+void Emulator::addBreakpoint(int lineNumber) {
+	if (!breakpoints.contains(lineNumber)) {
+		breakpoints.append(lineNumber);
+	}
+}
+
+void Emulator::removeBreakpoint(int lineNumber) {
+	int index = 0;
+
+	for (int i = 0; i < breakpoints.size(); i++) {
+		if (breakpoints.at(i) == lineNumber) {
+			break;
+		}
+
+		index++;
+	}
+
+	if (index < breakpoints.size()) {
+		breakpoints.remove(index);
+	}
 }

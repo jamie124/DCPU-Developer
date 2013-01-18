@@ -72,9 +72,12 @@ private slots:
 	// Memory Viewer timer
 	void updateScrollbarValue(int value);
 
-	//void disassemblyRowSelected(const QString &text);
-
 	void disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow);
+
+	void disableStepMode();
+
+	void addBreakpoint();
+	void removeBreakpoint();
 
 	void editorChanged();
 
@@ -139,6 +142,7 @@ private:
 	FindReplaceDialog *findReplaceDialog;
 
     QString currentFilename;
+
 
     bool assemblerRunning, emulatorRunning;
 	bool inStepMode;

@@ -94,6 +94,7 @@ signals:
 
 	void emulationEnded(int);
 
+	void disableStepMode();
 private:
 
 	bool DEBUG;
@@ -102,6 +103,8 @@ private:
 	volatile bool skippingCurrentPass;
     volatile bool stepMode;
     volatile bool emulatorRunning;
+
+	volatile bool hitBreakpoint;
 
     QString compiledFilename;
 
@@ -162,8 +165,12 @@ public:
 
 	void step();
 
-
 	word_map getMemory();
+
+	// Control breakpoints
+	void addBreakpoint(int lineNumber);
+	void removeBreakpoint(int lineNumber);
+
 private:
 	word_map memory;
 	word_vector registers;
@@ -186,6 +193,7 @@ private:
 
 	word_t lastInstruction;
 
+	QVector<int> breakpoints;
 };
 
 #endif
