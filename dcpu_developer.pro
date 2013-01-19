@@ -21,16 +21,20 @@ SOURCES += main.cpp\
     glhelper.cpp \
     utils.cpp \
     hexspinbox.cpp \
-    lem.cpp \
     devices/lemviewer.cpp \
     devices/lem.cpp \
-    devices/device.cpp
+    devices/device.cpp \
+    devices/clock.cpp \
+    dialogs/findreplaceform.cpp \
+    dialogs/findreplacedialog.cpp \
+    dialogs/findform.cpp \
+    dialogs/finddialog.cpp
 
-HEADERS  += dcpudeveloper.h \
-    emulator.h \
-    phrases.h \
-    highlighter.h \
-    editor.h \
+HEADERS  += include/dcpudeveloper.h \
+    include/emulator.h \
+    include/phrases.h \
+    include/highlighter.h \
+    include/editor.h \
     include/phrases.h \
     include/highlighter.h \
     include/emulator.h \
@@ -45,9 +49,18 @@ HEADERS  += dcpudeveloper.h \
     include/lemviewer.h \
     include/lem.h \
     include/hexspinbox.h \
-    include/device.h
+    include/device.h \
+    include/parser.h \
+    include/findreplaceform.h \
+    include/findreplacedialog.h \
+    include/findreplace_global.h \
+    include/findform.h \
+    include/finddialog.h \
+    include/clock.h
 
 INCLUDEPATH += include/
 
 FORMS    += dcpudeveloper.ui \
-    lem_monitor.ui
+    lem_monitor.ui \
+    findreplaceform.ui \
+    findreplacedialog.ui

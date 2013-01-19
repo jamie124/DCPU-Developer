@@ -14,6 +14,7 @@ Started 7-Apr-2012
 #include <QFile>
 #include <QByteArray>
 #include <QDataStream>
+#include <QMap>
 
 #include "include/phrases.h"
 #include "include/emulator.h"

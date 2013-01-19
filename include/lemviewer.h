@@ -7,6 +7,7 @@
 
 #include "emulator.h"
 
+
 #include <QMutex>
 
 const int CHAR_WIDTH = 4;
@@ -89,7 +90,7 @@ private:
 
 	//QMap<int, QMap<int, int>> videoBuffer;
 
-	QMap<int, QMap<int, bool>> cellQueue;
+    QMap<int, QMap<int, bool> > cellQueue;
 
 	bool initialised;
 
