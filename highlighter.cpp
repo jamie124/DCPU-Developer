@@ -111,13 +111,17 @@ void Highlighter::highlightBlock(const QString &text)
 			setFormat(index, length, rule.format);
 
 			if (text.contains(QRegExp(":[^ ]*"))) {
+
+				emit addToCodeComplete(text.mid(text.indexOf(":") + 1, length - 1));
+				/*
 				if (text.contains(" ")) {
-					qDebug() << "Adding " << text.mid(text.indexOf(":") + 1, length - 1);
+					//qDebug() << "Adding " << text.mid(text.indexOf(":") + 1, length - 1);
 					emit addToCodeComplete(text.mid(text.indexOf(":") + 1, length - 1), false);
 				} else {
-					qDebug() << "Removing " << text.mid(text.indexOf(":") + 1, length - 1);
+					//qDebug() << "Removing " << text.mid(text.indexOf(":") + 1, length - 1);
 					emit addToCodeComplete(text.mid(text.indexOf(":") + 1, length - 1), true);
 				}
+				*/
 			}
 			index = expression.indexIn(text, index + length);
 		}

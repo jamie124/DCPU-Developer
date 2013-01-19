@@ -12,7 +12,7 @@ SET PC, __boot__
 :monitor
 	DAT 0
 
-:clock
+:clock 
 	DAT 0
 
 :speaker
@@ -56,11 +56,11 @@ SET PC, __boot__
 	ADD [sec], 1
 
 	IFE [sec], 60
-   		JSR add_min 
+	JSR add_min
 	IFE [min], 60
-		JSR add_hour
+	JSR add_hour
 	IFE [hour], 24
-		JSR reset
+	JSR reset
 
 	SET PUSH, [sec]
 	DIV [sec], 10
@@ -116,127 +116,129 @@ SET PC, __boot__
 	SUB I, 1
 	HWQ I
 	IFE B, 0x7349
-   		IFE A, 0xf615
-			SET [monitor], I
+	IFE A, 0xf615
+	SET [monitor], I
 	IFE B, 0x12d0
-    		IFE A, 0xb402       
-       			 SET [clock], I
+	IFE A, 0xb402
+	SET [clock], I
 	IFE B, 0x0206
-		IFE A, 0x0001
-			SET [speaker], I        
+	IFE A, 0x0001
+	SET [speaker], I
 	IFN I, 0
-  		SET PC, hw_map
+	SET PC, hw_map
 	SET PC, POP
 
 :hw_setup
-IAS int_handler
-        
-SET A, 0
-SET B, [scr_ram]
-HWI [monitor]
+	IAS int_handler
+	
+	SET A, 0
+	SET B, [scr_ram]
+	HWI [monitor]
 
-SET A, 3
-SET B, 9
-HWI [monitor]
-    
-SET A, 0
-SET B, 60
-HWI [clock]
+	SET A, 3
+	SET B, 9
+	HWI [monitor]
+	
+	SET A, 0
+	SET B, 60
+	HWI [clock]
 
-SET A, 2
-SET B, 0x0003
-HWI [clock]
+	SET A, 2
+	SET B, 0x0003
+	HWI [clock]
 
-; Colorize monitor.
-SET PUSH, A
-SET A, [scr_ram]
+	; Colorize monitor.
+	SET PUSH, A
+	SET A, [scr_ram]
 
 :colorize
-IFE A, 0x8180
-    SET PC, colorize_end
-SET [A], 0x9900
-ADD A, 1
-SET PC, colorize
+	IFE A, 0x8180
+	SET PC, colorize_end
+	SET [A], 0x9900
+	ADD A, 1
+	SET PC, colorize
 
 :colorize_end
-SET [scr_ram], 0x8000
-SET A, POP
+	SET [scr_ram], 0x8000
+	SET A, POP
 
-SET PC, POP
+	SET PC, POP
 
 :beep_val
-DAT 0
+	DAT 0
 
 :beep
-SET PUSH, B
-SET B, A
-SET A, 0
-HWI [speaker]
-SET  [beep_val], [sec]
-ADD [beep_val], 1
+	SET PUSH, B
+	SET B, A
+	SET A, 0
+	HWI [speaker]
+	SET  [beep_val], [sec]
+	ADD [beep_val], 1
 
 :beep_loop
-IFG [sec], [beep_val]
+	IFG [sec], [beep_val]
 	SET PC, beep_end
-SET PC, beep_loop
+	SET PC, beep_loop
 
 :beep_end
-SET A, 0
-SET B, 0
-HWI [speaker]
-SET B, POP
-SET PC, POP
+	SET A, 0
+	SET B, 0
+	HWI [speaker]
+	SET B, POP
+	SET PC, POP
 
 :print_char
-SET B, [scr_ram]
-BOR A, 0xE900
-SET [B], A
-ADD B, 1
-SET [scr_ram], B
-SET PC, POP
-        
+	SET B, [scr_ram]
+	BOR A, 0xE900
+	SET [B], A
+	ADD B, 1
+	SET [scr_ram], B
+	SET PC, POP
+	
 :print_str
-SET B, [scr_ram]
+	SET B, [scr_ram]
 
 :print_str_loop
-IFE [A], 0
-    SET PC, print_str_end
-BOR [A], 0xE900
-SET [B], [A]
-ADD B, 1
-ADD A, 1
-SET PC, print_str_loop
+	IFE [A], 0
+	SET PC, print_str_end
+	BOR [A], 0xE900
+	SET [B], [A]
+	ADD B, 1
+	ADD A, 1
+	SET PC, print_str_loop
 
 :print_str_end
-SET [scr_ram], B
-SET PC, POP
+	SET [scr_ram], B
+	SET PC, POP
 
 :set_time_pos
-SET PUSH, I
-SET I, 0
+	SET PUSH, I
+	SET I, 0
 
 :set_time_pos_loop
-IFE I, 6
-    SET PC, set_time_pos_end
-AND [scr_ram], 0xFFE0
-ADD [scr_ram], 0x0020
-ADD I, 1
-SET PC, set_time_pos_loop
+	IFE I, 6
+	SET PC, set_time_pos_end
+	AND [scr_ram], 0xFFE0
+	ADD [scr_ram], 0x0020
+	ADD I, 1
+	SET PC, set_time_pos_loop
 
 :set_time_pos_end
-SET I, POP
-SET PC, POP
+	SET I, POP
+	SET PC, POP
 
 :prompt
-DAT "      Welcome to Voyger!", 0
+	DAT "      Welcome to Voyger!", 0
 
 :kernel
-SET A, prompt
-JSR print_str
-JSR set_time_pos
-SET A, 420
-JSR beep
+	SET A, prompt
+	JSR print_str
+	JSR set_time_pos
+	SET A, 420
+	JSR beep
 
 :end
-SET PC, end
+	SET PC, end
+
+
 

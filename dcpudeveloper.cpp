@@ -119,8 +119,15 @@ void DCPUDeveloper::setupConnections()
 	connect(editor, SIGNAL(textChanged()), this, SLOT(editorChanged()));
 
 	// Add code completion 
-	connect(highlighter, SIGNAL(addToCodeComplete(QString, bool)), this, 
-		SLOT(addToCodeComplete(QString, bool)));
+	/*
+	connect(highlighter, SIGNAL(addToCodeComplete(QString)), this, 
+		SLOT(addToCodeComplete(QString)));
+		*/
+
+	// Update the code complete entries every 5 seconds
+	QTimer *codeCompleteTimer = new QTimer(this);
+	connect(codeCompleteTimer, SIGNAL(timeout()), this, SLOT(updateCodeComplete()));
+	codeCompleteTimer->start(5000);
 
 	// Memory viewer
 	QTimer *timer = new QTimer(this);
@@ -130,27 +137,28 @@ void DCPUDeveloper::setupConnections()
 	timer->start(30);
 }
 
-void DCPUDeveloper::addToCodeComplete(QString newEntry, bool removing)
+void DCPUDeveloper::updateCodeComplete()
 {
 	QStringList codeList;
 
-	if (newEntry != "") {
-		if (!codeCompleteList.contains(newEntry)){
-			if (!removing) {
-				codeCompleteList << newEntry;
-			}
-		} else {
-			if (removing) {
-				codeCompleteList.removeOne(newEntry);
-			}
-		}
+	QStringList splitStrings = editor->toPlainText().split(QRegExp("[\r\n]"));
 
-		for (int i = 0; i < codeCompleteList.size(); i++) {
-			codeList << codeCompleteList[i];
-		}
+	QStringList::iterator itr;
 
-		completer->setModel(new QStringListModel(codeList, completer));
+	QString currentLine;
+
+	for (itr = splitStrings.begin(); itr != splitStrings.end(); ++itr) {
+		currentLine = *itr;
+
+		if (currentLine.contains(":")) {
+			currentLine = currentLine.trimmed().replace(":", "");
+
+			codeList.append(currentLine);
+		}
 	}
+
+	completer->setModel(new QStringListModel(codeList, completer));
+
 }
 
 // Editor text changed

@@ -14,7 +14,7 @@ public:
 	~Highlighter(void);
 
 signals:
-	void addToCodeComplete(QString, bool);
+	void addToCodeComplete(QString);
 
 protected:
 	void highlightBlock(const QString &text);

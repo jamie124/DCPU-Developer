@@ -21,7 +21,7 @@ Editor::Editor(QWidget *parent)
 	updateLineNumberAreaWidth(0);
 	highlightCurrentLine();
 
-	
+
 	QPalette palette = this->palette();
 
 	palette.setColor(QPalette::Active, QPalette::Base, Qt::black);
@@ -38,18 +38,20 @@ Editor::~Editor()
 
 void Editor::setCompleter(QCompleter *completer)
 {
-	if (c)
+	if (c) {
 		QObject::disconnect(c, 0, this, 0);
+	}
 
 	c = completer;
 
-	if (!c)
+	if (!c) {
 		return;
+	}
 
 	c->setWidget(this);
 	c->setCompletionMode(QCompleter::PopupCompletion);
 	c->setCaseSensitivity(Qt::CaseInsensitive);
-	QObject::connect(c, SIGNAL(activated(QString)),
+	connect(c, SIGNAL(activated(QString)),
 		this, SLOT(insertCompletion(QString)));
 }
 
@@ -60,8 +62,10 @@ QCompleter *Editor::completer() const
 
 void Editor::insertCompletion(const QString& completion)
 {
-	if (c->widget() != this)
+	if (c->widget() != this) {
 		return;
+	}
+
 	QTextCursor tc = textCursor();
 	int extra = completion.length() - c->completionPrefix().length();
 	tc.movePosition(QTextCursor::Left);
@@ -101,7 +105,7 @@ void Editor::keyPressEvent(QKeyEvent *e)
 		}
 	}
 
-	bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E); // CTRL+E
+	bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_Space); // CTRL+E
 	if (!c || !isShortcut) // do not process the shortcut when we have a completer
 		QPlainTextEdit::keyPressEvent(e);
 
@@ -124,6 +128,7 @@ void Editor::keyPressEvent(QKeyEvent *e)
 		c->popup()->setCurrentIndex(c->completionModel()->index(0, 0));
 	}
 	QRect cr = cursorRect();
+
 	cr.setWidth(c->popup()->sizeHintForColumn(0)
 		+ c->popup()->verticalScrollBar()->sizeHint().width());
 	c->complete(cr); // popup it up!
@@ -178,22 +183,25 @@ void Editor::formatCode() {
 
 		if (currentLine != "") {
 
+			// Remove shit from start and end of line
+			currentLine = currentLine.trimmed();
+
 			if (currentLine.contains(":")) {
 				formattingInLabel = true;
-
-				// Remove shit from start and end of line
-				//currentLine = currentLine.replace(tabs, "");
-				currentLine = currentLine.trimmed();
+			} else {
+				currentLine = (formattingInLabel ? "\t" : "") + currentLine;
 			}
 
 			formattedText += currentLine + "\n";
 		} else {
+			//formattingInLabel = false;
+
 			formattedText += "\n";
 		}
 
 	}
-	
-	qDebug() << formattedText;
+
+	//qDebug() << formattedText;
 
 	this->setPlainText(formattedText);
 }

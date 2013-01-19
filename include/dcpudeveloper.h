@@ -66,8 +66,8 @@ private slots:
 
 	void endEmulation(int endCode);
 
-	// Highlighter requests
-	void addToCodeComplete(QString newEntry, bool removing);
+	// Update code complete entries
+	void updateCodeComplete();
 
 	// Memory Viewer timer
 	void updateScrollbarValue(int value);
