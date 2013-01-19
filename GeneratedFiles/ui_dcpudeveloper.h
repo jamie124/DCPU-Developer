@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'dcpudeveloper.ui'
 **
-** Created: Thu Jan 17 19:32:49 2013
+** Created: Sat Jan 19 22:07:42 2013
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -58,6 +58,7 @@ public:
     QAction *actionReset;
     QAction *actionCompile;
     QAction *actionSave_As;
+    QAction *actionFormat_Code;
     QWidget *centralWidget;
     QGridLayout *gridLayout;
     QGroupBox *program_control_gb;
@@ -177,6 +178,8 @@ public:
         actionCompile->setShortcutContext(Qt::WidgetShortcut);
         actionSave_As = new QAction(DCPUDeveloper);
         actionSave_As->setObjectName(QString::fromUtf8("actionSave_As"));
+        actionFormat_Code = new QAction(DCPUDeveloper);
+        actionFormat_Code->setObjectName(QString::fromUtf8("actionFormat_Code"));
         centralWidget = new QWidget(DCPUDeveloper);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         centralWidget->setMinimumSize(QSize(1146, 659));
@@ -541,6 +544,8 @@ public:
         menuEdit->addAction(actionSelect_All);
         menuEdit->addSeparator();
         menuEdit->addAction(menuFind->menuAction());
+        menuEdit->addSeparator();
+        menuEdit->addAction(actionFormat_Code);
         menuFind->addAction(actionFind_Selection);
         menuFind->addAction(actionFind_File);
         menuProgram->addAction(actionCompile);
@@ -601,6 +606,8 @@ public:
         actionCompile->setShortcut(QApplication::translate("DCPUDeveloper", "F6", 0, QApplication::UnicodeUTF8));
         actionSave_As->setText(QApplication::translate("DCPUDeveloper", "Save As", 0, QApplication::UnicodeUTF8));
         actionSave_As->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+Shift+S", 0, QApplication::UnicodeUTF8));
+        actionFormat_Code->setText(QApplication::translate("DCPUDeveloper", "Format Code", 0, QApplication::UnicodeUTF8));
+        actionFormat_Code->setShortcut(QApplication::translate("DCPUDeveloper", "Ctrl+Shift+F", 0, QApplication::UnicodeUTF8));
         program_control_gb->setTitle(QApplication::translate("DCPUDeveloper", "Program Control", 0, QApplication::UnicodeUTF8));
         cycle_label->setText(QApplication::translate("DCPUDeveloper", "Cycle: 0", 0, QApplication::UnicodeUTF8));
         compile_button->setText(QApplication::translate("DCPUDeveloper", "Compile", 0, QApplication::UnicodeUTF8));

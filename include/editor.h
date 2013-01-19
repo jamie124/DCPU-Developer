@@ -38,6 +38,8 @@ public:
 
 	 void setLine(int lineNumber);
 
+	 void formatCode();
+
 protected:
 	void keyPressEvent(QKeyEvent *e);
 	void focusInEvent(QFocusEvent *e);

@@ -526,6 +526,8 @@
     <addaction name="actionSelect_All"/>
     <addaction name="separator"/>
     <addaction name="menuFind"/>
+    <addaction name="separator"/>
+    <addaction name="actionFormat_Code"/>
    </widget>
    <widget class="QMenu" name="menuProgram">
     <property name="title">
@@ -698,6 +700,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionFormat_Code">
+   <property name="text">
+    <string>Format Code</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+F</string>
    </property>
   </action>
  </widget>

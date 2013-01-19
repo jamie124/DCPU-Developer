@@ -1,11 +1,24 @@
 #include <QDebug>
 #include "include/highlighter.h"
 
-Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
-{
+Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent) {
+
 	highlight_rule_t rule;
 
-	keywordFormat.setForeground(Qt::blue);
+	// Regular text
+	regularText.setForeground(Qt::white);
+
+	rule.pattern = QRegExp(".");
+	rule.format = regularText;
+	highlightingRules.append(rule);
+
+	// Register
+	registerFormat.setForeground(QColor(252, 53, 53));
+	rule.pattern = QRegExp(" [a|b|c|x|y|z|i|j|pc|sp|ex|A|B|C|X|Y|Z|I|J|PC|SP|EX]+");
+	rule.format = registerFormat;
+	highlightingRules.append(rule);
+
+	keywordFormat.setForeground(QColor(0, 149, 255));
 	keywordFormat.setFontWeight(QFont::Bold);
 
 	// Keywords
@@ -37,29 +50,49 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 		highlightingRules.append(rule);
 	}
 
+	// Label Reference
+	labelRefFormat.setForeground(QColor(255, 162, 0));
+	labelRefFormat.setFontWeight(QFont::Bold);
+
+//	rule.pattern = QRegExp("[\[a-z_\"]+");
+	rule.pattern = QRegExp("(|[ ])[a-z_\\[\\]+]");
+	rule.format = labelRefFormat;
+	highlightingRules.append(rule);
+
 	// Label
-	labelFormat.setForeground(Qt::darkMagenta);
+	labelFormat.setForeground(QColor(255, 255, 0));
+	labelFormat.setFontWeight(QFont::Bold);
+
 	rule.pattern = QRegExp(":[^ ]*");
 	rule.format = labelFormat;
 	highlightingRules.append(rule);
 
+
+
+	// Dat String
+	datStringFormat.setForeground(QColor(0, 195, 255));
+	rule.pattern = QRegExp("\"[a-zA-Z1-9!. ]+\"");
+	rule.format = datStringFormat;
+	highlightingRules.append(rule);
+
+	// Numeric/Hex value
+	numericHexFormat.setForeground(QColor(0, 195, 255));
+	rule.pattern = QRegExp("(0x[0-9a-fA-F]+)|[0-9]+");
+	rule.format = numericHexFormat;
+	highlightingRules.append(rule);
+
 	// Comment
-	singleLineCommentFormat.setForeground(Qt::darkGreen);
+	singleLineCommentFormat.setForeground(QColor(0, 255, 94));
 	rule.pattern = QRegExp(";[^\n]*");
 	rule.format = singleLineCommentFormat;
 	highlightingRules.append(rule);
 
-	// Register
-	registerFormat.setForeground(Qt::darkRed);
-	rule.pattern = QRegExp("[ a|b|c|x|y|z|i|j|pc|sp]+,");
-	rule.format = registerFormat;
+	// Special Operation, PEEK, PUSH, POP
+	specialOperationFormat.setForeground(QColor(205, 54, 255));
+	rule.pattern = QRegExp("(pop|push|pick|POP|PUSH|PICK)");
+	rule.format = specialOperationFormat;
 	highlightingRules.append(rule);
 
-	// Dat String
-	datStringFormat.setForeground(Qt::red);
-	rule.pattern = QRegExp("\"[a-zA-Z1-9!. ]+\"");
-	rule.format = datStringFormat;
-	highlightingRules.append(rule);
 }
 
 

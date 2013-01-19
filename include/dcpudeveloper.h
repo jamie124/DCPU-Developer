@@ -119,6 +119,7 @@ private slots:
 
 	void on_actionFind_File_triggered();
 
+	void on_actionFormat_Code_triggered();
 private:
     Ui::DCPUDeveloper *ui;
 

@@ -20,6 +20,16 @@ Editor::Editor(QWidget *parent)
 
 	updateLineNumberAreaWidth(0);
 	highlightCurrentLine();
+
+	
+	QPalette palette = this->palette();
+
+	palette.setColor(QPalette::Active, QPalette::Base, Qt::black);
+	palette.setColor(QPalette::Inactive, QPalette::Base, Qt::black);
+
+	this->setPalette(palette);
+
+	this->setTabStopWidth(40);
 }
 
 Editor::~Editor()
@@ -146,7 +156,49 @@ void Editor::setLine(int lineNumber) {
 	}
 }
 
-void Editor::updateLineNumberAreaWidth(int /* newBlockCount */)
+void Editor::formatCode() {
+
+	QString unformattedText = this->toPlainText();
+
+	QString formattedText = "";
+
+	QStringList splitStrings = unformattedText.split(QRegExp("[\r\n]"));
+
+	QStringList::iterator itr;
+
+	bool formattingInLabel = false;
+
+	QString currentLine;
+
+	QRegExp tabs("\t");
+
+	for (itr = splitStrings.begin(); itr != splitStrings.end(); ++itr) {
+
+		currentLine = *itr;
+
+		if (currentLine != "") {
+
+			if (currentLine.contains(":")) {
+				formattingInLabel = true;
+
+				// Remove shit from start and end of line
+				//currentLine = currentLine.replace(tabs, "");
+				currentLine = currentLine.trimmed();
+			}
+
+			formattedText += currentLine + "\n";
+		} else {
+			formattedText += "\n";
+		}
+
+	}
+	
+	qDebug() << formattedText;
+
+	this->setPlainText(formattedText);
+}
+
+void Editor::updateLineNumberAreaWidth(int)
 {
 	setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
 }
@@ -155,13 +207,15 @@ void Editor::updateLineNumberAreaWidth(int /* newBlockCount */)
 
 void Editor::updateLineNumberArea(const QRect &rect, int dy)
 {
-	if (dy)
+	if (dy) {
 		lineNumberArea->scroll(0, dy);
-	else
+	} else {
 		lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
+	}
 
-	if (rect.contains(viewport()->rect()))
+	if (rect.contains(viewport()->rect())) {
 		updateLineNumberAreaWidth(0);
+	}
 }
 
 
@@ -183,7 +237,7 @@ void Editor::highlightCurrentLine()
 	if (!isReadOnly()) {
 		QTextEdit::ExtraSelection selection;
 
-		QColor lineColor = QColor(Qt::yellow).lighter(160);
+		QColor lineColor = QColor(QColor(46, 46, 46));
 
 		selection.format.setBackground(lineColor);
 		selection.format.setProperty(QTextFormat::FullWidthSelection, true);

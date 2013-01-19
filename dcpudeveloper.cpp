@@ -706,3 +706,7 @@ void DCPUDeveloper::on_actionSave_As_triggered()
 void  DCPUDeveloper::on_actionFind_File_triggered() {
 	findDialog->show();
 }
+
+void DCPUDeveloper::on_actionFormat_Code_triggered() {
+	editor->formatCode();	
+}

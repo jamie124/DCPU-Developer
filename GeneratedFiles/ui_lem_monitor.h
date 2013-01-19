@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'lem_monitor.ui'
 **
-** Created: Sun Jan 13 15:23:29 2013
+** Created: Sat Jan 19 22:07:42 2013
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
