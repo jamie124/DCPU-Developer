@@ -38,7 +38,7 @@ static enum {
 } registers;
 
 // Basic opcodes
-static const enum {
+static enum {
 	 OP_NULL		= 0x00,
 	 OP_SET			= 0x01,
 	 OP_ADD			= 0x02,
@@ -73,10 +73,10 @@ static const enum {
 
 	 OP_STI			= 0x1e,
 	 OP_STD			= 0x1f
-};
+} opcodes;
 
 // Special opcodes
-static const enum {
+static enum {
 	OP_JSR			= 0x20,
 
 	OP_INT			= 0x100,
@@ -88,10 +88,10 @@ static const enum {
 	OP_HWN			= 0x200,
 	OP_HWQ			= 0x220,
 	OP_HWI			= 0x240,
-};
+} special_opcodes;
 
 // Return codes
-static const enum { 
+static enum {
 	// General
 	SOURCE_FILE_MISSING				= 0x0, 
 	BIN_FILE_MISSING				= 0x1,
@@ -104,10 +104,10 @@ static const enum {
 	// Assembler
 	ASSEMBLER_SUCESSFUL				= 0x7, 
 	ASSEMBLER_FAILED				= 0x8, 
-};
+} return_codes;
 
 // Assembler errors
-static const enum {
+static  enum {
 	ASSEMBLER_EMPTY_ARG_STR			= 0x20, 
 	ASSEMBLER_INVALID_LITERAL		= 0x21, 
 	ASSEMBLER_INVALID_REG_NAME		= 0x22,
@@ -116,7 +116,7 @@ static const enum {
 	ASSEMBLER_UNRESOLVED_LABEL_A	= 0x25, 
 	ASSEMBLER_UNRESOLVED_LABEL_B	= 0x26, 
 	ASSEMBLER_EMPTY_DAT				= 0x27
-};
+} assembler_errors;
 
 // Registers
 static const word_t REG_A = 0x0;

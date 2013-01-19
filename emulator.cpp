@@ -14,6 +14,7 @@ Started 7-Apr-2012
 #include <QFile>
 #include <QByteArray>
 #include <QDataStream>
+#include <QMap>
 
 #include "include/phrases.h"
 #include "include/emulator.h"
@@ -556,7 +557,7 @@ void Emulator::run()
 
 				break;
 			case OP_SUB:
-				// Subtract Stores the value of B−A in B.
+				// Subtract Stores the value of BâA in B.
 				result = bValue - aValue;
 
 				setValue(EX, (result < 0) ? MAX_VALUE : 0x0000, REGISTER);
@@ -889,7 +890,7 @@ void Emulator::run()
 
 			case OP_SBX: 
 				{
-					// Subtract [with] EX Stores the value of A−B+EX in B.
+					// Subtract [with] EX Stores the value of AâB+EX in B.
 
 					int value = bValue + aValue + getSigned(registers.at(EX));
 

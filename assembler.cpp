@@ -241,7 +241,7 @@ nonbasicOpcode_t Assembler::nonbasicOpcodeFor(QString command)
 // Check register number 
 int Assembler::registerFor(QChar regName)
 {
-	switch(regName.toAscii()) {
+    switch(regName.toLatin1()) {
 	case 'a':
 		return REG_A;
 		break;
@@ -967,7 +967,7 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 		// Find start of second arg
 		bool hasArg2 = false;
 
-		QRegExp argSeperator(",(\s+)?");
+        QRegExp argSeperator(",(\\s+)?");
 
 		itemIndex = remainingLine.indexOf(argSeperator);
 

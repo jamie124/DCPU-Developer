@@ -11,6 +11,7 @@
 
 #include "include/dcpudeveloper.h"
 
+
 #include "ui_dcpudeveloper.h"
 
 DCPUDeveloper::DCPUDeveloper(QWidget *parent) :

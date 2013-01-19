@@ -13,7 +13,6 @@ Written by James Whitwell, 2012.
 #include <QTimer>
 
 #include <iostream>
-#include <Windows.h>
 
 #include <QGridLayout>
 
@@ -138,46 +137,3 @@ void Lem::drawScreen() {
 }
 */
 
-void Lem::setScreen(word_t row, word_t column, word_t character)
-{
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	setCursorPos(column, row);
-
-	char letter = (character & 0x7F);
-
-	if (letter == '\0') {
-		letter = ' ';
-	}
-
-	//SetConsoleTextAttribute(console, 6);
-
-	std::cout << letter;
-}
-
-void Lem::setCursorPos(int x, int y)
-{
-	COORD pos  = {x, y};
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	//SetConsoleTextAttribute(console, 7);
-	SetConsoleCursorPosition(console, pos);
-}
-
-void Lem::clearScreen()
-{
-	COORD topLeft  = { 0, 0 };
-	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_SCREEN_BUFFER_INFO screen;
-	DWORD written;
-
-	GetConsoleScreenBufferInfo(console, &screen);
-	FillConsoleOutputCharacterA(
-		console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-		);
-	FillConsoleOutputAttribute(
-		console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
-		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-		);
-	SetConsoleCursorPosition(console, topLeft);
-}

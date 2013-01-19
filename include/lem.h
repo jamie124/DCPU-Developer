@@ -22,7 +22,6 @@ namespace Ui {
 }
 
 
-
 class Lem : public Device
 {
 	Q_OBJECT
@@ -43,9 +42,6 @@ private:
 
 	//void drawScreen();
 
-	void setScreen(word_t row, word_t column, word_t character);
-	void setCursorPos(int x, int y);
-	void clearScreen();
 
 	long screenRamAddress;
 
