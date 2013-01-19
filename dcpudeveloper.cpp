@@ -157,6 +157,8 @@ void DCPUDeveloper::updateCodeComplete()
 		}
 	}
 
+	codeList.sort();
+
 	completer->setModel(new QStringListModel(codeList, completer));
 
 }
