@@ -94,6 +94,7 @@ signals:
 
 	void emulationEnded(int);
 
+	void disableStepMode();
 private:
 
 	bool DEBUG;
@@ -103,13 +104,15 @@ private:
     volatile bool stepMode;
     volatile bool emulatorRunning;
 
+	volatile bool hitBreakpoint;
+
     QString compiledFilename;
 
 	// Process instructions
 	int getAddress(word_t value, arg_type &argType, bool a = false);
 
 	word_t getWord(word_t value);
-	word_t nextWord(bool isLiteral = false);
+	word_t nextWord();
 	instruction_t nextInstruction();
 
 	word_t getSigned(word_t value);
@@ -162,8 +165,12 @@ public:
 
 	void step();
 
-
 	word_map getMemory();
+
+	// Control breakpoints
+	void addBreakpoint(int lineNumber);
+	void removeBreakpoint(int lineNumber);
+
 private:
 	word_map memory;
 	word_vector registers;
@@ -184,6 +191,9 @@ private:
 	//word_t keyboardPosition;
 	QVector<Device*> connectedDevices;
 
+	word_t lastInstruction;
+
+	QVector<int> breakpoints;
 };
 
 #endif

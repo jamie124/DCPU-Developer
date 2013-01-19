@@ -15,6 +15,9 @@
 
 Assembler::Assembler(QObject *parent) : QThread(parent), assemblerRunning(false)
 {
+	createDebugFile = true;
+
+	instructionOffset = 1;
 }
 
 Assembler::~Assembler(void)
@@ -537,8 +540,11 @@ void Assembler::run()
 {
 	lineNumber = 0;
 
+	instructionOffset = 1;
+
 	std::string compiledFilename = Utils::replace(sourceFilename.toStdString(), "dasm16", "bin");
-	std::string debugFilename = "debug_" + Utils::replace(sourceFilename.toStdString(), "dasm16", "dbg");
+	std::string debugFilename = "debug_" + compiledFilename;
+	std::string debugInfoFilename = Utils::replace(sourceFilename.toStdString(), "dasm16", "dbg");
 
 	//std::ifstream sourceFile(sourceFilename.toStdString());
 
@@ -561,14 +567,22 @@ void Assembler::run()
 		assemblerError(BIN_FILE_MISSING, lineNumber);
 	}
 
-	QFile debugFile(debugFilename.c_str());
 
-	if (!debugFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-		qDebug() << "ERROR: Unable to write a debug info file " << debugFilename.c_str();
+	QFile debugInfoFile(debugInfoFilename.c_str());
+
+	if (!debugInfoFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+		qDebug() << "ERROR: Unable to write a debug info file " << debugInfoFilename.c_str();
 	}
 
 	// Open debug stream
-	QTextStream debugOut(&debugFile);
+	QTextStream debugOut(&debugInfoFile);
+
+
+	FILE* debugFile = fopen(debugFilename.c_str(), "wb");
+
+	if (!debugFile) {
+		qDebug() << "ERROR: Unable to write a debug file " << debugFilename.c_str();
+	}
 
 	char lineBuffer[MAX_CHARS];
 
@@ -677,6 +691,9 @@ void Assembler::run()
 					// Match
 					qDebug() << "Resolved " << instruction->a.labelReference << " to address " << other->address;
 					instruction->a.nextWord = other->address;
+
+					//instructionOffset += 2;
+
 					instruction->a.labelReference = "";
 					break;
 				}
@@ -693,6 +710,9 @@ void Assembler::run()
 					// Match
 					qDebug() << "Resolved " << instruction->b.labelReference << " to address " << other->address;
 					instruction->b.nextWord = other->address;
+
+					//instructionOffset += 2;
+
 					instruction->b.labelReference = "";
 					break;
 				}
@@ -713,6 +733,8 @@ void Assembler::run()
 		}
 	}
 
+	//address = 0;
+
 	// Write out code
 	for (assembledInstruction_t* instruction = head; instruction != NULL; instruction = instruction->next) {
 
@@ -724,16 +746,23 @@ void Assembler::run()
 				debugOut << "|" << QString::number(instruction->data[i], 16).rightJustified(4, '0');
 
 				instruction->data[i] = Utils::swapByteOrder(instruction->data[i]);
+
+				debugOut << "\n";
 			}
 
 			qDebug() << "DATA: " << instruction->dataLength << " words";
 			fwrite(instruction->data, sizeof(word_t), instruction->dataLength, compiledFile);
+
+			if (createDebugFile) {
+				fwrite(instruction->data, sizeof(word_t), instruction->dataLength, debugFile);
+			}
+
 			continue;
 		}
 
 		word_t packed = 0;
 
-		//qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
+		qDebug() << "Opcode: " << instruction->opcode << "Arg A: " << instruction->a.argument;
 
 
 		packed = Utils::pack(instruction->opcode, instruction->a.argument, instruction->b.argument);
@@ -745,31 +774,52 @@ void Assembler::run()
 		word_t swapped = (packed>>8) | (packed<<8);
 
 		// Save instruction
-		qDebug() << address << ": Assembled instruction: " << packed << " Swapped: " << swapped << "Opcode: " << instruction->opcode;
+		qDebug() << instruction->address << ": Assembled instruction: " << QString::number(packed, 16).rightJustified(4, '0') << " Swapped: " << QString::number(swapped, 16).rightJustified(4, '0') << "Opcode: " << instruction->opcode;
+
+		if (createDebugFile) {
+			word_t debugInfo = ((word_t)instruction->lineNumber) | 0xA000;
+
+			debugInfo = (debugInfo >> 8) | (debugInfo << 8);
+
+			fwrite(&debugInfo, sizeof(word_t), 1, debugFile);
+		}
 
 		fwrite(&swapped, sizeof(word_t), 1, compiledFile);
+
+		if (createDebugFile) {
+			fwrite(&swapped, sizeof(word_t), 1, debugFile);
+		}
 
 		debugOut << "|" << QString::number(packed, 16).rightJustified(4, '0');
 
 		if (instruction->opcode != OP_NULL && Utils::usesNextWord(instruction->a.argument)) {
 			swapped = (instruction->a.nextWord>>8) | (instruction->a.nextWord<<8);
 
-			qDebug() << ++address << ": Extra Word A: " << instruction->a.nextWord << " Swapped: " << swapped;
+			qDebug() << instruction->address << ": Extra Word A: " << QString::number(instruction->a.nextWord, 16).rightJustified(4, '0') << " Swapped: " << QString::number(swapped, 16).rightJustified(4, '0');
 
 			debugOut << ":" << QString::number(instruction->a.nextWord, 16).rightJustified(4, '0');
 
 			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
+
+			if (createDebugFile) {
+				fwrite(&swapped, sizeof(word_t), 1, debugFile);
+			}
 		}
 
 		if (Utils::usesNextWord(instruction->b.argument)) {
 			swapped = (instruction->b.nextWord>>8) | (instruction->b.nextWord<<8);
 
-			qDebug() << ++address << ": Extra Word B: " << instruction->b.nextWord << " Swapped: " << swapped;
+			qDebug() << instruction->address << ": Extra Word B: " << QString::number(instruction->b.nextWord, 16).rightJustified(4, '0') << " Swapped: " << QString::number(swapped, 16).rightJustified(4, '0');
 
 			debugOut << ":" << QString::number(instruction->b.nextWord, 16).rightJustified(4, '0');
 
 			fwrite(&swapped, sizeof(word_t), 1, compiledFile);
+
+			if (createDebugFile) {
+				fwrite(&swapped, sizeof(word_t), 1, debugFile);
+			}
 		}
+
 
 		debugOut << "\n";
 
@@ -779,14 +829,14 @@ void Assembler::run()
 
 	qDebug() << "Compile finished.";
 
-	//debugOut.flush();
-	debugFile.flush();
-	debugFile.close();
+	debugInfoFile.flush();
+	debugInfoFile.close();
 
 	// Close files
 
-
 	fclose(compiledFile);
+
+	fclose(debugFile);
 
 	assemblerError(ASSEMBLER_SUCESSFUL, 0);
 }
@@ -884,14 +934,7 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 
 
 		if (itemIndex > -1) {
-			/*
-			if (remainingLine.length() > label.length()) {
-			functionOnNextLine = false;
-			} else {
-			functionOnNextLine = true;
-			return 1;
-			}
-			*/
+
 			functionOnNextLine = false;
 		} else {
 			remainingLine = "";
@@ -967,7 +1010,16 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 	}
 
 	instruction->next = NULL;
+
+	// Set base address
 	instruction->address = address;
+
+	if (command != "dat") {
+		// When creating a debug file add extra instrcution
+		address += (createDebugFile ? 1 : 0);
+	}
+
+
 	instruction->label = label;
 
 	instruction->data = NULL;
@@ -1060,7 +1112,9 @@ int Assembler::processCommand(QString &command, QString &data, word_t &address, 
 
 			address += instruction->dataLength;
 		}
-	}
+	} 
+
+	//address = instruction->address;
 
 	return 1;
 }
@@ -1082,6 +1136,8 @@ void Assembler::processArg1(QString &command, QString &arg, word_t &address, QSt
 
 	qDebug() << "Arg: " << arg;
 
+	instruction->lineNumber = lineNumber;
+
 	instruction->a = argumentFor(arg);
 
 	instruction->a.lineNumber = lineNumber;
@@ -1094,10 +1150,11 @@ void Assembler::processArg1(QString &command, QString &arg, word_t &address, QSt
 	address++;
 
 	if (Utils::usesNextWord(instruction->a.argument)) {
+		//address +=  (createDebugFile ? 2 : 1);
 		address++;
 	}
 
-	//delete tempArg
+	//address = instruction->address;
 }
 
 // Process argument 2
@@ -1120,21 +1177,6 @@ void Assembler::processArg2(QString &command, QString &arg, word_t &address, QSt
 		instruction->a.labelReference = "";
 
 	} else {
-		//memcpy(tempArg, arg, len + 1);
-
-		/*
-		while (arg[i] != '\0') {
-		if (arg[i] == ',') {
-
-		arg[i] = '\0';
-
-		continue;
-		} 
-
-		arg[i] = tolower(arg[i]);
-		i++;
-		}
-		*/
 
 		arg = arg.toLower().trimmed();
 
@@ -1147,11 +1189,14 @@ void Assembler::processArg2(QString &command, QString &arg, word_t &address, QSt
 			assemblerError(instruction->b.errorCode, lineNumber);
 		}
 
+		//address++;
+
 		if (Utils::usesNextWord(instruction->b.argument)) {
+			//address +=  (createDebugFile ? 2 : 1);
 			address++;
 		}
 
 	}
-
-
+	
+	//address = instruction->address;
 }

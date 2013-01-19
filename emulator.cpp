@@ -1,4 +1,4 @@
-/**
+﻿/**
 DCPU Emulator.
 Written by James Whitwell, 2012.
 
@@ -32,6 +32,8 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 	triggerInterrupts = true;
 	returnedFromInterrupt = false;
 
+	hitBreakpoint = false;
+
 	connectedDevices.clear();
 
 
@@ -40,9 +42,7 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 
 	connectedDevices.append(lemDevice);
 
-	//connectedDevices.append(qobject_cast<Device*>(lemDevice.data()));
 
-	//qDebug() << QString::number(connectedDevices.size());
 }
 
 Emulator::~Emulator()
@@ -106,26 +106,13 @@ void Emulator::reset()
 		literals[i] = i;
 	}
 
-
-
 	memory.clear();
-
-	/*
-	for (int i = 0; i < RAM_SIZE; i++) {
-	memory.insert(i, 0);
-	//memory[i] = 0;
-	}
-	*/
-
-
 
 	registers.clear();
 
 	for (word_t i = 0; i < NUM_REGISTERS; i++) {
 		registers.append(0);
-		//registers[i] = 0;
 	}
-
 
 	stackPointer = 0;
 	interruptAddress = 0;
@@ -247,7 +234,7 @@ word_t Emulator::getWord(word_t value) {
 	return memory.value(value, 0);
 }
 
-word_t Emulator::nextWord(bool isLiteral) {
+word_t Emulator::nextWord() {
 	word_t word = getWord(registers[PC]);
 
 	registers[PC] = (registers[PC] + 1) & 0xffff;
@@ -259,6 +246,8 @@ word_t Emulator::nextWord(bool isLiteral) {
 
 instruction_t Emulator::nextInstruction() {
 	word_t word = nextWord();
+
+	//qDebug() << "Actual instruction: " + QString::number(word, 16);
 
 	instruction_t instruction;
 
@@ -446,22 +435,23 @@ void Emulator::run()
 
 	QByteArray tempArray = program.readAll();
 
+
 	QDataStream inputStream(&tempArray, QIODevice::ReadOnly);
+
 
 	// Store stream in memory
 	int i = 0;
 
+
 	while (!inputStream.atEnd()) {
 		word_t currentWord;
-
 		inputStream >> currentWord;
 
+		memory.insert(i++, currentWord);
 		//memory[i++] = currentWord;
 
-		memory[i++] = currentWord;
 
 	}
-
 	program.close();
 
 	// Send the initial memory block to main thread
@@ -481,6 +471,30 @@ void Emulator::run()
 
 	// Start emulator loop, will continue until either finished or emulatorRunning is set to false
 	while(emulatorRunning) {
+
+		// In debug mode get the debug instruction before each regular instruction
+		if (!hitBreakpoint && !skippingCurrentPass) {
+			word_t word = nextWord();
+
+			int lineNumber = word ^ 0xA000;
+
+			qDebug() << "Checking breakpoint for line: " + QString::number(lineNumber);
+
+			if (breakpoints.contains(lineNumber)) {
+				qDebug() << "Breakpoint hit, line number: " + QString::number(lineNumber);
+
+				hitBreakpoint = true;
+				skippingCurrentPass = true;
+			}
+
+			lastInstruction = word;
+
+			//qDebug() << "Debug instruction: " + QString::number(word, 16);
+			if (stepMode) {
+				emit instructionChanged(lastInstruction);
+			}
+
+		}
 
 		if (skippingCurrentPass == false) {
 
@@ -512,6 +526,8 @@ void Emulator::run()
 
 				if (OPCODE_DEBUGGING) {
 					qDebug() << "Null opcode: " << QString::number(instruction.rawInstruction);
+
+					//emit instructionChanged(lastInstruction);
 				}
 
 				break;
@@ -541,7 +557,7 @@ void Emulator::run()
 
 				break;
 			case OP_SUB:
-				// Subtract Stores the value of B−A in B.
+				// Subtract Stores the value of BâA in B.
 				result = bValue - aValue;
 
 				setValue(EX, (result < 0) ? MAX_VALUE : 0x0000, REGISTER);
@@ -874,7 +890,7 @@ void Emulator::run()
 
 			case OP_SBX: 
 				{
-					// Subtract [with] EX Stores the value of A−B+EX in B.
+					// Subtract [with] EX Stores the value of AâB+EX in B.
 
 					int value = bValue + aValue + getSigned(registers.at(EX));
 
@@ -973,7 +989,7 @@ void Emulator::run()
 				// Return From Interrupt Disables interrupt queueing, pops A from the stack, then pops PC from the stack.
 
 				triggerInterrupts = true;
-				
+
 				setValue(A, getValue(POP, MEMORY_OPERATION), REGISTER);
 				setValue(PC, getValue(POP, MEMORY_OPERATION), REGISTER);
 
@@ -1057,16 +1073,23 @@ void Emulator::run()
 			}
 
 
+			if (hitBreakpoint) {
 
+				//stepMode = false;
+				hitBreakpoint = false;
+
+				// Disable step mode
+				//emit disableStepMode();
+			}
 
 			if (stepMode) {
-				
+
 				emit registersChanged(getRegisters());
 
 				// May not be a good way of doing it.
 				emit fullMemorySync(memory);
 
-				emit instructionChanged(instruction.rawInstruction);
+				//emit instructionChanged(instruction.rawInstruction);
 			}
 
 
@@ -1169,4 +1192,26 @@ bool Emulator::inStepMode()
 
 word_map Emulator::getMemory() {
 	return memory;
+}
+
+void Emulator::addBreakpoint(int lineNumber) {
+	if (!breakpoints.contains(lineNumber)) {
+		breakpoints.append(lineNumber);
+	}
+}
+
+void Emulator::removeBreakpoint(int lineNumber) {
+	int index = 0;
+
+	for (int i = 0; i < breakpoints.size(); i++) {
+		if (breakpoints.at(i) == lineNumber) {
+			break;
+		}
+
+		index++;
+	}
+
+	if (index < breakpoints.size()) {
+		breakpoints.remove(index);
+	}
 }
