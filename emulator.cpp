@@ -48,13 +48,10 @@ Emulator::Emulator(QObject* parent) : QThread(parent), emulatorRunning(false)
 Emulator::~Emulator()
 {
 	memory.clear();
-	//memory.squeeze();
 	registers.clear();
 	literals.clear();
 
 	emulatorRunning = false;
-
-	//this->wait();
 }
 
 void Emulator::setFilename(QString filename)
@@ -80,7 +77,6 @@ void Emulator::setStepMode(bool stepMode)
 
 void Emulator::toggleStepMode() 
 {
-	//QMutexLocker locker(&mutex);
 	if (this->stepMode) {
 		this->stepMode = false;
 		this->skippingCurrentPass = false;
@@ -126,7 +122,8 @@ void Emulator::reset()
 
 void Emulator::stopEmulator()
 {
-
+	QMutexLocker locker(&mutex);
+	emulatorRunning = false;
 }
 
 // Borrowed from https://github.com/fogleman/DCPU-16/blob/master/emulator/emulator.c
@@ -230,7 +227,7 @@ int Emulator::getAddress(word_t value, arg_type &argType, bool a) {
 
 word_t Emulator::getWord(word_t value) {
 	// TODO: Add pop
-
+	
 	return memory.value(value, 0);
 }
 
@@ -438,6 +435,7 @@ void Emulator::run()
 
 	QDataStream inputStream(&tempArray, QIODevice::ReadOnly);
 
+	emulatorRunning = true;
 
 	// Store stream in memory
 	int i = 0;
@@ -478,13 +476,15 @@ void Emulator::run()
 
 			int lineNumber = word ^ 0xA000;
 
-			qDebug() << "Checking breakpoint for line: " + QString::number(lineNumber);
+			//qDebug() << "Checking breakpoint for line: " + QString::number(lineNumber);
 
 			if (breakpoints.contains(lineNumber)) {
 				qDebug() << "Breakpoint hit, line number: " + QString::number(lineNumber);
 
 				hitBreakpoint = true;
 				skippingCurrentPass = true;
+
+				emit enableStepMode();
 			}
 
 			lastInstruction = word;
@@ -1078,8 +1078,6 @@ void Emulator::run()
 				//stepMode = false;
 				hitBreakpoint = false;
 
-				// Disable step mode
-				//emit disableStepMode();
 			}
 
 			if (stepMode) {

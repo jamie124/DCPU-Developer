@@ -17,6 +17,7 @@ Started 7-Apr-2012
 
 #include <QMap>
 #include <QHash>
+#include <QMutex>
 
 #include <iostream>
 
@@ -94,6 +95,7 @@ signals:
 
 	void emulationEnded(int);
 
+	void enableStepMode();
 	void disableStepMode();
 private:
 
@@ -194,6 +196,8 @@ private:
 	word_t lastInstruction;
 
 	QVector<int> breakpoints;
+
+	QMutex mutex;
 };
 
 #endif

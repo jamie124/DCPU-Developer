@@ -907,7 +907,7 @@ int Assembler::processLine(const QString currentLine, QString &data, QString &la
 	int itemIndex = 0;						// Current position in item being stored
 
 	//char *tempBuffer = new char[MAX_CHARS];
-	QString tempBuffer;
+	QString tempBuffer = "";
 
 	// Remove trailing characters
 	QString remainingLine = currentLine.trimmed();

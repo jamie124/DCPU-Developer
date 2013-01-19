@@ -284,7 +284,8 @@ void DCPUDeveloper::startEmulator() {
 
 	connect(emulator, SIGNAL(emulationEnded(int)), this, SLOT(endEmulation(int)), Qt::QueuedConnection);
 
-	//connect(emulator, SIGNAL(disableStepMode()), this, SLOT(disableStepMode()), Qt::QueuedConnection);
+	connect(emulator, SIGNAL(enableStepMode()), this, SLOT(enableStepMode()), Qt::QueuedConnection);
+
 }
 
 void DCPUDeveloper::runProgram(QString binFile) {
@@ -339,7 +340,7 @@ void DCPUDeveloper::setSelectedDisassembedInstruction(word_t value) {
 	word_t lineNumber = 0;
 	word_t lineNumberDisassembled = value ^ 0xA000;
 
-	QString currentLine;
+	QString currentLine = "";
 	QListWidgetItem *item;
 
 	int index = 0;
@@ -448,13 +449,13 @@ void DCPUDeveloper::on_run_button_clicked()
 		ui->run_button->setText("Stop");
 
 	} else {
-		//emulator->stopEmulator();
+		emulator->stopEmulator();
 
 		//delete emulator;
 
 		appendLogMessage("User stopped program");
 
-		//emulatorRunning = false;
+		emulatorRunning = false;
 	}
 }
 
@@ -533,6 +534,12 @@ void DCPUDeveloper::disassembledRowChanged(QListWidgetItem *currentRow, QListWid
 	if (currentRow != NULL) {
 		editor->setLine(currentRow->data(1).toInt());
 	}
+}
+
+void DCPUDeveloper::enableStepMode() {
+	qDebug() << "Enabled step mode";
+
+	on_toggle_step_button_clicked();
 }
 
 void DCPUDeveloper::disableStepMode() {

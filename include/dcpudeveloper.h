@@ -74,6 +74,7 @@ private slots:
 
 	void disassembledRowChanged(QListWidgetItem *currentRow, QListWidgetItem * previousRow);
 
+	void enableStepMode();
 	void disableStepMode();
 
 	void addBreakpoint();
