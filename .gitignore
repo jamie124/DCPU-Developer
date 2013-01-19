@@ -18,6 +18,7 @@ ipch/
 *.sdf
 *.opensdf
 *.ini
+moc_*.cpp
 
 # Extra crap
 dcpu-build*/
